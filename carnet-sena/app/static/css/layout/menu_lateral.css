@@ -1,0 +1,177 @@
+/* Floating Glass Sidebar */
+.sidebar {
+    width: 240px;
+    height: calc(100vh - 50px);
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: fixed;
+    left: 25px;
+    top: 25px;
+    bottom: 25px;
+    padding: 2rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    border-radius: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .sidebar {
+    background: rgba(30,39,46, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Premium Sidebar Header & Branding */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding: 0.5rem;
+    gap: 8px;
+}
+
+.sidebar-logo {
+    height: 45px; width: auto;
+    filter: drop-shadow(0 0 10px rgba(57, 169, 0, 0.6));
+    animation: pulse-glow 3s infinite ease-in-out;
+}
+
+.sidebar-header p {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--secondary-text);
+    margin: 0;
+    line-height: 1.2;
+    display: inline-block;
+    animation: float-tilt 4s infinite ease-in-out alternate;
+    transform-origin: center;
+}
+
+[data-theme="dark"] .sidebar-header p { color: white; }
+
+/* Premium Sidebar Navigation */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+.sidebar-nav::-webkit-scrollbar {
+    display: none; /* Hide scrollbar in Chrome/Safari */
+}
+.sidebar-nav > * {
+    flex-shrink: 0;
+}
+
+.sidebar-nav a, .dropdown-btn {
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 14px 20px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
+}
+
+.sidebar-nav a i {
+    margin-right: 15px;
+    font-size: 1.2rem;
+    width: 25px;
+    text-align: center;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hover & Active States */
+.sidebar-nav a:hover, .dropdown-btn:hover {
+    background: rgba(57, 169, 0, 0.08); /* Brillo verde SENA */
+    color: var(--primary-color);
+    transform: translateX(8px) scale(1.02);
+    border-color: rgba(57, 169, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.sidebar-nav a.active, .dropdown-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), #2E7D32);
+    color: white !important;
+    box-shadow: 0 10px 25px rgba(57, 169, 0, 0.35);
+    font-weight: 700;
+    border-color: transparent;
+    transform: translateX(5px);
+}
+
+.sidebar-nav a.active i, .dropdown-btn.active i {
+    transform: scale(1.15) rotate(5deg);
+}
+
+[data-theme="dark"] .sidebar-nav a, [data-theme="dark"] .dropdown-btn { 
+    background: rgba(255, 255, 255, 0.05); 
+    border-color: rgba(255, 255, 255, 0.05); 
+}
+[data-theme="dark"] .sidebar-nav a:hover, [data-theme="dark"] .dropdown-btn:hover { 
+    background: rgba(255, 255, 255, 0.1); 
+}
+
+/* Sidebar Dropdown Accordion */
+.sidebar-dropdown { margin: 10px 0; }
+.dropdown-btn {
+    width: 100%; cursor: pointer;
+    font-family: inherit; font-size: 1rem;
+}
+.dropdown-btn .caret { 
+    margin-left: auto; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); font-size: 0.8rem;
+}
+.sidebar-dropdown.open .caret { transform: rotate(180deg); color: var(--primary-color); }
+
+.dropdown-content {
+    max-height: 0; overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-left: 15px; display: flex; flex-direction: column;
+    opacity: 0; gap: 8px; margin-top: 0;
+}
+.sidebar-dropdown.open .dropdown-content { max-height: 300px; opacity: 1; margin-top: 10px; }
+
+.dropdown-content a {
+    padding: 12px 18px; font-size: 0.95rem; border-radius: 15px;
+    background: rgba(0, 0, 0, 0.02); border: 1px solid transparent;
+}
+.dropdown-content a:hover {
+    background: rgba(57, 169, 0, 0.05); color: var(--primary-color); padding-left: 22px; margin: 0; transform: none;
+}
+.dropdown-content a.active {
+    background: linear-gradient(135deg, var(--primary-color), #2E7D32); color: white !important; font-weight: 700; box-shadow: 0 8px 20px rgba(57, 169, 0, 0.25);
+}
+
+[data-theme="dark"] .dropdown-content a {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-divider {
+    margin: 1.5rem 0; border: 0; border-top: 1px solid #EEE;
+}
+
+@media (max-width: 992px) {
+    .sidebar { 
+        left: -300px; 
+    }
+    .sidebar.open { 
+        left: 15px; 
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar { 
+        width: 280px; /* Ancho completo al abrir en móvil */
+    }
+}

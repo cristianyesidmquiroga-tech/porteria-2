@@ -1,0 +1,23 @@
+# Secretos y configuración
+.env
+
+# Base de datos local
+instance/
+
+# Entorno virtual (Librerías)
+venv/
+env/
+ENV/
+
+# Archivos temporales de Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Respaldos generados (opcional, si no quieres subirlos a Git)
+app/respaldos_mensuales/

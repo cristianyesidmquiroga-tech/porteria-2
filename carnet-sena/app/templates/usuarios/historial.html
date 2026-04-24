@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Cambios - SENA{% endblock %}
+
+{% block content %}
+<div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+    <div class="header-title">
+        <h1><i class="fas fa-history" style="color: var(--primary-color);"></i> Historial de Cambios</h1>
+        <p style="color: var(--text-muted); margin-top: 5px;">Registro inmutable de acciones administrativas en perfiles.</p>
+    </div>
+</div>
+
+<div class="glass-container animate-on-scroll" data-animation="scale-in">
+    <div class="table-responsive">
+        <table class="glass-table">
+            <thead>
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Administrador</th>
+                    <th>Acción</th>
+                    <th>Autorizado Por</th>
+                    <th>Motivo / Detalles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if not logs %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-clipboard-list" style="font-size: 3rem; color: rgba(0,0,0,0.1); margin-bottom: 1rem; display: block;"></i>
+                        <p style="color: var(--text-muted);">No hay registros de auditoría aún.</p>
+                    </td>
+                </tr>
+                {% endif %}
+                {% for log in logs %}
+                <tr>
+                    <td style="white-space: nowrap;">
+                        <div style="font-weight: 600; color: var(--primary-color);">
+                            {{ log.fecha.strftime('%d/%m/%Y') }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            {{ log.fecha.strftime('%I:%M:%S %p') }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 35px; height: 35px; background: rgba(57, 169, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #39A900;">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">{{ log.nombre_usuario }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">ID: #{{ log.usuario_id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if 'Eliminación' in log.accion %}badge-danger{% else %}badge-primary{% endif %}" style="padding: 5px 12px;">
+                            {{ log.accion }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main);">
+                            {{ log.autorizado_por or 'N/A' }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-width: 300px;">
+                            <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 4px;">{{ log.motivo or 'Sin motivo registrado' }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">{{ log.detalles }}</div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .badge-danger {
+        background: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+    .badge-primary {
+        background: rgba(52, 152, 219, 0.1);
+        color: #3498db;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+</style>
+{% endblock %}

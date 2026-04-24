@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Verificación de Pase{% endblock %}
+
+{% block content %}
+<div class="card animate-on-scroll" data-animation="scale-in" style="max-width: 600px; margin: 2rem auto; border-top: 8px solid var(--primary-color);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="width: 100px; height: 100px; background: #f0f9f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            {% if tipo == 'Visitante' %}
+            <i class="fas fa-user-clock fa-3x" style="color: var(--primary-color);"></i>
+            {% else %}
+            <i class="fas fa-car fa-3x" style="color: var(--primary-color);"></i>
+            {% endif %}
+        </div>
+        <h2 style="color: var(--secondary-text);">Verificación de {{ tipo }}</h2>
+        <span class="status-badge {{ status | lower }}" style="display: inline-block; margin-top: 0.5rem;">
+            {{ 'EN SEDE' if status == 'Entrada' else 'AFUERA' }}
+        </span>
+    </div>
+
+    <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; background: var(--white); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border);">
+        <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">{% if tipo == 'Visitante' %}Nombre{% else %}Placa{% endif %}</label>
+            <div style="font-size: 1.2rem; font-weight: 700;">{% if tipo == 'Visitante' %}{{ entidad.nombre }}{% else %}{{ entidad.placa }}{% endif %}</div>
+        </div>
+        <div>
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">{% if tipo == 'Visitante' %}Documento{% else %}Tipo / Propietario{% endif %}</label>
+            <div style="font-weight: 600;">
+                {% if tipo == 'Visitante' %}
+                    {{ entidad.documento }}
+                {% else %}
+                    {{ entidad.tipo }} - {{ entidad.propietario or 'N/A' }}
+                {% endif %}
+            </div>
+        </div>
+        <div style="grid-column: span 2; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Motivo del Ingreso</label>
+            <p style="font-style: italic; color: var(--text-main); margin-top: 0.5rem; line-height: 1.5;">
+                "{{ entidad.motivo or 'Sin motivo registrado.' }}"
+            </p>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; flex-direction: column; align-items: center; width: 100%;">
+        {% if current_user.es_celador_cargo or current_user.cargo == 'Administrador' %}
+            <div style="display: flex; gap: 1rem; width: 100%;">
+            {% if status != 'Entrada' %}
+            <form action="{{ url_for('porteria.register_movement_entidad', tipo_entidad=tipo, entidad_id=entidad.id, mov='Entrada') }}" method="POST" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-primary" style="width: 100%; height: 60px; font-size: 1.1rem; background: #2E7D32;">
+                    <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                </button>
+            </form>
+            {% else %}
+            <form action="{{ url_for('porteria.register_movement_entidad', tipo_entidad=tipo, entidad_id=entidad.id, mov='Salida') }}" method="POST" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-primary" style="width: 100%; height: 60px; font-size: 1.1rem; background: #C62828;">
+                    <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                </button>
+            </form>
+            {% endif %}
+            </div>
+        {% else %}
+            <div style="text-align: center; color: var(--text-muted); padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.05); width: 100%;">
+                <i class="fas fa-lock"></i> Solo la Portería puede autorizar pases de vehículos o visitantes.
+            </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center; margin-top: 1.5rem;">
+        <a href="{{ url_for('porteria.scanner') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">
+            <i class="fas fa-arrow-left"></i> Volver al Escáner
+        </a>
+    </div>
+</div>
+{% endblock %}

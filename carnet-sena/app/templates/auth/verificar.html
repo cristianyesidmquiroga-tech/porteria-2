@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-wrapper glass-animated-bg">
+    <div class="auth-container modern-auth">
+        <!-- Encabezado de Marca / Branded Hero -->
+        <div class="welcome-section glass-welcome animate-on-scroll" data-animation="swipe-left">
+            <div class="brand-hero stagger-item" style="display: flex; align-items: center; gap: 1rem;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA Logo" class="sidebar-logo" style="height: 80px;">
+                <h1 class="text-3d dust-reveal">Verifica tu <span class="highlight-rainbow">Correo</span></h1>
+            </div>
+            <p class="stagger-item">Protegemos tu identidad con autenticación de dos factores. Ingresa el código de 6 dígitos que enviamos a tu bandeja institucional para desbloquear el acceso táctico.</p>
+            <div class="stagger-item" style="margin-top: 2rem; padding: 1rem; background: rgba(57, 169, 0, 0.1); border-radius: 12px; border: 1px solid rgba(57, 169, 0, 0.2);">
+                <p style="color: var(--primary-color); font-size: 0.9rem; margin: 0;">
+                    <i class="fas fa-terminal"></i> <strong>Modo Simulación:</strong> El código aparece en la consola del servidor.
+                </p>
+            </div>
+        </div>
+
+        <div class="form-section animate-on-scroll" data-animation="swipe-right">
+            <div class="glass-card" style="max-width: 450px;">
+                <h2 class="glass-title text-3d">Activación Táctica</h2>
+                <form action="{{ url_for('auth.verificar_correo') }}" method="POST" class="floating-form" style="margin-top: 2rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="floating-group">
+                        <input type="text" id="codigo" name="codigo" required placeholder=" " maxlength="6" pattern="\d{6}" 
+                               style="text-align: center; font-size: 2.5rem; letter-spacing: 12px; font-weight: 800; border-bottom: 3px solid var(--primary-color); background: rgba(255,255,255,0.4);" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <label for="codigo" style="text-align: center; width: 100%; left: 0;">Código de 6 Dígitos</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    <button type="submit" class="btn-glow" style="width: 100%; margin-top: 2.5rem;">
+                        <span>Verificar Identidad <i class="fas fa-shield-alt"></i></span>
+                    </button>
+                </form>
+                
+                <div class="glass-footer" style="margin-top: 3rem; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 1.5rem;">
+                    <p style="margin-bottom: 1.5rem; color: var(--text-muted);">¿Problemas con el código?</p>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: center; align-items: center; flex-direction: column;">
+                        <form action="{{ url_for('auth.reenviar_codigo') }}" method="POST" style="width: 100%;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="magnetic-btn" style="width: 100%; background: none; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.8rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: 700; transition: all 0.3s ease;">
+                               <i class="fas fa-sync-alt"></i> Generar Nuevo Código
+                            </button>
+                        </form>
+
+                        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                            <a href="{{ url_for('auth.logout') }}" class="back-link-premium" style="font-size: 0.9rem;">
+                                <i class="fas fa-sign-out-alt"></i> Salir / Cerrar Sesión
+                            </a>
+                            <a href="{{ url_for('main.index') }}" class="back-link-premium" style="font-size: 0.9rem;">
+                                <i class="fas fa-home"></i> Ir al Inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

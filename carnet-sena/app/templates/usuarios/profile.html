@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% block title %}Mi Perfil{% endblock %}
+{% block content %}
+<div class="profile-container">
+    <!-- Acciones Rápidas / Quick Actions -->
+    <div class="profile-quick-actions animate-on-scroll" data-animation="none">
+        <button onclick="toggleSection('update-info-section')"
+            class="btn-action gradient-blue stagger-item magnetic-btn">
+            <i class="fas fa-user-edit"></i> Información
+        </button>
+        {% if current_user.puede_registrar_equipos %}
+        <button onclick="toggleSection('devices-section')" class="btn-action gradient-green stagger-item magnetic-btn" id="btn-mis-equipos">
+            <i class="fas fa-laptop"></i> Mis Equipos
+        </button>
+        <button onclick="toggleSection('add-device-section')"
+            class="btn-action gradient-orange stagger-item magnetic-btn" id="btn-add-equipo">
+            <i class="fas fa-plus-circle"></i> Añadir Equipos
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="profile-split-layout">
+        <!-- Parte Izquierda: Carnet / Left Wing: Digital ID -->
+        <div class="left-wing">
+            <div class="carnet-wrapper animate-on-scroll" data-animation="scale-in">
+                <div class="carnet-card">
+                    <div class="carnet-header">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg"
+                            alt="SENA Logo" class="sena-logo-carnet">
+                        <span class="sena-text"><span class="highlight-rainbow">Centro de Gestión Agroempresarial</span>
+                            <br> <span class="highlight-rainbow">del Oriente</span></span>
+                    </div>
+
+                    <div class="carnet-body">
+                        <h2 class="user-name text-3d dust-reveal" style="margin-bottom: 20px; text-align: center; font-size: 1.6rem; width: 100%;">{{ current_user.nombre }}</h2>
+                        
+                        <div class="photo-area stagger-item" style="margin-bottom: 25px;">
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.foto) if current_user.foto else 'https://ui-avatars.com/api/?name=' + current_user.nombre + '&background=39A900&color=fff' }}"
+                                alt="Foto Perfil" class="profile-photo-carnet" onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre }}&background=39A900&color=fff'">
+                        </div>
+
+                        <div class="info-area" style="width: 100%;">
+                            <div class="info-grid stagger-item" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; text-align: left;">
+                                <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
+                                    <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Rol</small>
+                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">{% if current_user.es_admin %} Admin {% else %} {{ current_user.cargo }} {% endif %}</div>
+                                </div>
+                                <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
+                                    <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">ID</small>
+                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">{{ current_user.documento or 'N/A' }}</div>
+                                </div>
+                                {% if current_user.ficha %}
+                                <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
+                                    <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Ficha</small>
+                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">{{ current_user.ficha }}</div>
+                                </div>
+                                {% endif %}
+                                {% if current_user.programa %}
+                                    {% if not current_user.ficha %}
+                                    <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none; grid-column: 1 / -1;">
+                                    {% else %}
+                                    <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
+                                    {% endif %}
+                                        <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            {% if current_user.es_instructor_cargo %}Área{% else %}Programa{% endif %}
+                                        </small>
+                                        <div style="font-weight: 600; font-size: 0.85rem; line-height: 1.2; color: var(--text-main);">{{ current_user.programa }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="carnet-footer stagger-item">
+                        {% if qr_code %}
+                        <div class="qr-container">
+                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="qr-image"
+                                onclick="openQrModal('data:image/png;base64,{{ qr_code }}')" style="cursor: zoom-in;"
+                                title="Haz clic para agrandar">
+                        </div>
+                        {% else %}
+                        <div class="qr-placeholder" style="text-align: center; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; width: 100%; max-width: 150px; border: 1px dashed rgba(231, 76, 60, 0.4);">
+                            <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(231, 76, 60, 0.6); margin-bottom: 5px;"></i>
+                            <p style="font-size: 0.8rem; font-weight: 700; color: #e74c3c; margin: 0; text-transform: uppercase;">QR Bloqueado</p>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.2;">Completa tu información para generar el código</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parte Derecha: Formularios Dinámicos / Right Wing: Dynamic Forms -->
+        <div class="right-wing">
+            <!-- Placeholder Inicial / Initial Placeholder -->
+            <div id="profile-placeholder" class="glass-card animate-on-scroll"
+                style="text-align: center; padding: 4rem 2rem;">
+                <i class="fas fa-fingerprint"
+                    style="font-size: 4rem; color: var(--primary-color); opacity: 0.3; margin-bottom: 1.5rem;"></i>
+                <h2 class="text-3d">Centro de Gestión</h2>
+                <p style="color: var(--text-muted);">Selecciona una acción arriba para gestionar tus datos o equipos
+                    vinculados.</p>
+            </div>
+
+            <!-- Formulario Actualización / Update Form -->
+            <div id="update-info-section" class="glass-card stagger-item" style="display: none;">
+                <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                        style="height: 25px;">
+                    Actualizar Datos
+                </h2>
+                <form action="{{ url_for('usuarios.update_profile') }}" method="POST" enctype="multipart/form-data"
+                    class="floating-form" autocomplete="off" data-no-ajax>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="floating-group">
+                        <input type="file" id="foto" name="foto" accept="image/*" class="has-value">
+                        <label for="foto">Foto de Perfil</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    <div class="floating-group">
+                        <input type="text" id="documento" name="documento" value="{{ current_user.documento or '' }}"
+                            placeholder=" " required>
+                        <label for="documento">Documento de Identidad</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    <div class="floating-group">
+                        <select id="tipo_sangre" name="tipo_sangre" required>
+                            <option value="" disabled selected placeholder=" ">-- Selecciona Tipo de Sangre --</option>
+                            {% for tipo in ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] %}
+                            <option value="{{ tipo }}" {% if current_user.tipo_sangre == tipo %}selected{% endif %}>{{ tipo }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="tipo_sangre">Tipo de Sangre</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    
+                    {% if current_user.es_instructor_cargo or current_user.es_aprendiz_cargo %}
+                    <div class="floating-group">
+                        <input type="text" id="programa" name="programa" value="{{ current_user.programa or '' }}" placeholder=" " pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios (sin números)">
+                        <label for="programa">{% if current_user.es_instructor_cargo %}Especialidad / Área{% else %}Programa de Formación{% endif %}</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.es_aprendiz_cargo %}
+                    <div class="floating-group">
+                        <input type="text" id="ficha" name="ficha" value="{{ current_user.ficha or '' }}"
+                            placeholder=" ">
+                        <label for="ficha">Número de Ficha</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn-glow" style="width: 100%; margin-top: 2rem;">
+                        Guardar Cambios <i class="fas fa-sync"></i>
+                    </button>
+                </form>
+            </div>
+
+            {% if current_user.puede_registrar_equipos %}
+            <!-- Lista de Equipos / Devices List -->
+            <div id="devices-section" class="glass-card stagger-item" style="display: none;">
+                <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                        style="height: 25px;">
+                    Equipos Vinculados
+                </h2>
+                {% if equipos %}
+                <div class="device-list">
+                    {% for equipo in equipos %}
+                    <div class="device-item glass-card"
+                        style="padding: 1.2rem; margin-bottom: 1rem; display: flex; align-items: center; background: rgba(255,255,255,0.3);">
+                        <div style="font-size: 1.5rem; margin-right: 1rem;">
+                            {% if equipo.tipo == 'Computador' or equipo.tipo == 'Portátil' %} 💻 {% elif equipo.tipo == 'Tablet' %} 📱 {% else %} 📦 {% endif %}
+                        </div>
+                        <div class="device-info">
+                            <strong>{{ equipo.nombre }}</strong><br>
+                            <small>S/N: {{ equipo.serial }}</small>
+                        </div>
+                        <button class="magnetic-btn delete-device-btn"
+                                style="color: #E74C3C; margin-left: auto; border: none; background: transparent; cursor: pointer;"
+                                data-url="{{ url_for('equipos.delete_device', id=equipo.id) }}"
+                                data-name="{{ equipo.nombre }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay equipos registrados.</p>
+                {% endif %}
+            </div>
+
+            <!-- Añadir Equipo / Add Device Form -->
+            <div id="add-device-section" class="glass-card stagger-item" style="display: none;">
+                <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                        style="height: 25px;">
+                    Vincular Nuevo Equipo
+                </h2>
+                <form action="{{ url_for('equipos.add_device') }}" method="POST" class="floating-form" autocomplete="off">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="floating-group">
+                        <input type="text" name="serial" placeholder=" " required>
+                        <label>Serial / S/N</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    <div class="floating-group">
+                        <input type="text" name="nombre" placeholder=" " required>
+                        <label>Nombre del Equipo</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    <div class="floating-group">
+                        <select name="tipo" required>
+                            <option value="Computador" selected>💻 Computador</option>
+                        </select>
+                        <label>Tipo de Equipo</label>
+                        <div class="floating-border"></div>
+                    </div>
+                    <button type="submit" class="btn-glow" style="width: 100%; margin-top: 1.5rem;">
+                        Vincular Equipo <i class="fas fa-plus"></i>
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+
+    <!-- Modal para agrandar QR -->
+    <div id="qrModal"
+        style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); align-items: center; justify-content: center; backdrop-filter: blur(8px);"
+        onclick="if(event.target===this) closeQrModal()">
+        <div style="background: white; border-radius: 24px; padding: 2rem; max-width: 320px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.3); animation: scale-in 0.3s ease-out forwards; position: relative;">
+            <button onclick="closeQrModal()" style="position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); line-height: 1;">&times;</button>
+            <img id="modalQrImg" style="width: 100%; max-width: 250px; border-radius: 12px; margin: 0 auto; display: block;">
+            <p style="color: var(--text-main); margin-top: 1rem; font-size: 1rem; font-weight: 600; line-height: 1.3;">Preséntalo al escáner de manera clara</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openQrModal(src) {
+        document.getElementById('qrModal').style.display = "flex";
+        document.getElementById('modalQrImg').src = src;
+    }
+
+    function closeQrModal() {
+        document.getElementById('qrModal').style.display = "none";
+    }
+
+    // Cerrar si hace click fuera del QR
+    window.addEventListener("click", function (event) {
+        let modal = document.getElementById('qrModal');
+        if (event.target == modal) {
+            closeQrModal();
+        }
+    });
+
+    function toggleSection(sectionId) {
+        const sections = ['update-info-section', 'devices-section', 'add-device-section'];
+        const placeholder = document.getElementById('profile-placeholder');
+
+        // Determinar si ya está abierto / Check if already open
+        const target = document.getElementById(sectionId);
+        const alreadyOpen = target.style.display === 'block';
+
+        // Ocultar todos / Hide all
+        sections.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        if (!alreadyOpen) {
+            target.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        } else {
+            if (placeholder) placeholder.style.display = 'block';
+        }
+    }
+
+    // Premium Confirmation Integration
+    document.querySelectorAll('.delete-device-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const url = btn.dataset.url;
+            const name = btn.dataset.name;
+            
+            const confirmed = await window.customConfirm(
+                "¿Eliminar Equipo?",
+                `¿Estás seguro de que deseas eliminar el equipo "${name}"? Esta acción desvinculará el dispositivo de tu cuenta.`,
+                "Si, Eliminar"
+            );
+
+            if (confirmed) {
+                window.location.href = url;
+            }
+        });
+    });
+</script>
+{% endblock %}

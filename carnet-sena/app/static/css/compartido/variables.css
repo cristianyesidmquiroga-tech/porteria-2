@@ -1,0 +1,39 @@
+:root {
+    --primary-color: #39A900;
+    --secondary-color: #00324D;
+    --secondary-text: #00324D;
+    --accent-color: #FF6B00;
+    --bg-color: #F8F9FA;
+    --white: #FFFFFF;
+    --text-main: #2D3436;
+    --text-muted: #636E72;
+    --sidebar-width: 290px;
+    --sidebar-bg: #FFFFFF;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    
+    /* Status Colors */
+    --success-color: #39A900;
+    --danger-color: #E74C3C;
+    --input-bg-custom: rgba(0, 0, 0, 0.05);
+
+    /* Pastel Rainbow Palette */
+    --pastel-red: #FFEBEE;
+    --pastel-orange: #FFF3E0;
+    --pastel-yellow: #FFFDE7;
+    --pastel-green: #E8F5E9;
+    --pastel-blue: #E3F2FD;
+    --pastel-purple: #F3E5F5;
+}
+
+[data-theme="dark"] {
+    --primary-color: #4cd137;
+    --secondary-color: #1a5e2a; /* Verde oscuro para fondos */
+    --secondary-text: #6ddb8a; /* Verde claro para textos/letras */
+    --bg-color: #121212;
+    --white: #1e272e;
+    --text-main: #f5f6fa;
+    --text-muted: #b0b3b8;
+    --sidebar-bg: #1e272e;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --input-bg-custom: #FFFFFF;
+}

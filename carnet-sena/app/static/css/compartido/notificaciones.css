@@ -1,0 +1,146 @@
+/* Sistema de Notificaciones Toast - Estética Premium Glassmorphism */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    min-width: 320px;
+    max-width: 450px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transform: translateX(120%);
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--secondary-text);
+    margin: 0;
+    display: block;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 2px 0 0 0;
+    line-height: 1.4;
+}
+
+/* Tipos de Alertas / Alert Types */
+
+.toast-success .toast-icon {
+    background: rgba(57, 169, 0, 0.1);
+    color: #39A900;
+}
+.toast-success {
+    border-left: 5px solid #39A900;
+}
+
+.toast-danger .toast-icon {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+.toast-danger {
+    border-left: 5px solid #e74c3c;
+}
+
+.toast-warning .toast-icon {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+.toast-warning {
+    border-left: 5px solid #f39c12;
+}
+
+.toast-info .toast-icon {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+.toast-info {
+    border-left: 5px solid #3498db;
+}
+
+/* Progress Bar Animada */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(0,0,0,0.05);
+}
+
+.toast-progress-bar {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    background: currentColor;
+    opacity: 0.6;
+}
+
+.toast-success .toast-progress-bar { color: #39A900; }
+.toast-danger .toast-progress-bar { color: #e74c3c; }
+
+@keyframes toastProgress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
+.toast.show .toast-progress-bar {
+    animation: toastProgress 4s linear forwards;
+}
+
+/* Dark Mode Adaptation */
+[data-theme="dark"] .toast {
+    background: rgba(30, 30, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .toast-message {
+    color: #ccc;
+}
+
+[data-theme="dark"] .toast-title {
+    color: #fff;
+}

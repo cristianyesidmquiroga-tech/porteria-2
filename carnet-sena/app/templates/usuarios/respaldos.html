@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Respaldos del Sistema - SENA{% endblock %}
+
+{% block content %}
+<div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+    <div class="header-title">
+        <h1>Respaldos del Sistema</h1>
+        <p class="subtitle">Historial de archivos con datos limpiados de la base de datos cada mes.</p>
+    </div>
+</div>
+
+<div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="margin-top: 2rem;">
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+        <div style="background: linear-gradient(135deg, var(--primary), var(--secondary)); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
+            <i class="fas fa-file-excel"></i>
+        </div>
+        <div>
+            <h2 style="margin: 0; font-size: 1.4rem; color: var(--glass-text);">Historial de Respaldos Automáticos</h2>
+            <p style="margin: 0; font-size: 0.9rem; color: var(--glass-subtext);">Archivos de Excel generados automáticamente el día 1 de cada mes.</p>
+        </div>
+    </div>
+
+    {% if respaldos %}
+    <div class="table-responsive" style="border-radius: 10px; border: 1px solid var(--glass-border); overflow: hidden;">
+        <table class="glass-table" style="margin: 0; border: none;">
+            <thead>
+                <tr>
+                    <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">Nombre de Archivo</th>
+                    <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border);">Formato</th>
+                    <th style="padding: 1rem; border-bottom: 1px solid var(--glass-border); text-align: right;">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in respaldos %}
+                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-file-excel" style="color: #27ae60; font-size: 1.2rem;"></i>
+                            <strong style="color: var(--glass-text);">{{ r }}</strong>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span class="badge badge-success" style="background: rgba(39, 174, 96, 0.1); color: #27ae60;">.xlsx</span>
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        <a href="{{ url_for('usuarios.descargar_respaldo', filename=r) }}" class="btn-primary magnetic-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 8px;">
+                            <i class="fas fa-download"></i> Descargar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 3rem 1rem; text-align: center; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--glass-border);">
+        <div style="width: 60px; height: 60px; margin: 0 auto 1rem; border-radius: 50%; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-folder-open" style="font-size: 1.8rem; color: var(--glass-subtext); opacity: 0.7;"></i>
+        </div>
+        <h3 style="margin: 0 0 0.5rem 0; color: var(--glass-text); font-size: 1.1rem;">Aún no hay respaldos generados</h3>
+        <p style="margin: 0; color: var(--glass-subtext); font-size: 0.9rem; max-width: 400px; margin: 0 auto;">El primer archivo se creará automáticamente la madrugada del día 1 del próximo mes.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

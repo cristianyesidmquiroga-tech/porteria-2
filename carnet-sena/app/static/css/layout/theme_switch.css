@@ -1,0 +1,82 @@
+/* Theme Switcher Styles */
+
+/* Universal styles */
+.theme-switch {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.theme-switch:hover {
+    color: var(--primary-color);
+    transform: rotate(15deg) scale(1.1);
+}
+
+.theme-switch i {
+    font-size: 1.5rem;
+    display: block;
+}
+
+.theme-switch:active {
+    transform: scale(0.9);
+}
+
+/* Floating version for unauthenticated pages (Login/Register) */
+.floating-theme-switch {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    width: 45px; /* Botón más pequeño */
+    height: 45px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    color: var(--secondary-text);
+    animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.floating-theme-switch i {
+    font-size: 1.6rem !important; /* Icono casi del tamaño del botón */
+}
+
+[data-theme="dark"] .floating-theme-switch {
+    background: rgba(30, 39, 46, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.floating-theme-switch:hover {
+    background: var(--white);
+    color: var(--primary-color);
+    box-shadow: 0 15px 40px rgba(57, 169, 0, 0.2);
+}
+
+@keyframes bounce-in {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    70% { transform: scale(1.1) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* Theme Icons rotation */
+.theme-switch i {
+    transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+[data-theme="dark"] .theme-switch i {
+    color: #f1c40f; /* Sun Color */
+}

@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+
+{% block title %}Holographic Scanner Console{% endblock %}
+
+{% block head %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+    :root {
+        --scanner-glow: #39A900;
+        --scanner-error: #E74C3C;
+    }
+
+    .scanner-view-container {
+        position: relative;
+        width: 100%;
+        max-width: 1000px;
+        aspect-ratio: 4 / 3;
+        margin: 40px auto 0;
+        background: #000;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 2px solid var(--glass-border);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+
+    #reader {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Forzar que el video de la cámara llene todo el contenedor */
+    #reader video {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Ocultar los elementos internos que genera html5-qrcode (bordes, textos) */
+    #reader > div:nth-child(2) {
+        display: none !important;
+    }
+    #reader img[alt="Info icon"],
+    #reader span {
+        display: none !important;
+    }
+    /* Ocultar la caja blanca de escaneo interna de la librería */
+    #qr-shaded-region {
+        display: none !important;
+    }
+
+    /* Custom Laser Line Animation */
+    .laser-scanner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(to bottom, transparent, var(--scanner-glow), transparent);
+        box-shadow: 0 0 -5px var(--scanner-glow), 0 0 15px var(--scanner-glow);
+        z-index: 10;
+        animation: laserScan 3s linear infinite;
+        display: none;
+    }
+
+    @keyframes laserScan {
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
+    }
+
+    /* Target Corners */
+    .scanner-corners {
+        position: absolute;
+        inset: 40px;
+        border: none;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .corner {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border: 4px solid var(--scanner-glow);
+    }
+    .tl { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+    .tr { top: -4px; right: -4px; border-left: 0; border-bottom: 0; }
+    .bl { bottom: -4px; left: -4px; border-right: 0; border-top: 0; }
+    .br { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+
+    /* Overlay Overlay */
+    .scanner-ui-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        z-index: 20;
+        color: white;
+        text-align: center;
+        padding: 2rem;
+        transition: var(--transition);
+    }
+
+    .scanner-ui-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .btn-power-camera {
+        background: var(--scanner-glow);
+        color: white;
+        border: none;
+        padding: 1.2rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 0 20px rgba(57, 169, 0, 0.4);
+        transition: var(--transition);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-power-camera:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(57, 169, 0, 0.6);
+    }
+
+    /* Result Card Adjustments */
+    .scanner-result-card {
+        display: none;
+        background: var(--glass);
+        backdrop-filter: blur(24px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-top: 2rem;
+        animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .result-photo {
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid var(--scanner-glow);
+        margin: 0 auto 1.5rem;
+        display: block;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    /* Status Pill */
+    .status-pill {
+        display: inline-block;
+        padding: 8px 24px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 1.5rem;
+    }
+    .status-entrada {
+        background: rgba(46, 125, 50, 0.12);
+        color: #2E7D32;
+        border: 2px solid rgba(46, 125, 50, 0.3);
+    }
+    .status-afuera {
+        background: rgba(198, 40, 40, 0.12);
+        color: #C62828;
+        border: 2px solid rgba(198, 40, 40, 0.3);
+    }
+
+    .result-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 0.3rem;
+    }
+    .result-cargo {
+        font-size: 1rem;
+        color: var(--scanner-glow);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Responsive PC logic */
+    @media (min-width: 1025px) {
+        .scanner-view-container {
+            max-width: 1000px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .scanner-view-container {
+            aspect-ratio: 3 / 4;
+            border-radius: 16px;
+        }
+
+        .scanner-ui-overlay {
+            padding: 1.2rem;
+        }
+        .scanner-ui-overlay i[style*="font-size: 3rem"] {
+            font-size: 2rem !important;
+            margin-bottom: 0.8rem !important;
+        }
+        .scanner-ui-overlay h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        #diag-msg {
+            font-size: 0.9rem !important;
+            margin-bottom: 1.2rem !important;
+        }
+
+        .btn-power-camera {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .scanner-corners { inset: 20px; }
+        .corner { width: 20px; height: 20px; border-width: 3px; }
+
+        .result-photo { width: 150px; height: 150px; }
+        .result-name { font-size: 1.3rem; }
+        .scanner-result-card { padding: 1.5rem 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+    <h1 class="text-3d">Validación Cinematográfica</h1>
+    <p style="color: var(--glass-subtext);">Consola táctica de acceso institucional optimizada para múltiples dispositivos.</p>
+</div>
+
+<div class="scanner-layout" style="max-width: 1000px; margin: 0 auto; padding: 0 20px 40px;">
+    
+    <div class="scanner-view-container">
+        <div id="reader"></div>
+        <div id="laser" class="laser-scanner"></div>
+        <div class="scanner-corners">
+            <div class="corner tl"></div><div class="corner tr"></div>
+            <div class="corner bl"></div><div class="corner br"></div>
+        </div>
+
+        <!-- Initial Overlay -->
+        <div id="camera-overlay" class="scanner-ui-overlay">
+            <div id="overlay-content">
+                <i class="fas fa-video-slash" style="font-size: 3rem; margin-bottom: 1.5rem; opacity: 0.5;"></i>
+                <h2 style="margin-bottom: 1rem;">Cámara Lista</h2>
+                <p id="diag-msg" style="margin-bottom: 2rem; max-width: 500px; opacity: 0.8; font-size: 1.1rem;">Presiona el botón para iniciar el escaneo holográfico.</p>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button onclick="startCamera()" class="btn-power-camera">
+                        <i class="fas fa-power-off"></i> INICIAR ESCÁNER
+                    </button>
+                    <button id="switch-cam-btn" onclick="switchCamera()" class="btn-power-camera" style="display: none; background: var(--secondary);">
+                        <i class="fas fa-sync-alt"></i> CAMBIAR CÁMARA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Overlay (Scan Success) -->
+        <div id="success-flash" class="scanner-ui-overlay hidden" style="background: rgba(57, 169, 0, 0.8); z-index: 30;">
+            <i class="fas fa-check-circle" style="font-size: 6rem; margin-bottom: 1rem;"></i>
+            <h2 style="font-size: 2rem;">IDENTIFICADO</h2>
+        </div>
+    </div>
+
+    <!-- Manual Form (Bottom Link) -->
+    <div id="manual-trigger-group" style="text-align: center; margin-top: 2rem;">
+        <button onclick="toggleManual()" class="btn-outline" style="border: none; color: var(--primary); font-weight: 600; cursor: pointer;">
+            <i class="fas fa-keyboard"></i> ¿Cámara con problemas? Usar búsqueda manual
+        </button>
+        <div id="manual-form" style="display: none; margin-top: 1.5rem; animation: fadeIn 0.3s ease;">
+            <div class="floating-form" style="max-width: 450px; margin: 0 auto; background: var(--glass); padding: 20px; border-radius: 20px;">
+                <div class="floating-group">
+                    <input type="text" id="manualDoc" placeholder=" ">
+                    <label>ID / Cédula del Usuario</label>
+                </div>
+                <button onclick="handleManualSubmit()" class="glass-btn btn-glow" style="margin-top: 1.5rem; width: 100%;">
+                    <i class="fas fa-search"></i> Verificar Documento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Card -->
+    <div id="scanner-result-ui" class="scanner-result-card shadow-lg">
+        <div style="text-align: center;">
+            <div id="res-status-pill" class="status-pill"></div>
+            <img id="res-photo" src="" alt="Perfil" class="result-photo" onerror="this.onerror=null; this.src='/static/img/default-profile.png'">
+            <h2 id="res-nombre" class="result-name"></h2>
+            <p id="res-cargo" class="result-cargo"></p>
+            <div id="res-details" style="font-size: 1rem; color: var(--glass-subtext); margin-bottom: 2rem; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 12px;"></div>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 1.5rem;">
+                <button id="btn-entrada" class="glass-btn" style="flex: 1; background: #2E7D32 !important;">
+                    <i class="fas fa-sign-in-alt"></i> ENTRADA
+                </button>
+                <button id="btn-salida" class="glass-btn" style="flex: 1; background: #C62828 !important;">
+                    <i class="fas fa-sign-out-alt"></i> SALIDA
+                </button>
+            </div>
+
+            <button onclick="resetUI()" class="btn-outline" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); padding: 12px;">
+                <i class="fas fa-redo-alt"></i> VOLVER AL ESCÁNER
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let html5QrCode;
+    const scannerId = "reader";
+
+    let currentCameraId = null;
+    let availableCameras = [];
+
+    async function startCamera() {
+        const overlay = document.getElementById('camera-overlay');
+        const diagMsg = document.getElementById('diag-msg');
+        const powerBtn = document.querySelector('.btn-power-camera');
+        
+        if(location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.startsWith('127.')) {
+            diagMsg.innerHTML = "❌ <strong>Error de Seguridad:</strong> El navegador bloquea la cámara en conexiones HTTP externas.<br><br>Usa 'localhost' o activa HTTPS.";
+            diagMsg.style.color = "#FF4B2B";
+            powerBtn.style.display = 'none';
+            return;
+        }
+
+        if (!html5QrCode) html5QrCode = new Html5Qrcode(scannerId);
+        
+        try {
+            availableCameras = await Html5Qrcode.getCameras();
+            if (availableCameras && availableCameras.length > 0) {
+                // Priorizar cámara trasera ("back" o "environment")
+                const backCamera = availableCameras.find(cam => cam.label.toLowerCase().includes('back') || cam.label.toLowerCase().includes('trasera'));
+                currentCameraId = backCamera ? backCamera.id : availableCameras[0].id;
+
+                const config = { 
+                    fps: 20, 
+                    qrbox: (viewWidth, viewHeight) => {
+                        const minEdge = Math.min(viewWidth, viewHeight);
+                        const size = Math.floor(minEdge * 0.7);
+                        return { width: size, height: size };
+                    }
+                };
+
+                await html5QrCode.start(currentCameraId, config, onScanSuccess);
+                
+                overlay.classList.add('hidden');
+                document.getElementById('laser').style.display = 'block';
+                
+                // Mostrar botón de cambio si hay más de una cámara
+                if (availableCameras.length > 1) {
+                    document.getElementById('switch-cam-btn').style.display = 'inline-block';
+                }
+
+                showToast("Cámara Iniciada", "Puedes comenzar a escanear.", "success");
+            } else {
+                throw new Error("No se detectaron cámaras.");
+            }
+        } catch(err) {
+            console.error("Camera fail:", err);
+            diagMsg.innerHTML = "❌ <strong>Cámara no detectada:</strong> No pudimos conectar con ningún sensor de video.<br><br>1. Verifica los permisos.<br>2. Asegúrate de que ninguna otra app use la cámara.<br>3. Recarga (F5).";
+            diagMsg.style.color = "#FF4B2B";
+        }
+    }
+
+    async function switchCamera() {
+        if (availableCameras.length < 2) return;
+        
+        const currentIndex = availableCameras.findIndex(cam => cam.id === currentCameraId);
+        const nextIndex = (currentIndex + 1) % availableCameras.length;
+        currentCameraId = availableCameras[nextIndex].id;
+
+        showToast("Cambiando", "Conectando al siguiente sensor...", "info");
+        
+        try {
+            await html5QrCode.stop();
+            const config = { fps: 20, qrbox: (vw, vh) => { const s = Math.floor(Math.min(vw, vh) * 0.7); return { width: s, height: s }; } };
+            await html5QrCode.start(currentCameraId, config, onScanSuccess);
+            document.getElementById('laser').style.display = 'block';
+        } catch (e) {
+            showToast("Error", "No se pudo cambiar de cámara", "danger");
+        }
+    }
+
+    async function onScanSuccess(decodedText) {
+        // Efecto visual instantáneo
+        document.getElementById('success-flash').classList.remove('hidden');
+        document.getElementById('laser').style.display = 'none';
+        
+        try { await html5QrCode.stop(); } catch(e) {}
+        
+        setTimeout(() => {
+            document.getElementById('success-flash').classList.add('hidden');
+            processValidation(decodedText);
+        }, 1000);
+    }
+
+    function toggleManual() {
+        const form = document.getElementById('manual-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        if(form.style.display === 'block') {
+            document.getElementById('manualDoc').focus();
+        }
+    }
+
+    function handleManualSubmit() {
+        const val = document.getElementById('manualDoc').value;
+        if(val) processValidation(val);
+    }
+
+    async function processValidation(doc) {
+        showToast("Escaneando", "Analizando identidad de... " + doc, "info");
+        
+        try {
+            const res = await fetch(`/porteria/api/verify/${doc}`);
+            const data = await res.json();
+            
+            if(!data.found) {
+                showToast("No Encontrado", "El documento no coincide con ningún perfil activo.", "danger");
+                resetUI();
+                return;
+            }
+
+            // Ocultar escáner y mostrar resultado
+            document.querySelector('.scanner-view-container').style.display = 'none';
+            document.getElementById('manual-trigger-group').style.display = 'none';
+            const resUI = document.getElementById('scanner-result-ui');
+            resUI.style.display = 'block';
+
+            // Mapeo de datos
+            document.getElementById('res-nombre').textContent = data.nombre;
+            document.getElementById('res-cargo').textContent = data.cargo || data.tipo;
+            document.getElementById('res-photo').src = data.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=39A900&color=fff&size=200`;
+            
+            const pill = document.getElementById('res-status-pill');
+            pill.textContent = "ESTADO ACTUAL: " + data.status;
+            pill.className = "status-pill " + (data.status === 'Entrada' ? "status-entrada" : "status-afuera");
+
+            let equiposHtml = '';
+            if (data.equipos && data.equipos.length > 0) {
+                equiposHtml = `
+                    <div style="margin-top: 15px; text-align: left;">
+                        <p style="font-size: 0.85rem; font-weight: 700; color: var(--secondary-text); margin-bottom: 10px;">
+                            <i class="fas fa-laptop"></i> Equipos Registrados:
+                        </p>
+                `;
+                data.equipos.forEach(eq => {
+                    const checked = eq.estado === 'Adentro' ? 'checked' : '';
+                    const badgeBg = eq.estado === 'Adentro' ? '#E8F5E9' : '#FFF3E0';
+                    const badgeColor = eq.estado === 'Adentro' ? '#2E7D32' : '#E65100';
+                    const serialHtml = eq.serial ? `<span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 4px;">${eq.serial}</span>` : '';
+                    const icon = eq.tipo === 'Tablet' ? '📱' : (eq.tipo === 'Computador' || eq.tipo === 'Portátil' ? '💻' : '📦');
+                    
+                    equiposHtml += `
+                    <label style="display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 10px 14px; border: 1px solid var(--glass-border); border-radius: 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.3s;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" name="equipos_ids" value="${eq.id}" class="equipo-checkbox-ajax" ${checked} style="width: 18px; height: 18px; accent-color: #39A900;">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+                                ${icon} ${eq.nombre} <small style="opacity: 0.6;">(${eq.tipo})</small>
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            ${serialHtml}
+                            <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; background: ${badgeBg}; color: ${badgeColor};">
+                                ${eq.estado}
+                            </span>
+                        </div>
+                    </label>`;
+                });
+                equiposHtml += `
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: center;">
+                            <i class="fas fa-info-circle"></i> Marca los equipos que el usuario trae consigo.
+                        </p>
+                    </div>`;
+            }
+
+            document.getElementById('res-details').innerHTML = `
+                <div style="display:flex; justify-content:space-around;">
+                    <p><strong>Cédula:</strong><br>${data.documento}</p>
+                    <p><strong>Rol:</strong><br>${data.rol}</p>
+                </div>
+                ${equiposHtml}
+            `;
+
+            // Lógica de botones
+            const bEntrada = document.getElementById('btn-entrada');
+            const bSalida = document.getElementById('btn-salida');
+            bEntrada.onclick = () => registerMove(data.id, 'Entrada', data.tipo);
+            bSalida.onclick = () => registerMove(data.id, 'Salida', data.tipo);
+            bEntrada.disabled = (data.status === 'Entrada');
+            bSalida.disabled = (data.status === 'Salida');
+
+        } catch(e) {
+            console.error(e);
+            showToast("Fallo Crítico", "No se pudo conectar con el servidor de validación.", "danger");
+            resetUI();
+        }
+    }
+
+    async function registerMove(id, type, entityType) {
+        const url = entityType === 'Usuario' 
+            ? `/porteria/register_movement/${id}/${type}`
+            : `/porteria/register_movement_entidad/${entityType}/${id}/${type}`;
+        
+        const formData = new FormData();
+        if (entityType === 'Usuario') {
+            document.querySelectorAll('.equipo-checkbox-ajax:checked').forEach(cb => {
+                formData.append('equipos_ids', cb.value);
+            });
+        }
+        
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'X-CSRF-Token': '{{ csrf_token() }}' 
+                }
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                showToast("Éxito", data.message, "success");
+                resetUI();
+            }
+        } catch(e) {
+            showToast("Error de Registro", "Hubo un error al guardar el movimiento.", "danger");
+        }
+    }
+
+    function resetUI() {
+        document.getElementById('scanner-result-ui').style.display = 'none';
+        document.querySelector('.scanner-view-container').style.display = 'block';
+        document.getElementById('manual-trigger-group').style.display = 'block';
+        document.getElementById('camera-overlay').classList.remove('hidden');
+        document.getElementById('laser').style.display = 'none';
+        document.getElementById('manual-form').style.display = 'none';
+        document.getElementById('manualDoc').value = '';
+    }
+</script>
+{% endblock %}

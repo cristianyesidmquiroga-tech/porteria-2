@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Recuperar Contraseña | Paso 2{% endblock %}
+
+{% block content %}
+<div class="glass-container animate-on-scroll" data-animation="scale-in" style="max-width: 450px; margin: 3rem auto;">
+    <div class="glass-card" style="padding: 2.5rem;">
+        <div class="auth-header" style="text-align: center; margin-bottom: 2.5rem;">
+            <div class="auth-icon-wrapper" style="width: 70px; height: 70px; background: rgba(57, 169, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-user-shield" style="font-size: 2rem; color: #39A900;"></i>
+            </div>
+            <h1 class="text-3d" style="font-size: 2.2rem; margin-bottom: 0.5rem;">Verificación</h1>
+            <p style="color: var(--text-muted); font-weight: 500;">Ingresa el código enviado a <br><strong>{{ email }}</strong></p>
+        </div>
+
+        <form action="{{ url_for('auth.recuperar_verificar') }}" method="POST" class="floating-form stagger-item">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="floating-group" style="margin-bottom: 2.5rem;">
+                <input type="text" id="codigo" name="codigo" required placeholder=" " 
+                       maxlength="6" autocomplete="off"
+                       style="letter-spacing: 0.5rem; text-align: center; font-size: 1.5rem; font-weight: bold;">
+                <label for="codigo">Código de 6 dígitos</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <button type="submit" class="glass-btn btn-glow">
+                <span>Verificar Código</span>
+                <i class="fas fa-check-circle"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem; text-align: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 2rem;">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">¿No recibiste el código?</p>
+            <a href="{{ url_for('auth.recuperar_solicitar') }}" class="back-link-premium" style="font-size: 0.9rem;">
+                Intentar con otro correo <i class="fas fa-redo-alt"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

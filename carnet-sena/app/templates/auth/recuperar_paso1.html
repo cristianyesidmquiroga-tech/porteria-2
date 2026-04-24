@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Recuperar Contraseña | Paso 1{% endblock %}
+
+{% block content %}
+<div class="glass-container animate-on-scroll" data-animation="scale-in" style="max-width: 450px; margin: 3rem auto;">
+    <div class="glass-card" style="padding: 2.5rem;">
+        <div class="auth-header" style="text-align: center; margin-bottom: 2.5rem;">
+            <div class="auth-icon-wrapper" style="width: 70px; height: 70px; background: rgba(57, 169, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-key" style="font-size: 2rem; color: #39A900;"></i>
+            </div>
+            <h1 class="text-3d" style="font-size: 2.2rem; margin-bottom: 0.5rem;">Recuperar Cuenta</h1>
+            <p style="color: var(--text-muted); font-weight: 500;">Ingresa tu correo para recibir un código de seguridad.</p>
+        </div>
+
+        <form action="{{ url_for('auth.recuperar_solicitar') }}" method="POST" class="floating-form stagger-item">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="floating-group" style="margin-bottom: 2.5rem;">
+                <input type="email" id="email" name="email" required placeholder=" " class="input-premium">
+                <label for="email">Correo Institucional</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <button type="submit" class="glass-btn btn-glow">
+                <span>Enviar Código</span>
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem; text-align: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 2rem;">
+            <a href="{{ url_for('auth.login') }}" class="back-link-premium">
+                <i class="fas fa-arrow-left"></i> Volver al Inicio de Sesión
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

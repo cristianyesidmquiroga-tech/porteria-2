@@ -1,0 +1,179 @@
+/* --- CARNET DIGITAL PREMIUM --- */
+.carnet-card {
+    width: 380px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 30px;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.carnet-card:hover { transform: translateY(-15px) scale(1.02); box-shadow: 0 40px 80px rgba(0,0,0,0.2); }
+
+/* Digital ID Header */
+.carnet-header {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 5px solid rgba(255,255,255,0.1);
+    gap: 15px;
+}
+
+.sena-logo-carnet { height: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+.sena-text { text-align: center; }
+
+.carnet-body {
+    padding: 30px; display: flex; flex-direction: column; align-items: center; color: var(--text-main);
+}
+
+.photo-area {
+    width: 160px; height: 160px; border: 4px solid var(--primary-color);
+    border-radius: 50%; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.profile-photo-carnet { width: 100%; height: 100%; object-fit: cover; }
+
+.carnet-footer {
+    padding: 20px; background: rgba(0,0,0,0.03); display: flex; justify-content: center; border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.qr-container { padding: 10px; background: white; border-radius: 12px; }
+.qr-image { width: 110px; height: 110px; }
+
+/* Profile Split Layout */
+.profile-split-layout {
+    display: flex; gap: 2.5rem; margin-top: 2rem; align-items: flex-start; flex-wrap: wrap;
+}
+
+.left-wing { flex: 1; min-width: 320px; max-width: 420px; position: sticky; top: 100px; }
+.right-wing { flex: 1.5; min-width: 400px; }
+
+/* Quick Actions */
+.profile-quick-actions {
+    display: flex; justify-content: center; gap: 1.2rem; margin-bottom: 2.5rem; flex-wrap: wrap;
+}
+
+.btn-action {
+    padding: 1rem 1.8rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); color: var(--text-main);
+    font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 10px;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.btn-action i { font-size: 1.2rem; transition: transform 0.3s; }
+.btn-action:hover i { transform: rotate(15deg) scale(1.2); }
+
+.btn-action.gradient-blue:hover { 
+    background: linear-gradient(135deg, #3498DB, #2980B9); color: white;
+    box-shadow: 0 15px 35px rgba(52, 152, 219, 0.4); transform: translateY(-5px);
+}
+.btn-action.gradient-green:hover { 
+    background: linear-gradient(135deg, #39A900, #2E7D32); color: white;
+    box-shadow: 0 15px 35px rgba(57, 169, 0, 0.4); transform: translateY(-5px);
+}
+.btn-action.gradient-orange:hover {
+    background: linear-gradient(135deg, #E67E22, #D35400); color: white;
+    box-shadow: 0 15px 35px rgba(230, 126, 34, 0.4); transform: translateY(-5px);
+}
+
+/* === RESPONSIVE: TABLETS === */
+@media (max-width: 992px) {
+    .profile-split-layout { flex-direction: column-reverse; align-items: center; }
+    .left-wing, .right-wing { min-width: 100%; max-width: 100%; position: static; }
+    .left-wing { display: flex; justify-content: center; }
+    .carnet-card { margin: 0 auto; }
+    #profile-placeholder { display: none !important; }
+}
+
+/* === RESPONSIVE: MÓVILES === */
+@media (max-width: 600px) {
+    .profile-container { padding: 0 5px; }
+
+    /* Carnet adaptable al ancho del celular */
+    .carnet-card {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 20px;
+    }
+    .carnet-card:hover { transform: none; box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
+
+    .carnet-header {
+        padding: 15px 10px;
+        flex-direction: row;
+        gap: 10px;
+    }
+    .sena-logo-carnet { height: 40px; }
+    .sena-text { font-size: 0.8rem; }
+
+    .carnet-body {
+        padding: 20px 15px;
+    }
+    .carnet-body .user-name { font-size: 1.3rem !important; }
+
+    .photo-area {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* Grid de info: 1 columna en móvil muy pequeño */
+    .info-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+    .info-grid .glass-card {
+        padding: 8px 12px !important;
+        border-radius: 10px !important;
+    }
+    .info-grid small { font-size: 0.65rem !important; }
+    .info-grid div[style*="font-size: 0.95rem"] { font-size: 0.85rem !important; }
+
+    /* QR más pequeño */
+    .qr-image { width: 90px; height: 90px; }
+    .carnet-footer { padding: 15px; }
+
+    /* Botones de acción apilados */
+    .profile-quick-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.8rem;
+        padding: 0 5px;
+    }
+    .btn-action {
+        padding: 0.8rem 1.2rem;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        justify-content: center;
+    }
+
+    /* Formularios del lado derecho */
+    .right-wing .glass-card {
+        padding: 1.5rem 1rem !important;
+        border-radius: 18px !important;
+    }
+
+    /* Left wing: no sticky en móvil */
+    .left-wing {
+        position: static !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* === RESPONSIVE: MÓVILES MUY PEQUEÑOS (320px) === */
+@media (max-width: 380px) {
+    .carnet-body { padding: 15px 10px; }
+    .photo-area { width: 100px; height: 100px; }
+    .carnet-body .user-name { font-size: 1.1rem !important; }
+    .info-grid { grid-template-columns: 1fr !important; }
+    .qr-image { width: 80px; height: 80px; }
+    .btn-action { font-size: 0.85rem; padding: 0.7rem 1rem; }
+}
+
+/* Nota: Estilos de .kiosk-input ahora son globales en global.css */

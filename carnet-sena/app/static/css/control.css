@@ -1,0 +1,21 @@
+@import 'compartido/variables.css';
+@import 'compartido/animaciones.css';
+@import 'compartido/base.css';
+@import 'compartido/botones.css';
+@import 'compartido/cargador.css';
+@import 'compartido/componentes.css';
+@import 'compartido/dark_mode.css';
+@import 'compartido/formularios.css';
+@import 'compartido/responsive.css';
+@import 'compartido/tablas.css';
+
+@import 'layout/menu_lateral.css';
+@import 'layout/barra_superior.css';
+@import 'layout/theme_switch.css';
+@import 'layout/pie_pagina.css';
+
+@import 'vistas/login/login.css';
+@import 'vistas/registro/registro.css';
+@import 'vistas/perfil/perfil.css';
+@import 'vistas/dashboard/dashboard.css';
+@import 'vistas/escaner/escaner.css';
