@@ -1,0 +1,115 @@
+/* Glass Card base */
+.card, .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.7);
+    margin-bottom: 2rem;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+[data-theme="dark"] .card, [data-theme="dark"] .glass-card {
+    background: rgba(30,39,46, 0.85);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.card:hover { box-shadow: 0 10px 25px var(--shadow), inset 0 0 0 1px rgba(255,255,255,1); }
+[data-theme="dark"] .card:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.15); }
+
+.card::before {
+    content: ''; position: absolute; top: -50px; right: -50px; width: 100px; height: 100px;
+    background: var(--pastel-green); border-radius: 50%; z-index: 0;
+}
+
+.card h2 { text-align: center; color: var(--secondary-text); margin-bottom: 2rem; font-size: 1.5rem; }
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 28px; padding: 3rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+}
+
+.glass-card::after {
+    content: ''; position: absolute; top: -150%; left: -150%; width: 300%; height: 300%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg); transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1); pointer-events: none;
+}
+.glass-card:hover::after { left: 150%; }
+.glass-card:hover { transform: translateY(-10px) rotateX(5deg) rotateY(1deg); box-shadow: 0 30px 60px rgba(0,0,0,0.12); }
+
+/* Basic Buttons */
+.btn-primary {
+    background-color: var(--primary-color); color: var(--white);
+    padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600;
+    cursor: pointer; transition: background 0.3s;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-delete { color: #E74C3C; padding: 0.5rem; cursor: pointer; transition: transform 0.2s; }
+.btn-delete:hover { transform: scale(1.2); }
+
+/* Premium Glow Buttons */
+.btn-glow {
+    background: linear-gradient(135deg, var(--primary-color), #4cd137);
+    color: white; border: none; border-radius: 15px; padding: 14px 28px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex;
+    align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 10px 20px rgba(57, 169, 0, 0.2); position: relative; overflow: hidden;
+}
+
+.btn-glow::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: rgba(255, 255, 255, 0.2); transform: rotate(45deg) translateY(-100%);
+    transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.btn-glow:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 30px rgba(57, 169, 0, 0.4); filter: brightness(1.1); }
+.btn-glow:hover::after { transform: rotate(45deg) translateY(100%); }
+.btn-glow i { font-size: 1.1rem; transition: transform 0.4s ease; }
+.btn-glow:hover i { transform: rotate(15deg) scale(1.2); }
+.btn-glow:active { transform: translateY(-2px) scale(0.98); }
+
+/* Magnetic Button Base */
+.magnetic-btn { transition: transform 0.1s linear; }
+
+/* Alerts */
+.alert { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+.alert-success { background: #D4EDDA; color: #155724; }
+.alert-danger { background: #F8D7DA; color: #721C24; }
+/* Global Footer Links (Login/Register alternates) */
+html .glass-footer-link, 
+html[data-theme="dark"] .glass-footer-link,
+body .glass-footer-link {
+    color: var(--primary-color) !important;
+    font-weight: 700 !important;
+    text-decoration: underline !important;
+    text-underline-offset: 4px;
+    position: relative;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.glass-footer-link:visited, 
+html[data-theme="dark"] .glass-footer-link:visited {
+    color: var(--primary-color) !important;
+}
+
+.glass-footer-link:hover,
+html[data-theme="dark"] .glass-footer-link:hover {
+    color: var(--primary-color) !important;
+    filter: brightness(1.3);
+    text-decoration: underline !important;
+}
+
+.glass-footer-link:active {
+    color: var(--primary-color) !important;
+}

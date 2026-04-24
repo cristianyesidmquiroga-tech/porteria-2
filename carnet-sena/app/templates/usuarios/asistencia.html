@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Control de Asistencia - Instructor{% endblock %}
+{% block content %}
+<div class="profile-container animate-on-scroll" data-animation="fade-in-up">
+    
+    <div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+        <div class="header-title">
+            <h1>Control de Clase</h1>
+            <p class="subtitle">Busca tu Ficha. Solo se listarán los estudiantes de esta ficha que ya hayan cruzado portería el día de hoy.</p>
+        </div>
+    </div>
+
+    <div class="glass-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+        <form action="{{ url_for('usuarios.asistencia') }}" method="POST" class="floating-form" data-no-ajax>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="buscar">
+            <div class="floating-group">
+                <input type="text" id="ficha" name="ficha" value="{{ ficha or '' }}" required placeholder=" ">
+                <label for="ficha"><i class="fas fa-search"></i> Código de Ficha a impartir</label>
+                <div class="floating-border"></div>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
+                <button type="submit" class="glass-btn btn-glow">
+                    <span>Buscar Aprendices en Campus</span> <i class="fas fa-search"></i>
+                </button>
+                <a href="{{ url_for('usuarios.asistencia') }}" class="glass-btn" style="padding: 0.8rem 1.5rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-eraser"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    {% if students %}
+    <div class="stagger-item" style="margin-top: 3rem;">
+        <div class="glass-card">
+            <h2 class="glass-title text-3d" style="margin-bottom: 1.5rem;"><i class="fas fa-users"></i> Aprendices de Ficha: {{ ficha }}</h2>
+            
+            <form action="{{ url_for('usuarios.asistencia') }}" method="POST" data-no-ajax>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="guardar_asistencia">
+                <input type="hidden" name="ficha_guardar" value="{{ ficha }}">
+
+                <div class="table-responsive">
+                    <table class="glass-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(255,255,255,0.2);">
+                                <th>#</th>
+                                <th>Nombre Completo</th>
+                                <th>Documento</th>
+                                <th>Programa</th>
+                                <th>Horario</th>
+                                <th style="text-align: center;">Asistió a Clase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <td>{{ loop.index }}</td>
+                                <!-- Nota: NO hay enlace al perfil por privacidad -->
+                                <td><strong>{{ student.nombre }}</strong></td>
+                                <td>{{ student.documento }}</td>
+                                <td>{{ student.programa }}</td>
+                                <td>{{ student.horario or 'N/A' }}</td>
+                                <td style="text-align: center;">
+                                    <label class="glass-checkbox" style="display: flex; justify-content: center; margin: 0;">
+                                        <!-- Checked por defecto, ya que si estÃ¡n adentro, es muy probable que asistan a clase -->
+                                        <input type="checkbox" name="presente" value="{{ student.id }}" checked>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button type="submit" class="glass-btn gradient-green btn-glow" style="width: 100%; max-width: 400px; padding: 1.2rem;">
+                        <span>Guardar Checklist en Historial</span> <i class="fas fa-save"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% elif ficha %}
+    <div class="stagger-item" style="margin-top: 3rem; text-align: center;">
+        <div class="glass-card" style="border: 1px solid #FF9F40;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #FF9F40; margin-bottom: 1rem;"></i>
+            <h3>No hay resultados</h3>
+            <p style="color: var(--text-muted);">No se encontraron estudiantes de la Ficha <strong>{{ ficha }}</strong> registrados por portería hoy, o la ficha no existe.</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    /* Add basic styling for glass table simply to make it responsive if missing in shared */
+    .glass-table th, .glass-table td {
+        padding: 15px;
+        text-align: left;
+    }
+    .glass-table th {
+        color: var(--primary-color);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+</style>
+<script>
+    setTimeout(() => {
+        if(document.getElementById('ficha').value) document.getElementById('ficha').classList.add('has-value');
+    }, 100);
+</script>
+{% endblock %}

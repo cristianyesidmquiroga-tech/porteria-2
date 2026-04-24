@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Cambio de Contraseña Obligatorio{% endblock %}
+{% block content %}
+<div class="auth-wrapper" style="display: flex; justify-content: center; align-items: flex-start; padding: 2rem; gap: 2rem; flex-wrap: wrap;">
+
+    <!-- Tarjeta de Cambio de Contraseña -->
+    <div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="max-width: 450px; width: 100%; padding: 2rem; border-top: 4px solid var(--primary-color);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+            <h2 class="text-3d">Seguridad Institucional</h2>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Hola <strong>{{ current_user.nombre }}</strong>, por normativas de seguridad del SENA, debes cambiar la contraseña temporal que te enviamos por una personal y secreta.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.cambiar_password_obligatorio') }}" class="floating-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="floating-group">
+                <input type="password" id="nueva_contrasena" name="nueva_contrasena" required placeholder=" " minlength="6">
+                <label for="nueva_contrasena"><i class="fas fa-key"></i> Nueva Contraseña</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <div class="floating-group" style="margin-top: 1.5rem;">
+                <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" required placeholder=" " minlength="6">
+                <label for="confirmar_contrasena"><i class="fas fa-check-double"></i> Confirmar Contraseña</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <button type="submit" class="btn-glow" style="width: 100%; margin-top: 2rem;">
+                Guardar Contraseña y Continuar <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Guía de Usuario (Manual) -->
+    <div class="glass-card animate-on-scroll" data-animation="fade-in-right" style="max-width: 600px; width: 100%; padding: 2rem;">
+        <h3 style="color: var(--primary-color); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 1.5rem;">
+            <i class="fas fa-book-open"></i> Guía Rápida de Uso
+        </h3>
+        
+        <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 1.5rem;">
+            Bienvenido a la plataforma de gestión de accesos del <strong>SENA Vélez Santander</strong>. Para garantizar tu ingreso a la institución, sigue estos pasos:
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid var(--secondary-color);">
+                <h4 style="margin: 0 0 5px 0;"><i class="fas fa-id-card"></i> 1. Completar tu Perfil (¡Obligatorio!)</h4>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                    Una vez cambies tu contraseña, irás al menú <strong>Mi Perfil</strong>. Debes rellenar todos tus datos (Foto, Tipo de Sangre, Documento, etc.). Solo así se generará tu <strong>Código QR</strong> personal que usarás en portería.
+                </p>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid #E67E22;">
+                <h4 style="margin: 0 0 5px 0;"><i class="fas fa-laptop"></i> 2. Registro de Equipos</h4>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                    Si llevas computadores, celulares o tablets, debes ir a la sección <strong>Mis Equipos</strong> en tu perfil. Regístralos usando el <strong>número de serie (S/N)</strong> que traen en la parte inferior para evitar problemas al salir.
+                </p>
+            </div>
+
+            {% if current_user.puede_gestionar_asistencia or current_user.puede_operar_porteria or current_user.es_admin %}
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid #9b59b6;">
+                <h4 style="margin: 0 0 5px 0;"><i class="fas fa-layer-group"></i> 3. Tus Interfaces Especiales</h4>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                    Debido a tu rol, verás opciones adicionales en el menú lateral de la izquierda:
+                </p>
+                <ul style="font-size: 0.8rem; color: var(--text-muted); margin: 5px 0 0 0; padding-left: 20px;">
+                    {% if current_user.puede_operar_porteria %}
+                    <li><strong>Escaner Portería:</strong> Para leer los QR de las personas y equipos al ingresar o salir.</li>
+                    {% endif %}
+                    {% if current_user.puede_gestionar_asistencia %}
+                    <li><strong>Asistencia:</strong> Para gestionar o revisar las asistencias dentro de la institución.</li>
+                    {% endif %}
+                    {% if current_user.es_admin %}
+                    <li><strong>Gestión de Usuarios:</strong> Para crear, editar y bloquear accesos a otras personas.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

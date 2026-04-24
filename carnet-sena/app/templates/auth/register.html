@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Registro Institucional | Portal SENA{% endblock %}
+
+{% block content %}
+<div class="auth-split-wrapper">
+    <!-- Branding Section -->
+    <div class="branding-section">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA Logo" class="branding-logo">
+        <h1 class="branding-title">
+            Únete al <span class="text-accent-green">Centro de Gestión</span>
+            <span class="text-accent-orange">Agroempresarial</span>
+            <span class="text-accent-green">del Oriente</span>
+        </h1>
+        <p class="branding-description">
+            Regístrate para gestionar tu acceso, equipos y carnet digital de forma fluida, rápida y segura con nuestro nuevo sistema dinámico.
+        </p>
+    </div>
+
+    <!-- Form Section -->
+    <div class="form-section">
+        <div class="glass-container animate-on-scroll" data-animation="fade-in-up" style="max-width: 600px; width: 100%;">
+            <div class="glass-card" style="padding: 2.5rem;">
+                <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
+                    <div class="auth-icon-wrapper" style="width: 70px; height: 70px; background: rgba(57, 169, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-user-plus" style="font-size: 2rem; color: #39A900;"></i>
+                    </div>
+                    <h1 class="text-3d" style="font-size: 2rem; margin-bottom: 0.5rem;">Registro Único</h1>
+                    <p style="color: var(--text-muted);">Crea tu perfil y accede a los servicios digitales del SENA.</p>
+                </div>
+
+                <form action="{{ url_for('auth.register') }}" method="POST" id="unifiedRegisterForm" class="floating-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <!-- 1. Selección de Cargo (Diferenciador principal) -->
+                    <div class="floating-group" style="margin-bottom: 2.5rem;">
+                        <select id="cargo" name="cargo" required class="kiosk-input" onchange="toggleCargoFields(this)">
+                            <option value="" disabled selected>Selecciona tu Cargo / Dependencia</option>
+                            <option value="Aprendiz">Aprendiz (Estudiante)</option>
+                            <option value="Instructor">Instructor (Docente)</option>
+                            <option value="Celador">Portería / Celador</option>
+                            <option value="Coordinador">Coordinador Académico</option>
+                            <option value="Biblioteca">Personal Biblioteca</option>
+                            <option value="Sennova">Investigador Sennova</option>
+                            <option value="Administrativo">Personal Administrativo</option>
+                        </select>
+                        <label for="cargo">¿Quién eres?</label>
+                        <div class="floating-border" style="background: #39A900; height: 3px;"></div>
+                    </div>
+
+                    <!-- 2. Información General (Siempre Visible) -->
+                    <div id="general-fields" class="stagger-item">
+                        <div class="floating-group">
+                            <input type="text" id="nombre" name="nombre" required placeholder=" ">
+                            <label for="nombre">Nombre Completo</label>
+                            <div class="floating-border"></div>
+                        </div>
+
+                        <div class="floating-group">
+                            <input type="email" id="correo" name="correo" required placeholder=" ">
+                            <label for="correo">Correo Institucional / Personal</label>
+                            <div class="floating-border"></div>
+                        </div>
+
+                        <div class="floating-group">
+                            <input type="text" id="documento" name="documento" required placeholder=" " 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <label for="documento">Documento de Identidad (Sin puntos)</label>
+                            <div class="floating-border"></div>
+                        </div>
+
+                        <div class="floating-group">
+                            <input type="password" id="password" name="password" required placeholder=" ">
+                            <label for="password">Crea una Contraseña Segura</label>
+                            <div class="floating-border"></div>
+                        </div>
+                    </div>
+
+                    <div class="divider" style="height: 1px; background: rgba(0,0,0,0.05); margin: 2rem 0; display: none;" id="fields-divider"></div>
+
+                    <!-- 3. Campos Dinámicos por Cargo -->
+                    
+                    <!-- Campos para Aprendiz -->
+                    <div id="fields-aprendiz" class="dynamic-fields-group" style="display: none;">
+                        <div class="floating-group">
+                            <input type="text" id="ficha" name="ficha" placeholder=" ">
+                            <label for="ficha">Número de Ficha</label>
+                            <div class="floating-border"></div>
+                        </div>
+                        <div class="floating-group">
+                            <input type="text" id="programa_aprendiz" name="programa" placeholder=" ">
+                            <label for="programa_aprendiz">Nombre del Programa de Formación</label>
+                            <div class="floating-border"></div>
+                        </div>
+                        <div class="floating-group">
+                            <select id="horario" name="horario" class="kiosk-input">
+                                <option value="" disabled selected>Selecciona tu Jornada</option>
+                                <option value="Mañana">Mañana</option>
+                                <option value="Tarde">Tarde</option>
+                                <option value="Noche">Noche</option>
+                            </select>
+                            <label for="horario">Horario / Jornada</label>
+                            <div class="floating-border"></div>
+                        </div>
+                    </div>
+
+                    <!-- Campos para Instructor -->
+                    <div id="fields-instructor" class="dynamic-fields-group" style="display: none;">
+                        <div class="floating-group">
+                            <input type="text" id="programa_instructor" name="programa" placeholder=" ">
+                            <label for="programa_instructor">Área o Especialidad Técnica</label>
+                            <div class="floating-border"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="glass-btn btn-glow" style="margin-top: 1rem;">
+                        <i class="fas fa-paper-plane"></i> Finalizar Registro y Enviar Código
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+function toggleCargoFields(select) {
+    const cargo = select.value;
+    const divider = document.getElementById('fields-divider');
+    const allGroups = document.querySelectorAll('.dynamic-fields-group');
+    
+    // Ocultar todos y deshabilitar para que no viajen en el form si no corresponden
+    allGroups.forEach(g => {
+        g.style.display = 'none';
+        g.querySelectorAll('input, select').forEach(i => {
+            i.required = false;
+            i.disabled = true;
+        });
+    });
+    
+    divider.style.display = 'block';
+
+    let groupToEnable = null;
+    if (cargo === 'Aprendiz') {
+        groupToEnable = document.getElementById('fields-aprendiz');
+    } else if (cargo === 'Instructor') {
+        groupToEnable = document.getElementById('fields-instructor');
+    }
+
+    if (groupToEnable) {
+        groupToEnable.style.display = 'block';
+        groupToEnable.querySelectorAll('input, select').forEach(i => {
+            i.required = true;
+            i.disabled = false;
+        });
+    } else {
+        // Para otros cargos no hay campos extra, ocultamos el divisor
+        divider.style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.dynamic-fields-group {
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporte: {{ rol_nombre }}{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <h1 style="font-size: 2rem; color: var(--secondary-text);">Demografía de {{ rol_nombre }}s</h1>
+        <p style="color: var(--text-muted); font-size: 1rem;">
+            {% if rol_nombre == 'Personal' %}
+            Distribución de ingresos dividida por cargos y dependencias administrativas.
+            {% else %}
+            Distribución de ingresos dividida por programas y fichas.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('porteria.dashboard') }}" class="btn-primary"
+        style="background-color: var(--secondary-color); text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Volver al Panel
+    </a>
+</div>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;">
+    <!-- Hoy -->
+    <div class="card animate-on-scroll" data-animation="scale-in"
+        style="flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; max-width: 100%;">
+        <h2 style="align-self: flex-start; margin-bottom: 1rem;">Ingresos de Hoy</h2>
+        <div style="height: 350px; width: 100%; position: relative;">
+            <canvas id="hoyChart"></canvas>
+            {% if not chart_data.hoy_data %}
+            <div
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 10;">
+                <i class="fas fa-bed fa-2x" style="color: var(--text-muted); margin-bottom: 10px;"></i>
+                <p style="color: var(--text-muted); font-weight: 600; text-align: center;">No hay registros hoy</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 7 Dias -->
+    <div class="card animate-on-scroll" data-animation="scale-in"
+        style="flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center; max-width: 100%;">
+        <h2 style="align-self: flex-start; margin-bottom: 1rem;">Flujo Últimos 7 Días</h2>
+        <div style="height: 350px; width: 100%; position: relative;">
+            <canvas id="semanaChart"></canvas>
+            {% if not chart_data['7d_data'] %}
+            <div
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 10;">
+                <i class="fas fa-folder-open fa-2x" style="color: var(--text-muted); margin-bottom: 10px;"></i>
+                <p style="color: var(--text-muted); font-weight: 600; text-align: center;">Sin datos históricos</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card animate-on-scroll" data-animation="fade-in-up"
+    style="width: 100%; max-width: 100%; background: linear-gradient(145deg, #1A4314, var(--primary-color)); color: white;">
+    <h2
+        style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1rem; margin-bottom: 1rem; text-align: left;">
+        <i class="fas fa-brain"></i> Análisis Inteligente del Sistema
+    </h2>
+    <p style="font-size: 1.1rem; line-height: 1.6; font-weight: 400; opacity: 0.95;">{{ analisis }}</p>
+</div>
+
+<!-- Usuarios Actualmente Adentro -->
+<div class="card animate-on-scroll" data-animation="fade-in-up" style="margin-top: 2rem; width: 100%;">
+    <h2 style="margin-bottom: 1rem; color: var(--secondary-text); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">
+        <i class="fas fa-user-check" style="color: #39A900;"></i> {{ rol_nombre }}s en la Institución ({{ usuarios_adentro|length }})
+    </h2>
+    {% if usuarios_adentro %}
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <table class="modern-table" style="width: 100%; min-width: 600px;">
+            <thead style="position: sticky; top: 0; background: var(--bg-main); z-index: 10;">
+                <tr>
+                    <th>Nombre y Documento</th>
+                    <th>{% if rol_nombre == 'Personal' %}Cargo{% else %}Programa / Área{% endif %}</th>
+                    <th>Ficha</th>
+                    <th style="text-align: right;">Hora Ingreso</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios_adentro %}
+                <tr>
+                    <td>
+                        <strong>{{ u.nombre }}</strong><br>
+                        <small style="opacity: 0.7; font-family: monospace;">ID: {{ u.documento }}</small>
+                    </td>
+                    <td>{{ u.programa }}</td>
+                    <td>{% if u.ficha != 'N/A' %}<span style="background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">{{ u.ficha }}</span>{% else %}N/A{% endif %}</td>
+                    <td style="text-align: right;">
+                        <span style="color: #39A900; font-weight: 700; font-size: 0.9rem;">{{ u.hora_ingreso }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 2rem; background: rgba(0,0,0,0.02); border-radius: 12px; color: var(--text-muted);">
+        <i class="fas fa-sign-out-alt fa-3x" style="margin-bottom: 15px; opacity: 0.3;"></i>
+        <p style="font-weight: 600; font-size: 1.1rem; margin: 0;">No hay {{ rol_nombre }}s registrados dentro actualmente.</p>
+        <p style="font-size: 0.9rem; margin-top: 5px;">Todos los ingresos tienen su respectiva salida registrada o no han ingresado hoy.</p>
+    </div>
+    {% endif %}
+</div>
+
+<h3 style="margin-top: 3rem; color: var(--secondary-text); text-align: center;">
+    {% if rol_nombre == 'Personal' %}
+    Comparativa Interna por Cargos y Funciones (Semanal)
+    {% else %}
+    Comparativa Interna por Programa de Formación (Semanal)
+    {% endif %}
+</h3>
+<p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
+    {% if rol_nombre == 'Personal' %}
+    Distribución de los distintos registros según el cargo desempeñado durante los últimos 7 días.
+    {% else %}
+    Distribución de los distintos registros dentro de cada programa durante los últimos 7 días.
+    {% endif %}
+</p>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; margin-bottom: 3rem;">
+    {% for p_chart in program_charts %}
+    <div class="card animate-on-scroll" data-animation="scale-in"
+        style="flex: 1; min-width: 300px; max-width: 450px; display: flex; flex-direction: column; align-items: center; padding: 1.5rem;">
+        <h3 style="color: var(--primary-color); font-size: 1.2rem; text-align: center; margin-bottom: 1rem;">
+            {{ p_chart.prog_name }}
+        </h3>
+        <div style="height: 250px; width: 100%; position: relative;">
+            <canvas id="progChart_{{ loop.index }}"></canvas>
+            {% if not p_chart.seven_data %}
+            <div
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 10;">
+                <p style="color: var(--text-muted); font-weight: 600; text-align: center;">Sin datos esta semana</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not program_charts %}
+    <div
+        style="width: 100%; padding: 3rem; text-align: center; color: var(--text-muted); background: var(--white); border-radius: 12px; border: 1px dashed var(--glass-border);">
+        <i class="fas fa-folder-open fa-3x" style="color: var(--text-muted); opacity: 0.5; margin-bottom: 15px; display: block;"></i>
+        {% if rol_nombre == 'Personal' %}
+        Aún no hay cargos registrados con historial esta semana.
+        {% else %}
+        Aún no hay programas registrados con historial esta semana para {{ rol_nombre }}s.
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Data passed from server via hidden element (no Jinja inside script tags) -->
+<div id="chart-data-source" style="display:none;" data-hoy-labels='{{ chart_data.hoy_labels | tojson }}'
+    data-hoy-data='{{ chart_data.hoy_data | tojson }}' data-semana-labels='{{ chart_data["7d_labels"] | tojson }}'
+    data-semana-data='{{ chart_data["7d_data"] | tojson }}' data-programs='{{ program_charts | tojson }}'>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var src = document.getElementById("chart-data-source");
+        var hoyLabels = JSON.parse(src.getAttribute("data-hoy-labels"));
+        var hoyData = JSON.parse(src.getAttribute("data-hoy-data"));
+        var semanaLabels = JSON.parse(src.getAttribute("data-semana-labels"));
+        var semanaData = JSON.parse(src.getAttribute("data-semana-data"));
+        var programCharts = JSON.parse(src.getAttribute("data-programs"));
+
+        var bg = [
+            "rgba(57, 169, 0, 0.85)",
+            "rgba(54, 162, 235, 0.85)",
+            "rgba(255, 206, 86, 0.85)",
+            "rgba(255, 99, 132, 0.85)",
+            "rgba(153, 102, 255, 0.85)",
+            "rgba(255, 159, 64, 0.85)",
+            "rgba(0, 150, 136, 0.85)",
+            "rgba(233, 30, 99, 0.85)",
+            "rgba(63, 81, 181, 0.85)",
+            "rgba(121, 85, 72, 0.85)",
+            "rgba(96, 125, 139, 0.85)"
+        ];
+
+        var opts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "right",
+                    labels: { boxWidth: 12, padding: 15, font: { size: 11, family: "'Outfit', sans-serif" } }
+                },
+                tooltip: { 
+                    backgroundColor: "rgba(0,0,0,0.85)", padding: 12, cornerRadius: 8,
+                    bodyFont: { size: 14 }, titleFont: { size: 13 }
+                }
+            },
+            cutout: "60%",
+            animation: { animateScale: true, animateRotate: true, duration: 1500, easing: 'easeOutQuart' },
+            hover: { mode: 'nearest', intersect: true }
+        };
+
+        var polarOpts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "right",
+                    labels: { boxWidth: 12, padding: 15, font: { size: 11, family: "'Outfit', sans-serif" } }
+                },
+                tooltip: { 
+                    backgroundColor: "rgba(0,0,0,0.85)", padding: 12, cornerRadius: 8,
+                    bodyFont: { size: 14 }, titleFont: { size: 13 }
+                }
+            },
+            animation: { animateScale: true, animateRotate: true, duration: 2000, easing: 'easeOutQuart' }
+        };
+
+        if (hoyData.length > 0) {
+            new Chart(document.getElementById("hoyChart").getContext("2d"), {
+                type: "doughnut",
+                data: {
+                    labels: hoyLabels,
+                    datasets: [{ data: hoyData, backgroundColor: bg, borderWidth: 2, hoverOffset: 25, borderColor: "#ffffff" }]
+                },
+                options: opts
+            });
+        }
+
+        if (semanaData.length > 0) {
+            new Chart(document.getElementById("semanaChart").getContext("2d"), {
+                type: "polarArea",
+                data: {
+                    labels: semanaLabels,
+                    datasets: [{ data: semanaData, backgroundColor: bg.map(c => c.replace('0.85', '0.6')), borderColor: bg, borderWidth: 2 }]
+                },
+                options: polarOpts
+            });
+        }
+
+        programCharts.forEach(function (p, index) {
+            if (p.seven_data && p.seven_data.length > 0) {
+                var el = document.getElementById("progChart_" + (index + 1));
+                if (el) {
+                    new Chart(el.getContext("2d"), {
+                        type: "doughnut",
+                        data: {
+                            labels: p.seven_labels,
+                            datasets: [{ data: p.seven_data, backgroundColor: bg, borderWidth: 2, hoverOffset: 10, borderColor: "#ffffff" }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 11, family: "'Montserrat', sans-serif" } } }
+                            },
+                            cutout: "50%"
+                        }
+                    });
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+/* Top Header */
+.top-header {
+    background: rgba(244, 247, 244, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1.5rem 2.5rem 1rem 2.5rem;
+    position: sticky; top: 0; z-index: 900;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+    transition: background-color 0.4s ease;
+}
+
+[data-theme="dark"] .top-header {
+    background: rgba(30, 39, 46, 0.92);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.header-container {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.logo-header-group { display: flex; align-items: center; gap: 12px; }
+
+.header-logo { height: 35px; animation: spin-3d 8s infinite ease-in-out; }
+
+.page-title {
+    font-size: 1.3rem; color: var(--secondary-text); font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px; display: inline-block;
+    animation: float-tilt 4s infinite ease-in-out alternate reverse;
+}
+
+
+
+/* User Pill */
+.user-pill {
+    display: flex; align-items: center; 
+    background: var(--bg-card); /* Se adapta al tema actual */
+    color: var(--text-main);    /* Texto siempre legible */
+    padding: 6px 16px 6px 6px; border-radius: 12px; 
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+    font-weight: 600; font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .user-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.nav-user-photo { 
+    width: 32px; height: 32px; border-radius: 50%; 
+    margin-right: 10px; object-fit: cover; 
+    border: 2px solid var(--primary-color);
+}
+
+/* Logout Button - Premium Header */
+.btn-logout-header {
+    background: rgba(231, 76, 60, 0.1); color: #E74C3C;
+    border: 1px solid rgba(231, 76, 60, 0.2); border-radius: 20px;
+    padding: 8px 18px; display: flex; align-items: center; justify-content: center;
+    text-decoration: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 0.9rem; font-weight: 700;
+}
+.btn-logout-header i { margin-right: 8px; font-size: 1rem; }
+.btn-logout-header:hover {
+    background: #E74C3C; color: white; transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3); border-color: transparent;
+}
+.btn-logout-header:active { transform: translateY(0) scale(0.98); }
+
+/* Responsive Header Enhancements */
+@media (max-width: 992px) {
+    .top-header { padding: 1rem 1.5rem; }
+    .page-title { font-size: 1rem; }
+    .header-logo { height: 30px; }
+}
+
+@media (max-width: 768px) {
+    .top-header { padding: 0.8rem 1rem; }
+    .user-pill span, .btn-logout-header span { display: none; }
+    .user-pill { padding: 6px; border-radius: 50%; }
+    .btn-logout-header { padding: 10px; border-radius: 50%; width: 40px; height: 40px; }
+    .btn-logout-header i { margin: 0; }
+    .header-container { gap: 10px; }
+}

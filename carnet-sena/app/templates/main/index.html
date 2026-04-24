@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Panel de Control</h1>
+    <p>Bienvenido, <strong>{{ current_user.nombre }}</strong>! Gestión de acceso y carnets SENA.</p>
+</div>
+
+<div class="dashboard-grid" style="margin-top: 2rem;">
+    <div class="stat-card">
+        <h3>{{ user_count }}</h3>
+        <p>Usuarios Registrados</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ carnet_count }}</h3>
+        <p>Carnets Generados</p>
+    </div>
+    <div class="stat-card">
+        <h3>0</h3>
+        <p>Accesos hoy</p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 100%; margin-top: 2rem;">
+    <h2>Opciones Rápidas</h2>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button class="btn-primary" style="width: auto; padding: 1rem 2rem;">Ver mi Carnet</button>
+        <button class="btn-primary" style="width: auto; padding: 1rem 2rem; background-color: var(--secondary-color);">Registrar Equipo</button>
+    </div>
+</div>
+{% endblock %}

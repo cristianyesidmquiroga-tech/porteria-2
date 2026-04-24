@@ -1,0 +1,5 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div id="flex-messages-data" style="display:none;" data-messages='{{ messages|tojson|safe }}'></div>
+{% endif %}
+{% endwith %}

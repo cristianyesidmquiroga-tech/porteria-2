@@ -1,0 +1,81 @@
+/* Glassmorphism Auth Layout */
+.glass-animated-bg {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 150px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.modern-auth { position: relative; z-index: 10; align-items: center; gap: 5rem; width: 100%; justify-content: center; display: flex; }
+.glass-welcome { display: flex; flex-direction: column; justify-content: center; flex: 1; max-width: 450px; padding-right: 1rem; }
+.glass-welcome h1 { font-size: 3.5rem; line-height: 1.2; margin-bottom: 1.5rem; text-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.glass-welcome p { font-size: 1.2rem; color: var(--text-muted); line-height: 1.6; }
+
+/* Content structure for auth */
+.auth-wrapper {
+    min-height: calc(100vh - 100px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4rem;
+    width: 100%;
+}
+
+.welcome-section {
+    flex: 1;
+    max-width: 500px;
+}
+.welcome-section h1 { font-size: 3.5rem; font-weight: 800; color: var(--secondary-text); line-height: 1.1; margin-bottom: 1.5rem; }
+.welcome-section p { font-size: 1.2rem; color: var(--text-muted); line-height: 1.6; }
+
+.highlight-green { color: var(--primary-color); }
+.form-section { flex: 1; display: flex; justify-content: center; }
+
+@media (max-width: 992px) {
+    .modern-auth { flex-direction: column; gap: 3rem; text-align: center; }
+}
+@media (max-width: 768px) {
+    .auth-container { flex-direction: column; gap: 2rem; text-align: center; }
+    .welcome-section { max-width: 100%; }
+    .welcome-section h1 { font-size: 2.2rem; }
+}
+
+.glass-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    background: linear-gradient(135deg, #1A4314, #39A900);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -1px;
+}
+
+.glass-footer { text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 1rem; }
+.glass-footer a { color: var(--primary-color) !important; font-weight: 700; text-decoration: none; position: relative; display: inline-block; transition: all 0.3s; }
+.glass-footer a:visited { color: var(--primary-color) !important; }
+.glass-footer a:hover { color: var(--primary-color) !important; filter: brightness(1.2); }
+.glass-footer a:active { color: var(--primary-color) !important; }
+.glass-footer a::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; width: 0%; height: 2px;
+    background: var(--primary-color); transition: width 0.3s ease;
+}
+.glass-footer a:hover::after { width: 100%; }
+
+@media (max-width: 768px) {
+    .glass-card { padding: 2rem 1.5rem; }
+    .modern-auth { flex-direction: column; gap: 2rem; }
+    .glass-welcome h1 { font-size: 2.5rem; }
+}

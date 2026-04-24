@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Historial Clases{% endblock %}
+{% block content %}
+<div class="profile-container animate-on-scroll" data-animation="fade-in-up">
+    
+    <div class="welcome-section" style="text-align: center; margin-bottom: 2rem;">
+        <h1 class="text-3d">Historial de Clases</h1>
+        <p>Consultar registros de asistencia por número de ficha.</p>
+    </div>
+
+    <div class="glass-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+        <form action="{{ url_for('porteria.historial_clases') }}" method="POST" class="floating-form" data-no-ajax>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="floating-group">
+                <input type="text" id="ficha" name="ficha" value="{{ busqueda_ficha or '' }}" required placeholder=" ">
+                <label for="ficha"><i class="fas fa-hashtag"></i> Número de Ficha</label>
+                <div class="floating-border"></div>
+            </div>
+            
+            <button type="submit" class="glass-btn btn-glow" style="margin-top: 15px;">
+                <span>Buscar Registros</span> <i class="fas fa-search"></i>
+            </button>
+            {% if busqueda_ficha %}
+            <a href="{{ url_for('porteria.historial_clases') }}" class="glass-btn" style="background: rgba(255,255,255,0.1); color: var(--text-main); margin-top: 15px;">Quitar Filtro</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if busqueda_ficha %}
+    <div class="stagger-item" style="margin-top: 3rem;">
+        <div class="glass-card table-responsive">
+            {% if historial %}
+            <h2 style="margin-bottom: 1rem; text-align: center; color: var(--text-main);">
+                <i class="fas fa-clipboard-list"></i> Resultados para Ficha: <strong>{{ busqueda_ficha }}</strong>
+            </h2>
+            <table class="modern-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Ficha</th>
+                        <th>Programa</th>
+                        <th>Horario</th>
+                        <th>Aprendiz (Documento)</th>
+                        <th>Instructor a cargo</th>
+                        <th style="text-align: center;">Asistencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in historial %}
+                    <tr>
+                        <td>{{ h.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td><strong>{{ h.ficha }}</strong></td>
+                        <td>{{ h.aprendiz.programa or 'N/A' }}</td>
+                        <td>{{ h.aprendiz.horario or 'N/A' }}</td>
+                        <td>{{ h.aprendiz.nombre }} <br><small style="opacity: 0.7;">cc: {{ h.aprendiz.documento }}</small></td>
+                        <td>{{ h.instructor.nombre }}</td>
+                        <td style="text-align: center;">
+                            {% if h.presente %}
+                                <span class="role-badge role-badge-aprendiz"><i class="fas fa-check"></i> Asistió</span>
+                            {% else %}
+                                <span class="role-badge role-badge-trabajador" style="background:#FFEbee;color:#D32F2F;"><i class="fas fa-times"></i> Falla</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No hay reportes de clase para la ficha <strong>{{ busqueda_ficha }}</strong>.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    setTimeout(() => {
+        if(document.getElementById('ficha').value) document.getElementById('ficha').classList.add('has-value');
+    }, 100);
+</script>
+{% endblock %}

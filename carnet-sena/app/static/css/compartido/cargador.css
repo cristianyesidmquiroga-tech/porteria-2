@@ -1,0 +1,100 @@
+/* Global App Loader - Premium 3D Edition */
+#global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-color);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+}
+
+.loader-content {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#global-loader img {
+    width: 70px;
+    z-index: 10;
+    filter: drop-shadow(0 0 15px rgba(57, 169, 0, 0.3));
+    animation: loader-logo-dance 3s infinite ease-in-out;
+}
+
+/* Holographic Rings */
+.loader-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--primary-color);
+    border-bottom-color: var(--secondary-color);
+    opacity: 0.6;
+}
+
+.ring-1 {
+    width: 120px;
+    height: 120px;
+    animation: ring-rotate 2s linear infinite;
+}
+
+.ring-2 {
+    width: 150px;
+    height: 150px;
+    border-top-color: var(--secondary-color);
+    border-bottom-color: var(--accent-color);
+    animation: ring-rotate 3s linear infinite reverse;
+}
+
+.ring-3 {
+    width: 180px;
+    height: 180px;
+    opacity: 0.3;
+    animation: ring-rotate 4s linear infinite;
+}
+
+/* Orbiting Dots */
+.loader-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    filter: blur(1px);
+    box-shadow: 0 0 10px var(--primary-color);
+}
+
+.dot-1 { animation: orbit-1 4s linear infinite; }
+.dot-2 { animation: orbit-2 3s linear infinite; }
+
+@keyframes loader-logo-dance {
+    0%, 100% { transform: scale(1) perspective(1000px) rotateY(0deg); filter: brightness(1); }
+    50% { transform: scale(1.1) perspective(1000px) rotateY(180deg); filter: brightness(1.2); }
+}
+
+@keyframes ring-rotate {
+    0% { transform: rotate(0deg) rotateX(0deg); }
+    100% { transform: rotate(360deg) rotateX(360deg); }
+}
+
+@keyframes orbit-1 {
+    from { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+}
+
+@keyframes orbit-2 {
+    from { transform: rotate(360deg) translateX(70px) rotate(-360deg); }
+    to { transform: rotate(0deg) translateX(70px) rotate(0deg); }
+}
+
+#global-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+}

@@ -1,0 +1,64 @@
+/* Dashboard Stats Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: #E8F5E9;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 15px;
+}
+
+.stat-info h3 { font-size: 1.8rem; margin: 0; }
+.stat-info p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+
+/* Dashboard role specific classes */
+.role-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.role-border-aprendiz,
+.role-border-instructor,
+.role-border-trabajador {
+    border-color: var(--primary-color) !important;
+}
+
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.role-badge-aprendiz { background-color: #E8F5E9 !important; color: #2E7D32 !important; }
+.role-badge-instructor { background-color: #E3F2FD !important; color: #1565C0 !important; }
+.role-badge-trabajador { background-color: #FFF3E0 !important; color: #E65100 !important; }

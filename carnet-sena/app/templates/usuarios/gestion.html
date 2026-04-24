@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Perfiles - SENA{% endblock %}
+
+{% block content %}
+<div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+    <div class="header-title">
+        <h1>Gestión de Perfiles</h1>
+    </div>
+    <div class="action-buttons">
+        <button class="glass-btn btn-primary" onclick="openModal('modal-add-user')">
+            <i class="fas fa-plus"></i> Nuevo Perfil
+        </button>
+    </div>
+</div>
+
+<div class="glass-container animate-on-scroll" data-animation="scale-in">
+    <div class="table-responsive">
+        <table class="glass-table" id="users-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Correo</th>
+                    <th>Cargo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr id="user-row-{{ u.id }}">
+                    <td>{{ u.nombre }}</td>
+                    <td>{{ u.documento or 'N/A' }}</td>
+                    <td>{{ u.correo }}</td>
+                    <td><span class="badge {{ 'badge-info' if u.cargo == 'Aprendiz' else 'badge-primary' }}">{{ u.cargo or 'Sin Cargo' }}</span></td>
+                    <td>{{ u.rol.nombre }}</td>
+                    <td>
+                        {% if u.bloqueado_hasta %}
+                            <span class="badge badge-danger">Bloqueado</span>
+                        {% elif u.correo_verificado %}
+                            <span class="badge badge-success">Verificado</span>
+                        {% else %}
+                            <span class="badge badge-warning">Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td class="action-cells">
+                        <button class="action-btn-glass action-btn-edit" title="Editar"
+                                data-id="{{ u.id }}"
+                                onclick="openEditModal(this.dataset.id)"
+                                data-nombre="{{ u.nombre }}" 
+                                data-documento="{{ u.documento or '' }}" 
+                                data-correo="{{ u.correo }}" 
+                                data-cargo="{{ u.cargo or '' }}" 
+                                data-rol="{{ u.rol_id }}" 
+                                data-ficha="{{ u.ficha or '' }}" 
+                                data-programa="{{ u.programa or '' }}" 
+                                data-horario="{{ u.horario or '' }}"
+                                data-verificado="{{ 'true' if u.correo_verificado else 'false' }}"
+                                data-bloqueado="{{ 'true' if u.bloqueado_hasta else 'false' }}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        {% if current_user.id != u.id and u.rol.nombre != 'Admin' %}
+                        <button class="action-btn-glass action-btn-delete" title="Eliminar" 
+                                data-uid="{{ u.id }}" data-uname="{{ u.nombre }}"
+                                onclick="deleteUser(this.dataset.uid, this.dataset.uname)">
+                            <i class="fas fa-trash-alt"></i> Eliminar
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<!-- Modal Añadir Usuario -->
+<div id="modal-add-user" class="glass-modal">
+    <div class="modal-content glass-card">
+        <div class="modal-header">
+            <h2>Nuevo Perfil</h2>
+            <button class="close-btn" onclick="closeModal('modal-add-user')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="form-add-user" onsubmit="createUser(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" name="nombre" class="glass-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Documento</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-id-card input-icon"></i>
+                            <input type="text" name="documento" class="glass-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" name="correo" class="glass-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña Temporal</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" name="contraseña" class="glass-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Rol de Sistema</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-shield-alt input-icon"></i>
+                            <select name="rol_id" class="glass-input" required>
+                                {% for r in roles %}
+                                <option value="{{ r.id }}">{{ r.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo / Dependencia</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-briefcase input-icon"></i>
+                            <select name="cargo" class="glass-input" onchange="toggleCargoFields(this.value, 'add')">
+                                <option value="">Seleccione...</option>
+                                <option value="Aprendiz">Aprendiz</option>
+                                <option value="Instructor">Instructor</option>
+                                <option value="Administrativo">Administrativo</option>
+                                <option value="Celador">Celador</option>
+                                <option value="Administrador">Administrador de Sistema</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="add-aprendiz-fields" style="display: none; margin-top: 1rem;" class="form-grid">
+                    <div class="form-group">
+                        <label>Ficha</label>
+                        <input type="text" name="ficha" class="glass-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Programa</label>
+                        <input type="text" name="programa" class="glass-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Horario</label>
+                        <select name="horario" class="glass-input">
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noche">Noche</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top: 1.5rem;">
+                    <button type="submit" class="glass-btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Usuario -->
+<div id="modal-edit-user" class="glass-modal">
+    <div class="modal-content glass-card">
+        <div class="modal-header">
+            <h2>Editar Perfil</h2>
+            <button class="close-btn" onclick="closeModal('modal-edit-user')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="form-edit-user" onsubmit="updateUser(event)">
+                <input type="hidden" id="edit-id" name="id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="edit-nombre" name="nombre" class="glass-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Documento</label>
+                        <input type="text" id="edit-documento" name="documento" class="glass-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Rol de Sistema</label>
+                        <select id="edit-rol" name="rol_id" class="glass-input" required>
+                            {% for r in roles %}
+                            <option value="{{ r.id }}">{{ r.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo / Dependencia</label>
+                        <select id="edit-cargo" name="cargo" class="glass-input" onchange="toggleCargoFields(this.value, 'edit')">
+                            <option value="">Seleccione...</option>
+                            <option value="Aprendiz">Aprendiz</option>
+                            <option value="Instructor">Instructor</option>
+                            <option value="Administrativo">Administrativo</option>
+                            <option value="Celador">Celador</option>
+                            <option value="Administrador">Administrador de Sistema</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Verificación</label>
+                        <select id="edit-verificado" name="verificado" class="glass-input">
+                            <option value="true">Correo Verificado</option>
+                            <option value="false">Pendiente</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="edit-bloqueo-group" style="display: none;">
+                        <label>Estado Bloqueo</label>
+                        <select id="edit-bloqueo" name="estado_bloqueo" class="glass-input">
+                            <option value="">Mantener Bloqueado</option>
+                            <option value="desbloquear">Desbloquear Ahora</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Nueva Contraseña (Opcional)</label>
+                        <input type="password" id="edit-password" name="contraseña" class="glass-input" placeholder="Dejar en blanco para no cambiar">
+                    </div>
+                </div>
+                
+                <div id="edit-aprendiz-fields" style="display: none; margin-top: 1rem;" class="form-grid">
+                    <div class="form-group">
+                        <label>Ficha</label>
+                        <input type="text" id="edit-ficha" name="ficha" class="glass-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Programa</label>
+                        <input type="text" id="edit-programa" name="programa" class="glass-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Horario</label>
+                        <select id="edit-horario" name="horario" class="glass-input">
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noche">Noche</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top: 1.5rem;">
+                    <button type="submit" class="glass-btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Modal Auditoría / Justificación -->
+<div id="modal-audit" class="glass-modal">
+    <div class="modal-content glass-card" style="max-width: 450px;">
+        <div class="modal-header">
+            <h2>Autorización de Cambio</h2>
+            <button class="close-btn" onclick="closeModal('modal-audit')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                Para proceder, es obligatorio registrar quién autoriza y el motivo.
+            </p>
+            <form id="form-audit" class="floating-form" style="margin-top: 2rem;">
+                <div class="floating-group">
+                    <input type="text" id="audit-autorizado" name="autorizado_por" placeholder=" " required>
+                    <label>¿Quién autoriza el cambio?</label>
+                    <div class="floating-border"></div>
+                </div>
+                <div class="floating-group">
+                    <textarea id="audit-motivo" name="motivo" placeholder=" " rows="3" required style="resize: vertical;"></textarea>
+                    <label>Motivo o Descripción</label>
+                    <div class="floating-border"></div>
+                </div>
+                <button type="button" id="audit-submit-btn" class="btn-glow" style="width: 100%; margin-top: 1rem;">
+                    <i class="fas fa-check-circle"></i> Confirmar y Guardar Registro
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleCargoFields(cargo, prefix) {
+        const fields = document.getElementById(`${prefix}-aprendiz-fields`);
+        if (cargo === 'Aprendiz') {
+            fields.style.display = 'grid';
+        } else {
+            fields.style.display = 'none';
+        }
+    }
+
+    // Modal helpers
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    // Función auxiliar para notificaciones (usando showToast de base.html)
+    function showNotification(message, type) {
+        const title = type === 'success' ? 'Éxito' : 'Error';
+        showToast(title, message, type === 'success' ? 'success' : 'danger');
+    }
+
+    // --- FLUJO DE AUDITORÍA ---
+    let pendingAuditAction = null;
+
+    function openAuditModal(onConfirm) {
+        document.getElementById('audit-autorizado').value = '';
+        document.getElementById('audit-motivo').value = '';
+        pendingAuditAction = onConfirm;
+        openModal('modal-audit');
+    }
+
+    document.getElementById('audit-submit-btn').onclick = function() {
+        const autorizado = document.getElementById('audit-autorizado').value;
+        const motivo = document.getElementById('audit-motivo').value;
+
+        if (!autorizado || !motivo) {
+            showNotification('Todos los campos de auditoría son obligatorios.', 'error');
+            return;
+        }
+
+        if (pendingAuditAction) {
+            pendingAuditAction({ autorizado_por: autorizado, motivo: motivo });
+            closeModal('modal-audit');
+            pendingAuditAction = null;
+        }
+    };
+
+    // Crear Usuario
+    async function createUser(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        data.verificado = true; 
+        
+        try {
+            const response = await fetch("{{ url_for('usuarios.api_crear_usuario') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if(response.ok) {
+                showNotification(result.message, 'success');
+                closeModal('modal-add-user');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch(e) {
+            showNotification('Error de conexión', 'error');
+        }
+    }
+
+    // Preparar y Abrir Editar
+    function openEditModal(id) {
+        const targetBtn = event.target.closest('.action-btn-edit');
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-nombre').value = targetBtn.dataset.nombre;
+        document.getElementById('edit-documento').value = targetBtn.dataset.documento;
+        document.getElementById('edit-cargo').value = targetBtn.dataset.cargo;
+        document.getElementById('edit-rol').value = targetBtn.dataset.rol;
+        document.getElementById('edit-verificado').value = targetBtn.dataset.verificado;
+        document.getElementById('edit-password').value = '';
+        
+        toggleCargoFields(targetBtn.dataset.cargo, 'edit');
+        if(targetBtn.dataset.cargo === 'Aprendiz') {
+            document.getElementById('edit-ficha').value = targetBtn.dataset.ficha;
+            document.getElementById('edit-programa').value = targetBtn.dataset.programa;
+            document.getElementById('edit-horario').value = targetBtn.dataset.horario;
+        }
+
+        const bloqueoGroup = document.getElementById('edit-bloqueo-group');
+        if(targetBtn.dataset.bloqueado === 'true') {
+            bloqueoGroup.style.display = 'block';
+            document.getElementById('edit-bloqueo').value = '';
+        } else {
+            bloqueoGroup.style.display = 'none';
+        }
+
+        openModal('modal-edit-user');
+    }
+
+    // Actualizar Usuario (Con Auditoría)
+    async function updateUser(event) {
+        event.preventDefault();
+        const form = event.target;
+        const id = document.getElementById('edit-id').value;
+        const formData = new FormData(form);
+        const userData = Object.fromEntries(formData.entries());
+        userData.verificado = userData.verificado === 'true';
+
+        openAuditModal(async (auditData) => {
+            const finalData = { ...userData, ...auditData };
+            try {
+                const response = await fetch(`/usuarios/api/admin/editar_usuario/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(finalData)
+                });
+                const result = await response.json();
+                
+                if(response.ok) {
+                    showNotification(result.message, 'success');
+                    closeModal('modal-edit-user');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch(e) {
+                showNotification('Error de conexión', 'error');
+            }
+        });
+    }
+
+    // Eliminar Usuario (Con Auditoría)
+    async function deleteUser(id, nombre) {
+        const confirmed = await window.customConfirm(
+            'Confirmar Eliminación',
+            `¿Estás seguro de que deseas eliminar permanentemente el perfil de ${nombre}?`
+        );
+
+        if (confirmed) {
+            openAuditModal(async (auditData) => {
+                try {
+                    const response = await fetch(`/usuarios/api/admin/eliminar_usuario/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(auditData)
+                    });
+                    const result = await response.json();
+                    
+                    if(response.ok) {
+                        showNotification(result.message, 'success');
+                        const row = document.getElementById(`user-row-${id}`);
+                        if(row) row.remove();
+                    } else {
+                        showNotification(result.message, 'error');
+                    }
+                } catch(e) {
+                    showNotification('Error de conexión', 'error');
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

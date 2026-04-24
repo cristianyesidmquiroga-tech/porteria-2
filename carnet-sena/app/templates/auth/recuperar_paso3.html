@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Recuperar Contraseña | Paso 3{% endblock %}
+
+{% block content %}
+<div class="glass-container animate-on-scroll" data-animation="scale-in" style="max-width: 450px; margin: 3rem auto;">
+    <div class="glass-card" style="padding: 2.5rem;">
+        <div class="auth-header" style="text-align: center; margin-bottom: 2.5rem;">
+            <div class="auth-icon-wrapper" style="width: 70px; height: 70px; background: rgba(57, 169, 0, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-lock-open" style="font-size: 2rem; color: #39A900;"></i>
+            </div>
+            <h1 class="text-3d" style="font-size: 2.2rem; margin-bottom: 0.5rem;">Nueva Clave</h1>
+            <p style="color: var(--text-muted); font-weight: 500;">Establece tu nueva contraseña de acceso.</p>
+        </div>
+
+        <form action="{{ url_for('auth.recuperar_cambiar') }}" method="POST" class="floating-form stagger-item">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="floating-group">
+                <input type="password" id="password" name="password" required placeholder=" ">
+                <label for="password">Nueva Contraseña</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <div class="floating-group" style="margin-bottom: 2.5rem;">
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder=" ">
+                <label for="confirm_password">Confirmar Contraseña</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <button type="submit" class="glass-btn btn-glow">
+                <span>Cambiar Contraseña</span>
+                <i class="fas fa-save"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem; text-align: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 2rem;">
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Ingresando como: <strong>{{ email }}</strong></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

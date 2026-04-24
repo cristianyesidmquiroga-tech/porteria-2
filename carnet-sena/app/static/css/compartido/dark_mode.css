@@ -1,0 +1,46 @@
+/* Modo Oscuro - Formularios */
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] input[type="url"],
+[data-theme="dark"] input[type="file"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    color: #f1f1f1 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+    border-color: #39A900 !important;
+    box-shadow: 0 0 10px rgba(57, 169, 0, 0.3);
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] ::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+[data-theme="dark"] select option {
+    background: #1e272e;
+    color: #f1f1f1;
+}
+
+[data-theme="dark"] label,
+[data-theme="dark"] .form-group label,
+[data-theme="dark"] .floating-group label,
+[data-theme="dark"] .floating-form label {
+    color: #e8e8e8 !important;
+}
+
+[data-theme="dark"] .form-group .input-icon,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] p[style*="color: var(--text-muted)"] {
+    color: #b0b3b8 !important;
+}

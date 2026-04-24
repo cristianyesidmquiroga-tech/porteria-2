@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENA - Centro de Gestión Agroempresarial del Oriente</title>
+    <!-- Modern Global CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/componentes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/control.css') }}">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Third Party Scripts -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <!-- Theme Switcher & JS Ready State -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('js-ready');
+    </script>
+    {% block head %}{% endblock %}
+</head>
+
+<body class="{% if current_user.is_authenticated and current_user.correo_verificado %}with-sidebar{% endif %}">
+
+    <div id="toast-container"></div>
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Global Loader Screen -->
+    <div id="global-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="Cargando SENA" style="width: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        </div>
+    </div>
+
+    <!-- Global Animated Background -->
+    <div id="particles-js" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-2; pointer-events:auto;"></div>
+
+    <!-- Universal Theme Toggle (Floating for Unauthenticated) -->
+    {% if not (current_user.is_authenticated and current_user.correo_verificado) %}
+    <button class="floating-theme-switch theme-icon-btn" aria-label="Cambiar Tema" title="Cambiar Tema" style="z-index: 1001;">
+        <i class="fas fa-moon"></i>
+    </button>
+    {% endif %}
+
+    {% if current_user.is_authenticated and current_user.correo_verificado %}
+        {% include 'partials/_sidebar.html' %}
+    {% endif %}
+
+    <div class="main-wrapper">
+        {% if current_user.is_authenticated and current_user.correo_verificado %}
+            {% include 'partials/_header.html' %}
+        {% endif %}
+
+        <main class="content-area animate-in">
+            {% if current_user.is_authenticated and not current_user.perfil_completo and current_user.correo_verificado %}
+            <div class="glass-card animate-on-scroll" data-animation="fade-in-down" style="background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.3); margin-bottom: 2rem; padding: 1.5rem; display: flex; align-items: center; gap: 15px; border-radius: 15px; border-left: 5px solid #e74c3c;">
+                <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; color: #e74c3c;"></i>
+                <div>
+                    <h3 style="margin: 0 0 5px 0; color: #e74c3c; font-size: 1.1rem;">¡Perfil Incompleto!</h3>
+                    <p style="margin: 0; color: var(--text-main); font-size: 0.95rem;">Para activar tu código QR de acceso y utilizar el sistema correctamente, debes <a href="{{ url_for('usuarios.profile') }}" style="color: #e74c3c; text-decoration: underline; font-weight: bold;">completar todos los campos obligatorios de tu perfil</a>.</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if backup_warning %}
+            <div class="glass-card animate-on-scroll" data-animation="fade-in-down" style="background: rgba(243, 156, 18, 0.1); border-color: rgba(243, 156, 18, 0.3); margin-bottom: 2rem; padding: 1.5rem; display: flex; align-items: center; gap: 15px; border-radius: 15px; border-left: 5px solid #f39c12;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #f39c12;"></i>
+                <div>
+                    <h3 style="margin: 0 0 5px 0; color: #f39c12; font-size: 1.1rem;">Aviso de Sistema Automático</h3>
+                    <p style="margin: 0; color: var(--text-main); font-size: 0.95rem;">{{ backup_warning }}</p>
+                </div>
+            </div>
+            {% endif %}
+            {% include 'partials/_flash_messages.html' %}
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer style="margin-top: auto; padding: 40px 0; text-align: center; color: var(--glass-subtext); font-size: 0.85rem;">
+            <p>&copy; 2026 SENA - Centro de Gestión Agroempresarial del Oriente. Gestión de Acceso.</p>
+        </footer>
+    </div>
+
+    <!-- Global Premium Confirmation Modal -->
+    <div id="global-confirm-modal" class="confirm-modal-overlay" style="display: none;">
+        <div class="confirm-modal-card glass-card animate-on-scroll" data-animation="scale-in">
+            <div class="confirm-modal-header">
+                <div class="confirm-icon-outer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 id="confirm-modal-title" class="text-3d">¿Estás seguro?</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <p id="confirm-modal-message">Esta acción no se puede deshacer de forma sencilla.</p>
+            </div>
+            <div class="confirm-modal-actions">
+                <button id="confirm-modal-cancel" class="glass-btn btn-cancel">
+                    <i class="fas fa-times"></i> No, Cancelar
+                </button>
+                <button id="confirm-modal-ok" class="glass-btn btn-danger-action">
+                    <i class="fas fa-trash-alt"></i> Si, Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Logic -->
+    <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+    <script>
+        // Evitar que el navegador muestre páginas cacheadas (Bfcache) al presionar el botón "Atrás" después de cerrar sesión.
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

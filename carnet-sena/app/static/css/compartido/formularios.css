@@ -1,0 +1,202 @@
+/* ==========================================================================
+   ESTILOS DE FORMULARIOS PREMIUM (SENA)
+   Incluye: Etiquetas Flotantes, Efectos de Enfoque y Animaciones
+   ========================================================================== */
+
+/* 1. Estructura de Grupo Flotante */
+.floating-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.floating-group input, 
+.floating-group select, 
+.floating-group textarea,
+input {
+    width: 100%;
+    padding: 1.6rem 1rem 0.6rem 1rem !important; /* Más espacio arriba para la etiqueta */
+    background: #FFFFFF !important;
+    color: #000000 !important; /* Negro absoluto para máxima claridad */
+    border: 2px solid #E2E8F0 !important;
+    border-radius: 12px !important;
+    font-size: 1.05rem;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    display: block;
+}
+
+/* 3. Comportamiento en Enfoque (Escritura) */
+.floating-group input:focus, 
+.floating-group select:focus, 
+.floating-group textarea:focus,
+input:focus, 
+select:focus, 
+textarea:focus {
+    background: #f1fcf1 !important; /* Verde pastel muy suave al escribir */
+    border-color: #39A900 !important; /* Brillo Verde SENA */
+    box-shadow: 0 4px 15px rgba(57, 169, 0, 0.1);
+    transform: translateY(-1px); /* Sutil elevación */
+}
+
+/* 4. Lógica de Etiqueta Flotante */
+.floating-group label {
+    position: absolute;
+    left: 1rem;
+    top: 1.3rem; /* Ajustado para estar más centrado inicialmente */
+    color: #4A5568; /* Gris más oscuro para que se vea bien sobre blanco */
+    font-size: 1rem;
+    font-weight: 500;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+}
+
+/* Estado Flotando (Cuando hay texto o está enfocado) */
+.floating-group input:focus ~ label, 
+.floating-group input:not(:placeholder-shown) ~ label,
+.floating-group select:focus ~ label,
+.floating-group select:not([value=""]) ~ label,
+.floating-group textarea:focus ~ label,
+.floating-group textarea:not(:placeholder-shown) ~ label {
+    top: 0.45rem; /* Un poco más abajo para que no se pegue al borde */
+    font-size: 0.75rem;
+    color: #39A900 !important; /* Verde SENA vibrante */
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* 5. Ajuste Especial para Inputs de Archivo (Foto Perfil) */
+input[type="file"] {
+    padding-top: 1.8rem;
+    line-height: 1;
+}
+
+.floating-group input[type="file"] ~ label {
+    top: 0.35rem; /* Siempre flotando para archivos para no tapar el botón */
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+/* 6. Otros componentes de Formulario */
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.floating-border {
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    right: 12px;
+    height: 2px;
+    background: #39A900;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    z-index: 10;
+}
+
+.floating-group input:focus ~ .floating-border {
+    transform: scaleX(1);
+}
+
+/* Placeholder invisible para que funcione :placeholder-shown */
+::placeholder {
+    color: transparent !important;
+}
+
+/* 7. Checkboxes Customizados */
+.glass-checkbox {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.glass-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.glass-checkbox .checkmark {
+    position: relative;
+    height: 28px;
+    width: 28px;
+    background-color: var(--input-bg-custom);
+    border: 2px solid var(--glass-border);
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+[data-theme="dark"] .glass-checkbox .checkmark {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-checkbox:hover input ~ .checkmark {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.glass-checkbox input:checked ~ .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 12px rgba(57, 169, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.glass-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    width: 7px;
+    height: 13px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+.glass-checkbox input:checked ~ .checkmark:after {
+    display: block;
+    animation: check-pop 0.3s ease-out forwards;
+}
+
+@keyframes check-pop {
+    0% { transform: scale(0) rotate(45deg); }
+    100% { transform: scale(1) rotate(45deg); }
+}
+
+/* Compatibilidad con Modo Oscuro Heredada */
+[data-theme="dark"] .floating-group input,
+[data-theme="dark"] .floating-group select,
+[data-theme="dark"] .floating-group textarea,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .floating-group input:focus, 
+[data-theme="dark"] .floating-group select:focus, 
+[data-theme="dark"] .floating-group textarea:focus,
+[data-theme="dark"] input:focus, 
+[data-theme="dark"] select:focus, 
+[data-theme="dark"] textarea:focus {
+    background: rgba(255, 255, 255, 0.12) !important; /* Fondo oscuro y sutil */
+    color: #ffffff !important; /* Texto blanco asegurado */
+    border-color: #39A900 !important;
+    box-shadow: 0 0 15px rgba(57, 169, 0, 0.3);
+}

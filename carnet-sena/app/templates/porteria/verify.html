@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Verificación de Perfil{% endblock %}
+
+{% block content %}
+<div class="carnet-wrapper animate-on-scroll" data-animation="scale-in">
+    <div class="carnet-card" style="width: 400px;">
+        <div class="carnet-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA Logo"
+                class="sena-logo-carnet">
+            <span class="sena-text"><span class="highlight-rainbow">SENA</span> <span
+                    class="highlight-rainbow">C.G.A.O</span></span>
+        </div>
+
+        <div class="carnet-body">
+            <div style="margin-bottom: 10px;">
+                <span class="badge-status {{ 'badge-entrada' if status == 'Entrada' else 'badge-salida' }}">
+                    Último Estado: {{ status }}
+                </span>
+            </div>
+            <div class="photo-area {{ 'photo-entrada' if status == 'Entrada' else 'photo-salida' }}">
+                <img src="{{ url_for('static', filename='uploads/profiles/' + user_profile.foto) if user_profile.foto else 'https://ui-avatars.com/api/?name=' + user_profile.nombre|urlencode + '&background=39A900&color=fff' }}"
+                    alt="Foto Perfil" class="profile-photo-carnet" onerror="this.src='https://ui-avatars.com/api/?name={{ user_profile.nombre|urlencode }}&background=39A900&color=fff'">
+            </div>
+
+            <div class="info-area">
+                {% if user_profile.cargo and user_profile.cargo not in ['Aprendiz', 'Instructor'] %}
+                <p class="role-text" style="text-transform: uppercase; letter-spacing: 1px; color: #39A900; font-weight: 700;">
+                    Personal <span style="opacity: 0.8; font-size: 0.85em;">- {{ user_profile.cargo }}</span>
+                </p>
+                {% else %}
+                <p class="role-text">{{ user_profile.rol.nombre }} - {{ user_profile.cargo if user_profile.cargo else '' }}</p>
+                {% endif %}
+                <h2 class="user-name">{{ user_profile.nombre }}</h2>
+                <p class="detail-text"><strong>ID:</strong> {{ user_profile.documento or 'N/A' }}</p>
+                
+                {% if user_profile.rol.nombre == 'Aprendiz' %}
+                <p class="detail-text"><strong>Ficha:</strong> {{ user_profile.ficha or 'N/A' }}</p>
+                <p class="detail-text"><strong>Programa:</strong> {{ user_profile.programa or 'N/A' }}</p>
+                {% elif user_profile.rol.nombre == 'Instructor' %}
+                <p class="detail-text"><strong>Especialidad:</strong> {{ user_profile.programa or 'N/A' }}</p>
+                {% endif %}
+                
+                <p class="detail-text" style="margin-top: 5px;"><strong>RH:</strong> <span style="font-weight: 800; color: #E74C3C; font-size: 1.1em;">{{ user_profile.tipo_sangre or 'N/A' }}</span></p>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 0 20px;">
+
+        <div style="padding: 15px 20px;">
+            <p style="font-size: 0.85rem; font-weight: 700; color: var(--secondary-text); text-align: left; margin-bottom: 10px;">
+                <i class="fas fa-laptop"></i> Equipos Registrados:
+            </p>
+            {% if user_profile.equipos %}
+            {% for equipo in user_profile.equipos %}
+            <label class="equipo-check-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 10px 14px; border: 1px solid var(--glass-border); border-radius: 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.3s;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" name="equipos_ids" value="{{ equipo.id }}" class="equipo-checkbox" {% if equipo.estado == 'Adentro' %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #39A900;">
+                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+                        {% if equipo.tipo == 'Tablet' %}📱{% elif equipo.tipo == 'Computador' %}💻{% else %}📦{% endif %}
+                        {{ equipo.nombre }} <small style="opacity: 0.6;">({{ equipo.tipo }})</small>
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    {% if equipo.serial %}
+                    <span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 4px;">{{ equipo.serial }}</span>
+                    {% endif %}
+                    <span class="equipo-estado-badge" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700;
+                        {% if equipo.estado == 'Adentro' %}background: #E8F5E9; color: #2E7D32;{% else %}background: #FFF3E0; color: #E65100;{% endif %}">
+                        {{ equipo.estado }}
+                    </span>
+                </div>
+            </label>
+            {% endfor %}
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: center;">
+                <i class="fas fa-info-circle"></i> Marca los equipos que el usuario trae consigo.
+            </p>
+            {% else %}
+            <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">
+                <i class="fas fa-box-open" style="font-size: 1.5rem; opacity: 0.4; margin-bottom: 0.5rem; display: block;"></i>
+                No tiene equipos registrados en su perfil.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="carnet-footer" style="flex-direction: column; gap: 10px; padding: 20px;">
+            {% if current_user.es_celador_cargo or current_user.cargo == 'Administrador' %}
+            <form id="form-entrada" action="{{ url_for('porteria.register_movement', user_id=user_profile.id, type='Entrada') }}"
+                method="POST" data-no-ajax>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div id="equipos-entrada"></div>
+                <button type="submit" class="btn-primary" style="width: 100%; border-radius: 10px;" {% if
+                    status=='Entrada' %}disabled{% endif %}>
+                    <i class="fas fa-sign-in-alt"></i> ESTA ENTRANDO
+                </button>
+            </form>
+            <form id="form-salida" action="{{ url_for('porteria.register_movement', user_id=user_profile.id, type='Salida') }}"
+                method="POST" data-no-ajax>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div id="equipos-salida"></div>
+                <button type="submit" class="btn-primary btn-danger" style="width: 100%; border-radius: 10px;" {% if
+                    status=='Salida' %}disabled{% endif %}>
+                    <i class="fas fa-sign-out-alt"></i> ESTA SALIENDO
+                </button>
+            </form>
+            {% else %}
+            <div style="text-align: center; color: var(--text-muted); padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.05);">
+                <i class="fas fa-lock"></i> Solo la Portería puede modificar accesos de usuarios.
+            </div>
+            {% endif %}
+            <button onclick="window.history.back()" class="btn-back">Volver al Escáner</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-status {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .badge-entrada {
+        background: #E8F5E9;
+        color: #39A900;
+    }
+
+    .badge-salida {
+        background: #FFEBEE;
+        color: #D32F2F;
+    }
+
+    .photo-entrada {
+        border-color: #39A900;
+    }
+
+    .photo-salida {
+        border-color: #D32F2F;
+    }
+
+    .btn-danger {
+        background: #D32F2F !important;
+    }
+
+    .btn-back {
+        width: 100%;
+        background: transparent;
+        color: #555;
+        border: 2px solid #EEE;
+        padding: 0.8rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 5px;
+        transition: background 0.3s;
+        font-family: inherit;
+        font-size: 1rem;
+    }
+
+    .btn-back:hover {
+        background: #F5F5F5;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const formEntrada = document.getElementById('form-entrada');
+        if (formEntrada) {
+            formEntrada.addEventListener('submit', function() {
+                const checked = document.querySelectorAll('.equipo-checkbox:checked');
+                const container = document.getElementById('equipos-entrada');
+                container.innerHTML = '';
+                checked.forEach(cb => {
+                    container.innerHTML += `<input type="hidden" name="equipos_ids" value="${cb.value}">`;
+                });
+            });
+        }
+
+        const formSalida = document.getElementById('form-salida');
+        if (formSalida) {
+            formSalida.addEventListener('submit', function() {
+                const checked = document.querySelectorAll('.equipo-checkbox:checked');
+                const container = document.getElementById('equipos-salida');
+                container.innerHTML = '';
+                checked.forEach(cb => {
+                    container.innerHTML += `<input type="hidden" name="equipos_ids" value="${cb.value}">`;
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

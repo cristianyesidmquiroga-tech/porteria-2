@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel General{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock %}
+
+{% block content %}
+<div class="top-tabs">
+    <button id="btn-tab-dashboard" class="tab-btn active" onclick="switchTab('dashboard')">Panel General</button>
+    <button id="btn-tab-history" class="tab-btn" onclick="switchTab('history')">Historial de Accesos</button>
+</div>
+
+<div id="view-dashboard">
+    <!-- Encabezado de Marca / Branded Header -->
+    <div class="page-hero animate-on-scroll" data-animation="dust-reveal">
+        <div>
+            <h1 class="text-3d" style="font-size: 3rem;">Panel de Inteligencia</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem; font-weight: 300;">Visualización táctica y métricas
+                de flujo institucional.</p>
+        </div>
+    </div>
+
+    <!-- Grid de Estadísticas / Stats Grid -->
+    <div class="dashboard-grid animate-on-scroll" data-animation="none">
+        <div class="stat-card glass-card stagger-item">
+            <div class="stat-icon magnetic-btn"><i class="fas fa-user-graduate"></i></div>
+            <div class="stat-info">
+                <h3 class="highlight-rainbow" style="font-size: 2rem;">{{ kpis.aprendices }}</h3>
+                <p>Aprendices</p>
+            </div>
+        </div>
+        <div class="stat-card glass-card stagger-item">
+            <div class="stat-icon magnetic-btn" style="background: rgba(52, 152, 219, 0.1); color: #3498DB;"><i
+                    class="fas fa-chalkboard-teacher"></i></div>
+            <div class="stat-info">
+                <h3 class="highlight-rainbow" style="font-size: 2rem;">{{ kpis.instructores }}</h3>
+                <p>Instructores</p>
+            </div>
+        </div>
+        <div class="stat-card glass-card stagger-item">
+            <div class="stat-icon magnetic-btn" style="background: rgba(245, 124, 0, 0.1); color: #F57C00;"><i
+                    class="fas fa-user-tie"></i></div>
+            <div class="stat-info">
+                <h3 class="highlight-rainbow" style="font-size: 2rem;">{{ kpis.trabajadores }}</h3>
+                <p>Trabajadores</p>
+            </div>
+        </div>
+        <div class="stat-card glass-card stagger-item">
+            <div class="stat-icon magnetic-btn" style="background: rgba(123, 31, 162, 0.1); color: #7B1FA2;"><i
+                    class="fas fa-users"></i></div>
+            <div class="stat-info">
+                <h3 class="highlight-rainbow" style="font-size: 2rem;">{{ kpis.visitantes }}</h3>
+                <p>Visitantes</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2rem; margin-top: 2rem;">
+        <div class="card animate-on-scroll" data-animation="scale-in"
+            style="width: 100%; max-width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <h2 style="align-self: flex-start;">Tendencias de Ingreso (Últimos 7 Días)</h2>
+            <div style="height: 450px; width: 100%; margin: 0 auto;">
+                <canvas id="entriesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card animate-on-scroll" data-animation="fade-in-up"
+            style="width: 100%; max-width: 100%; background: linear-gradient(145deg, #1A4314, var(--primary-color)); color: white;">
+            <h2
+                style="color: white; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1rem; margin-bottom: 1rem; text-align: left;">
+                <i class="fas fa-brain"></i> Análisis Inteligente
+            </h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; font-weight: 400; opacity: 0.95;">{{ analisis_texto }}</p>
+        </div>
+    </div>
+</div>
+
+<div id="view-history" style="display: none;">
+    <div class="card" style="width: 100%; max-width: 1200px;">
+        <h2>Historial de Accesos</h2>
+
+        <form method="GET" action="{{ url_for('porteria.dashboard') }}" class="filter-form stagger-item" data-no-ajax
+            style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: flex-end; flex-wrap: wrap;">
+            <div class="form-group" style="margin-bottom: 0; min-width: 200px;">
+                <label for="cargo" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">Filtrar por Cargo</label>
+                <select name="cargo" id="cargoFilter"
+                    style="padding: 0.6rem; border: 1px solid var(--glass-border); background-color: var(--white); color: var(--text-main); border-radius: 8px;">
+                    <option value="">Todos los Cargos</option>
+                    {% for cargo in cargos %}
+                    <option value="{{ cargo }}" {% if current_cargo==cargo %}selected{% endif %}>{{ cargo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" id="fichaFilterContainer" style="margin-bottom: 0; min-width: 200px; display: none;">
+                <label for="ficha" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">Filtrar por
+                    Ficha</label>
+                <select name="ficha" id="ficha"
+                    style="padding: 0.6rem; border: 1px solid var(--glass-border); background-color: var(--white); color: var(--text-main); border-radius: 8px;">
+                    <option value="">Todas las Fichas</option>
+                    {% for f in fichas %}
+                    <option value="{{ f }}" {% if current_ficha==f %}selected{% endif %}>{{ f }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-primary magnetic-btn" style="height: 42px; padding: 0 1.5rem;"><i
+                    class="fas fa-filter"></i> Aplicar</button>
+            <a href="{{ url_for('porteria.dashboard', tab='history') }}" class="glass-btn magnetic-btn"
+                style="height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500;">Limpiar</a>
+            <div style="flex-grow: 1;"></div>
+            <a href="{{ url_for('porteria.export_dashboard', cargo=current_cargo, ficha=current_ficha) }}" class="btn-primary magnetic-btn"
+                style="height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.5rem; background-color: var(--primary-color); text-decoration: none;">
+                <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Exportar XLS/CSV
+            </a>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const cargoFilter = document.getElementById('cargoFilter');
+                const fichaContainer = document.getElementById('fichaFilterContainer');
+                
+                function toggleFichaFilter() {
+                    const val = cargoFilter.value.toLowerCase();
+                    // Mostrar si el cargo es Aprendiz
+                    if (val === 'aprendiz') {
+                        fichaContainer.style.display = 'block';
+                    } else {
+                        fichaContainer.style.display = 'none';
+                        // Limpiar el valor si se oculta para no enviar filtros fantasmas
+                        document.getElementById('ficha').value = '';
+                    }
+                }
+                
+                cargoFilter.addEventListener('change', toggleFichaFilter);
+                // Run on load to set initial state
+                toggleFichaFilter();
+            });
+        </script>
+
+        <div style="overflow-x: auto;">
+            <table class="modern-table" style="width: 100%; text-align: left; font-size: 0.95rem;">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Documento</th>
+                        <th>Cargo</th>
+                        <th>Programa / Ficha</th>
+                        <th>Equipo(s)</th>
+                        <th>Tipo</th>
+                        <th>Fecha y Hora</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acceso, usuario, rol in historial %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% set rsuffix = 'aprendiz' if rol.nombre == 'Aprendiz' else ('instructor' if rol.nombre ==
+                                'Instructor' else 'trabajador') %}
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + usuario.foto) if usuario.foto else 'https://ui-avatars.com/api/?name=' + usuario.nombre|urlencode + '&background=39A900&color=fff' }}"
+                                    alt="Foto" class="role-img role-border-{{ rsuffix }}" onerror="this.src='https://ui-avatars.com/api/?name={{ usuario.nombre|urlencode }}&background=39A900&color=fff'">
+                                <span style="font-weight: 600;">{{ usuario.nombre }}</span>
+                            </div>
+                        </td>
+                        <td>{{ usuario.documento or 'N/A' }}</td>
+                        <td>
+                            {% set rsuffix = 'aprendiz' if rol.nombre == 'Aprendiz' else ('instructor' if rol.nombre ==
+                            'Instructor' else 'trabajador') %}
+                            <span class="role-badge role-badge-{{ rsuffix }}">
+                                {{ usuario.cargo or rol.nombre }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if usuario.programa %}
+                            <div style="font-weight: 600;">{{ usuario.programa }}</div>
+                            <small style="opacity: 0.7;">Ficha: {{ usuario.ficha or 'N/A' }}</small>
+                            {% else %}
+                            <span style="opacity: 0.5; font-style: italic;">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if acceso.equipos_str %}
+                            <span style="font-size: 0.85rem; background: rgba(57,169,0,0.1); color: #39A900; padding: 4px 8px; border-radius: 6px; font-weight: 600;"><i class="fas fa-laptop"></i> {{ acceso.equipos_str }}</span>
+                            {% else %}
+                            <span style="opacity: 0.5; font-style: italic; font-size: 0.85rem;">Ninguno</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if acceso.tipo == 'Entrada' %}
+                            <span
+                                class="text-entrada" style="display: flex; align-items: center; gap: 5px;"><i
+                                    class="fas fa-arrow-right"
+                                    style="background: rgba(57,169,0,0.1); padding: 4px; border-radius: 50%;"></i> Entrada</span>
+                            {% else %}
+                            <span
+                                class="text-salida" style="display: flex; align-items: center; gap: 5px;"><i
+                                    class="fas fa-arrow-left"
+                                    style="background: rgba(231,76,60,0.1); padding: 4px; border-radius: 50%;"></i> Salida</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.85rem;">{{ acceso.fecha.strftime('%Y-%m-%d
+                            %H:%M:%S') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="padding: 3rem; text-align: center; opacity: 0.5;">
+                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem;"></i><br>
+                            No hay registros de acceso que coincidan con los filtros.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Datos del gráfico inyectados desde el servidor -->
+<div id="chart-data-source" style="display:none;" data-labels='{{ chart_data.labels | tojson }}'
+    data-aprendices='{{ chart_data.aprendices | tojson }}' data-instructores='{{ chart_data.instructores | tojson }}'
+    data-trabajadores='{{ chart_data.trabajadores | tojson }}'>
+</div>
+
+<script>
+    function switchTab(viewName) {
+        document.querySelectorAll('.tab-btn').forEach(function (btn) {
+            btn.classList.remove('active');
+        });
+        document.getElementById('btn-tab-' + viewName).classList.add('active');
+        document.getElementById('view-dashboard').style.display = 'none';
+        document.getElementById('view-history').style.display = 'none';
+        document.getElementById('view-' + viewName).style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Switch to history tab on load if there are active filters or specific tab requested
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('cargo') || urlParams.get('ficha') || urlParams.get('tab') === 'history' || window.location.href.includes('cargo=')) {
+            switchTab('history');
+        }
+
+        // Read chart data from hidden element
+        var src = document.getElementById('chart-data-source');
+        var labels = JSON.parse(src.getAttribute('data-labels'));
+        var aprendices = JSON.parse(src.getAttribute('data-aprendices'));
+        var instructores = JSON.parse(src.getAttribute('data-instructores'));
+        var trabajadores = JSON.parse(src.getAttribute('data-trabajadores'));
+
+        // Initialize chart only if canvas exists
+        var chartCanvas = document.getElementById('entriesChart');
+        if (chartCanvas) {
+            var ctx = chartCanvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Aprendices',
+                            data: aprendices,
+                            backgroundColor: 'rgba(57, 169, 0, 0.1)',
+                            borderColor: '#39A900',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#39A900',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Instructores',
+                            data: instructores,
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderColor: '#36A2EB',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#36A2EB',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Trabajadores',
+                            data: trabajadores,
+                            backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                            borderColor: '#FF9F40',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#FF9F40',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, color: '#999' },
+                            grid: { color: '#F0F0F0' }
+                        },
+                        x: {
+                            ticks: { color: '#999' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { boxWidth: 12, usePointStyle: true }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
