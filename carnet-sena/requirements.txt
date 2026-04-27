@@ -6,3 +6,5 @@ flask-wtf
 email-validator
 qrcode
 pillow
+pandas
+openpyxl

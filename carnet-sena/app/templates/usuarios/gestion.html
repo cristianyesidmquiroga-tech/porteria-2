@@ -11,6 +11,9 @@
         <button class="glass-btn btn-primary" onclick="openModal('modal-add-user')">
             <i class="fas fa-plus"></i> Nuevo Perfil
         </button>
+        <button class="glass-btn btn-success" onclick="openModal('modal-import-excel')" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+            <i class="fas fa-file-excel"></i> Importar Excel
+        </button>
     </div>
 </div>
 
@@ -284,6 +287,37 @@
             </form>
         </div>
     </div>
+<!-- Modal Importar Excel -->
+<div id="modal-import-excel" class="glass-modal">
+    <div class="modal-content glass-card" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>Importar desde Excel</h2>
+            <button class="close-btn" onclick="closeModal('modal-import-excel')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                Sube un archivo .xlsx con las siguientes columnas: <br>
+                <strong>Nombre, Correo</strong> (Obligatorias)<br>
+                <em>Documento, Cargo, Rol, Ficha, Programa, Horario, Contraseña</em> (Opcionales)
+            </p>
+            <form id="form-import-excel" onsubmit="importExcel(event)">
+                <div class="form-group">
+                    <label>Archivo Excel (.xlsx)</label>
+                    <input type="file" name="file" class="glass-input" accept=".xlsx, .xls" required>
+                </div>
+                <div class="modal-actions" style="margin-top: 1.5rem;">
+                    <button type="submit" class="glass-btn btn-primary" id="btn-submit-import">
+                        <i class="fas fa-upload"></i> Subir e Importar
+                    </button>
+                </div>
+            </form>
+            <div id="import-results" style="display: none; margin-top: 1.5rem; padding: 1rem; border-radius: 8px; background: rgba(0,0,0,0.05);">
+                <h4>Resultados:</h4>
+                <p id="import-stats"></p>
+                <ul id="import-errors" style="color: #e74c3c; font-size: 0.8rem; margin-top: 0.5rem;"></ul>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -464,6 +498,56 @@
                     showNotification('Error de conexión', 'error');
                 }
             });
+        }
+    }
+
+    async function importExcel(event) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = document.getElementById('btn-submit-import');
+        const resultsDiv = document.getElementById('import-results');
+        const statsP = document.getElementById('import-stats');
+        const errorsUl = document.getElementById('import-errors');
+        
+        const formData = new FormData(form);
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        
+        try {
+            const response = await fetch("{{ url_for('usuarios.api_importar_usuarios_excel') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: formData
+            });
+            const result = await response.json();
+            
+            if(response.ok) {
+                showNotification(result.message, 'success');
+                resultsDiv.style.display = 'block';
+                statsP.innerText = result.message;
+                errorsUl.innerHTML = '';
+                
+                if (result.detalles.errores.length > 0) {
+                    result.detalles.errores.forEach(err => {
+                        const li = document.createElement('li');
+                        li.innerText = err;
+                        errorsUl.appendChild(li);
+                    });
+                }
+                
+                setTimeout(() => window.location.reload(), 3000);
+            } else {
+                showNotification(result.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload"></i> Subir e Importar';
+            }
+        } catch(e) {
+            showNotification('Error de conexión', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload"></i> Subir e Importar';
         }
     }
 </script>

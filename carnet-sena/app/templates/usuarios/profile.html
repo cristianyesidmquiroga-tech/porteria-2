@@ -23,70 +23,95 @@
         <!-- Parte Izquierda: Carnet / Left Wing: Digital ID -->
         <div class="left-wing">
             <div class="carnet-wrapper animate-on-scroll" data-animation="scale-in">
-                <div class="carnet-card">
-                    <div class="carnet-header">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg"
-                            alt="SENA Logo" class="sena-logo-carnet">
-                        <span class="sena-text"><span class="highlight-rainbow">Centro de Gestión Agroempresarial</span>
-                            <br> <span class="highlight-rainbow">del Oriente</span></span>
+                <div class="carnet-card institutional" id="carnet-capture">
+                    <!-- Marca de agua decorativa -->
+                    <div class="carnet-watermark">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="">
+                    </div>
+                    
+                    <div class="carnet-header-inst">
+                        <div class="header-logo">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA">
+                        </div>
+                        <div class="header-text-inst">
+                            <div class="sena-title">SERVICIO NACIONAL DE APRENDIZAJE</div>
+                            <div class="sena-subtitle">Centro de Gestión Agroempresarial del Oriente</div>
+                        </div>
                     </div>
 
-                    <div class="carnet-body">
-                        <h2 class="user-name text-3d dust-reveal" style="margin-bottom: 20px; text-align: center; font-size: 1.6rem; width: 100%;">{{ current_user.nombre }}</h2>
-                        
-                        <div class="photo-area stagger-item" style="margin-bottom: 25px;">
-                            <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.foto) if current_user.foto else 'https://ui-avatars.com/api/?name=' + current_user.nombre + '&background=39A900&color=fff' }}"
-                                alt="Foto Perfil" class="profile-photo-carnet" onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre }}&background=39A900&color=fff'">
+                    <div class="carnet-main">
+                        <div class="photo-container-inst">
+                            <div class="photo-frame">
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.foto) if current_user.foto else 'https://ui-avatars.com/api/?name=' + current_user.nombre + '&background=39A900&color=fff' }}"
+                                    alt="Foto Perfil" class="profile-photo-inst" onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre }}&background=39A900&color=fff'">
+                            </div>
                         </div>
 
-                        <div class="info-area" style="width: 100%;">
-                            <div class="info-grid stagger-item" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; text-align: left;">
-                                <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
-                                    <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Rol</small>
-                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">{% if current_user.es_admin %} Admin {% else %} {{ current_user.cargo }} {% endif %}</div>
-                                </div>
-                                <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
-                                    <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">ID</small>
-                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">{{ current_user.documento or 'N/A' }}</div>
-                                </div>
-                                {% if current_user.ficha %}
-                                <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
-                                    <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Ficha</small>
-                                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">{{ current_user.ficha }}</div>
-                                </div>
-                                {% endif %}
-                                {% if current_user.programa %}
-                                    {% if not current_user.ficha %}
-                                    <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none; grid-column: 1 / -1;">
-                                    {% else %}
-                                    <div class="glass-card" style="padding: 10px 15px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--glass-border); background: var(--sidebar-bg); box-shadow: none;">
-                                    {% endif %}
-                                        <small style="color: var(--primary-color); font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                            {% if current_user.es_instructor_cargo %}Área{% else %}Programa{% endif %}
-                                        </small>
-                                        <div style="font-weight: 600; font-size: 0.85rem; line-height: 1.2; color: var(--text-main);">{{ current_user.programa }}</div>
-                                    </div>
-                                {% endif %}
+                        <div class="user-details-inst">
+                            <h2 class="user-full-name">{{ current_user.nombre }}</h2>
+                            <div class="user-role-badge">{% if current_user.es_admin %} Administrador {% else %} {{ current_user.cargo }} {% endif %}</div>
+                        </div>
+
+                        <div class="info-grid-inst">
+                            <div class="info-item">
+                                <span class="label">IDENTIFICACIÓN</span>
+                                <span class="value">{{ current_user.documento or 'N/A' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">RH</span>
+                                <span class="value blood-type">{{ current_user.tipo_sangre or 'N/A' }}</span>
+                            </div>
+                            {% if current_user.ficha %}
+                            <div class="info-item">
+                                <span class="label">FICHA</span>
+                                <span class="value">{{ current_user.ficha }}</span>
+                            </div>
+                            {% endif %}
+                            {% if current_user.horario %}
+                            <div class="info-item">
+                                <span class="label">HORARIO</span>
+                                <span class="value">{{ current_user.horario }}</span>
+                            </div>
+                            {% endif %}
+                            {% if current_user.programa %}
+                            <div class="info-item full-width">
+                                <span class="label">{% if current_user.es_instructor_cargo %}ÁREA DE ESPECIALIDAD{% else %}PROGRAMA DE FORMACIÓN{% endif %}</span>
+                                <span class="value">{{ current_user.programa }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="info-item full-width">
+                                <span class="label">CORREO INSTITUCIONAL</span>
+                                <span class="value email-text">{{ current_user.correo }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="carnet-footer stagger-item">
-                        {% if qr_code %}
-                        <div class="qr-container">
-                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="qr-image"
-                                onclick="openQrModal('data:image/png;base64,{{ qr_code }}')" style="cursor: zoom-in;"
-                                title="Haz clic para agrandar">
+                    <div class="carnet-footer-inst">
+                        <div class="qr-section-inst">
+                            {% if qr_code %}
+                            <div class="qr-box">
+                                <img src="data:image/png;base64,{{ qr_code }}" alt="QR" class="qr-img-inst" onclick="openQrModal('data:image/png;base64,{{ qr_code }}')">
+                                <small>IDENTIDAD DIGITAL</small>
+                            </div>
+                            {% else %}
+                            <div class="qr-locked">
+                                <i class="fas fa-lock"></i>
+                                <span>QR BLOQUEADO</span>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        <div class="qr-placeholder" style="text-align: center; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; width: 100%; max-width: 150px; border: 1px dashed rgba(231, 76, 60, 0.4);">
-                            <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(231, 76, 60, 0.6); margin-bottom: 5px;"></i>
-                            <p style="font-size: 0.8rem; font-weight: 700; color: #e74c3c; margin: 0; text-transform: uppercase;">QR Bloqueado</p>
-                            <p style="font-size: 0.7rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.2;">Completa tu información para generar el código</p>
+                        <div class="footer-bar">
+                            <span>SENA: CONOCIMIENTO PARA TODOS LOS COLOMBIANOS</span>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
+            </div>
+
+            <!-- Botón Descargar Carnet -->
+            <div class="carnet-download-wrapper animate-on-scroll" data-animation="fade-in-up">
+                <button onclick="downloadCarnet()" class="btn-download-carnet magnetic-btn" id="btn-download-carnet">
+                    <i class="fas fa-id-card"></i> Descargar Carnet Institucional
+                </button>
             </div>
         </div>
 
@@ -240,6 +265,9 @@
     </div>
 </div>
 
+<!-- html2canvas CDN para captura del carnet -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <script>
     function openQrModal(src) {
         document.getElementById('qrModal').style.display = "flex";
@@ -277,6 +305,59 @@
             if (placeholder) placeholder.style.display = 'none';
         } else {
             if (placeholder) placeholder.style.display = 'block';
+        }
+    }
+
+    // === DESCARGAR CARNET COMO IMAGEN ===
+    async function downloadCarnet() {
+        const btn = document.getElementById('btn-download-carnet');
+        const carnet = document.getElementById('carnet-capture');
+        
+        if (!carnet) return;
+
+        // Estado de carga
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        try {
+            const canvas = await html2canvas(carnet, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                borderRadius: '30px',
+                logging: false
+            });
+
+            // Crear enlace de descarga
+            const link = document.createElement('a');
+            link.download = 'carnet_sena_{{ current_user.nombre | replace(" ", "_") }}.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            // Feedback visual
+            btn.innerHTML = '<i class="fas fa-check"></i> ¡Descargado!';
+            btn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.background = '';
+            }, 2500);
+        } catch (err) {
+            console.error('Error al generar la imagen del carnet:', err);
+            btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error';
+            btn.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.background = '';
+            }, 2500);
         }
     }
 
