@@ -1,53 +1,198 @@
-/* --- CARNET DIGITAL PREMIUM --- */
-.carnet-card {
-    width: 380px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 30px;
-    padding: 0;
+/* --- CARNET DIGITAL INSTITUCIONAL (SENA) --- */
+.carnet-card.institutional {
+    width: 400px;
+    background: #ffffff;
+    border-radius: 15px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    border: 1px solid #e0e0e0;
+    font-family: 'Outfit', sans-serif;
+    color: #333;
 }
 
-.carnet-card:hover { transform: translateY(-15px) scale(1.02); box-shadow: 0 40px 80px rgba(0,0,0,0.2); }
+/* Marca de agua */
+.carnet-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    opacity: 0.05;
+    width: 80%;
+    pointer-events: none;
+    z-index: 0;
+}
 
-/* Digital ID Header */
-.carnet-header {
-    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-    padding: 20px;
+.carnet-header-inst {
+    background: #ffffff;
+    padding: 15px 20px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-bottom: 5px solid rgba(255,255,255,0.1);
+    gap: 15px;
+    border-bottom: 3px solid #39A900;
+    position: relative;
+    z-index: 1;
+}
+
+.header-logo img {
+    height: 50px;
+}
+
+.header-text-inst {
+    display: flex;
+    flex-direction: column;
+}
+
+.sena-title {
+    font-weight: 800;
+    font-size: 0.8rem;
+    color: #39A900;
+    letter-spacing: 0.5px;
+}
+
+.sena-subtitle {
+    font-size: 0.65rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.carnet-main {
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.photo-container-inst {
+    margin-bottom: 15px;
+}
+
+.photo-frame {
+    width: 130px;
+    height: 160px;
+    border: 3px solid #39A900;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f9f9f9;
+}
+
+.profile-photo-inst {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-details-inst {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.user-full-name {
+    font-size: 1.3rem !important;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.user-role-badge {
+    display: inline-block;
+    background: #FF6B00;
+    color: white;
+    padding: 3px 15px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.info-grid-inst {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
 
-.sena-logo-carnet { height: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
-.sena-text { text-align: center; }
-
-.carnet-body {
-    padding: 30px; display: flex; flex-direction: column; align-items: center; color: var(--text-main);
+.info-item {
+    display: flex;
+    flex-direction: column;
 }
 
-.photo-area {
-    width: 160px; height: 160px; border: 4px solid var(--primary-color);
-    border-radius: 50%; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+.info-item.full-width {
+    grid-column: 1 / -1;
 }
 
-.profile-photo-carnet { width: 100%; height: 100%; object-fit: cover; }
-
-.carnet-footer {
-    padding: 20px; background: rgba(0,0,0,0.03); display: flex; justify-content: center; border-top: 1px solid rgba(255,255,255,0.1);
+.info-item .label {
+    font-size: 0.6rem;
+    color: #888;
+    font-weight: 700;
+    margin-bottom: 2px;
 }
 
-.qr-container { padding: 10px; background: white; border-radius: 12px; }
-.qr-image { width: 110px; height: 110px; }
+.info-item .value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+}
 
-/* Profile Split Layout */
+.blood-type {
+    color: #e74c3c !important;
+    font-weight: 800 !important;
+}
+
+.email-text {
+    font-size: 0.75rem !important;
+    color: #39A900 !important;
+}
+
+.carnet-footer-inst {
+    position: relative;
+    z-index: 1;
+}
+
+.qr-section-inst {
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    background: rgba(249, 249, 249, 0.8);
+}
+
+.qr-box {
+    text-align: center;
+    background: white;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.qr-img-inst {
+    width: 90px;
+    height: 90px;
+    cursor: zoom-in;
+}
+
+.qr-box small {
+    display: block;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: #999;
+    margin-top: 5px;
+}
+
+.footer-bar {
+    background: #39A900;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Quick Actions and Layout */
 .profile-split-layout {
     display: flex; gap: 2.5rem; margin-top: 2rem; align-items: flex-start; flex-wrap: wrap;
 }
@@ -87,7 +232,7 @@
 @media (max-width: 992px) {
     .profile-split-layout { flex-direction: column-reverse; align-items: center; }
     .left-wing, .right-wing { min-width: 100%; max-width: 100%; position: static; }
-    .left-wing { display: flex; justify-content: center; }
+    .left-wing { display: flex; flex-direction: column; align-items: center; }
     .carnet-card { margin: 0 auto; }
     #profile-placeholder { display: none !important; }
 }
@@ -132,7 +277,16 @@
         border-radius: 10px !important;
     }
     .info-grid small { font-size: 0.65rem !important; }
-    .info-grid div[style*="font-size: 0.95rem"] { font-size: 0.85rem !important; }
+    .carnet-info-value { font-size: 0.85rem !important; }
+
+    /* Botón descargar en móvil */
+    .btn-download-carnet {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+        width: 100%;
+        justify-content: center;
+    }
+    .carnet-download-wrapper { width: 100%; padding: 0 5px; }
 
     /* QR más pequeño */
     .qr-image { width: 90px; height: 90px; }
@@ -174,6 +328,7 @@
     .info-grid { grid-template-columns: 1fr !important; }
     .qr-image { width: 80px; height: 80px; }
     .btn-action { font-size: 0.85rem; padding: 0.7rem 1rem; }
+    .btn-download-carnet { font-size: 0.85rem; padding: 10px 20px; }
 }
 
 /* Nota: Estilos de .kiosk-input ahora son globales en global.css */

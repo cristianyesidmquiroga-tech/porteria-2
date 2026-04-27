@@ -5,6 +5,8 @@ from ... import db
 from . import bp
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash
+import pandas as pd
+import io
 
 # Decorador o chequeo simple para asegurar admin
 def check_admin():
@@ -275,3 +277,124 @@ def admin_historial():
     # Obtener logs de auditoría ordenados por fecha descendente
     logs = Auditoria.query.order_by(Auditoria.fecha.desc()).all()
     return render_template('usuarios/historial.html', logs=logs)
+
+@bp.route('/api/admin/importar_usuarios_excel', methods=['POST'])
+@login_required
+def api_importar_usuarios_excel():
+    if not check_admin():
+        return jsonify({"status": "error", "message": "No autorizado"}), 403
+
+    if 'file' not in request.files:
+        return jsonify({"status": "error", "message": "No se subió ningún archivo"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"status": "error", "message": "Archivo sin nombre"}), 400
+
+    try:
+        # Leer el excel
+        df = pd.read_excel(file)
+        
+        # Validar columnas necesarias (mínimo Nombre y Correo)
+        required_cols = ['Nombre', 'Correo']
+        for col in required_cols:
+            if col not in df.columns:
+                return jsonify({"status": "error", "message": f"Falta la columna '{col}' en el Excel"}), 400
+
+        # Obtener roles para mapeo
+        roles_map = {r.nombre.lower(): r.id for r in Rol.query.all()}
+        rol_usuario_id = roles_map.get('usuario')
+
+        usuarios_creados = 0
+        usuarios_omitidos = 0
+        errores = []
+
+        for index, row in df.iterrows():
+            nombre = str(row.get('Nombre', '')).strip()
+            correo = str(row.get('Correo', '')).strip().lower()
+            documento = str(row.get('Documento', '')).strip() if pd.notnull(row.get('Documento')) else None
+            cargo = str(row.get('Cargo', '')).strip() if pd.notnull(row.get('Cargo')) else 'Aprendiz'
+            rol_nombre = str(row.get('Rol', '')).strip().lower() if pd.notnull(row.get('Rol')) else 'usuario'
+            ficha = str(row.get('Ficha', '')).strip() if pd.notnull(row.get('Ficha')) else None
+            programa = str(row.get('Programa', '')).strip() if pd.notnull(row.get('Programa')) else None
+            horario = str(row.get('Horario', '')).strip() if pd.notnull(row.get('Horario')) else None
+            password = str(row.get('Contraseña', 'Sena2024*')).strip()
+
+            if not nombre or not correo:
+                usuarios_omitidos += 1
+                continue
+
+            # Verificar si ya existe
+            if Usuario.query.filter_by(correo=correo).first():
+                usuarios_omitidos += 1
+                continue
+
+            rol_id = roles_map.get(rol_nombre, rol_usuario_id)
+            if not rol_id:
+                rol_id = rol_usuario_id
+
+            try:
+                nuevo_usuario = Usuario(
+                    nombre=nombre,
+                    correo=correo,
+                    documento=documento,
+                    rol_id=rol_id,
+                    cargo=cargo,
+                    ficha=ficha,
+                    programa=programa,
+                    horario=horario,
+                    perfil_completo=False,
+                    correo_verificado=True, # Por ser masivo, asumimos verificados o requerimos que completen perfil
+                    debe_cambiar_contrasena=True
+                )
+                nuevo_usuario.set_password(password)
+                db.session.add(nuevo_usuario)
+                db.session.flush() # Para obtener ID si es necesario
+
+                # --- ENVIAR CORREO DE BIENVENIDA ---
+                from app.utils.email import enviar_correo
+                asunto = "Bienvenido al Sistema de Acceso - SENA Vélez"
+                link_login = url_for('auth.login', _external=True)
+                cuerpo_html = f"""
+                <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <div style="background-color: #39A900; padding: 20px; text-align: center;">
+                        <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
+                        <p style="color: white; margin: 5px 0 0 0;">Centro de Gestión Agroempresarial del Oriente (Vélez)</p>
+                    </div>
+                    <div style="padding: 20px;">
+                        <h3>Hola, {nombre}</h3>
+                        <p>Se te ha creado un perfil institucional para el ingreso a la plataforma de gestión de accesos (Ingreso Masivo).</p>
+                        <p>Estas son tus credenciales de acceso temporal:</p>
+                        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                            <p style="margin: 5px 0;"><strong>Usuario/Correo:</strong> {correo}</p>
+                            <p style="margin: 5px 0;"><strong>Contraseña:</strong> {password}</p>
+                        </div>
+                        <p>Por favor, ingresa a <a href="{link_login}" style="color: #39A900; font-weight: bold;">este enlace</a> y completa tu perfil para activar tu carnet digital.</p>
+                    </div>
+                </div>
+                """
+                enviar_correo(correo, asunto, cuerpo_html)
+                
+                usuarios_creados += 1
+            except Exception as e:
+                errores.append(f"Fila {index+2}: {str(e)}")
+
+        db.session.commit()
+        
+        msg = f"Importación finalizada. Creados: {usuarios_creados}, Omitidos: {usuarios_omitidos}."
+        if errores:
+            msg += f" Errores: {len(errores)}"
+
+        return jsonify({
+            "status": "success", 
+            "message": msg,
+            "detalles": {
+                "creados": usuarios_creados,
+                "omitidos": usuarios_omitidos,
+                "errores": errores
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": f"Error al procesar Excel: {str(e)}"}), 500
