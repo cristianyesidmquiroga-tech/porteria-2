@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: carnet_sena_web
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      # Montamos la carpeta instance para no perder la base de datos SQLite
+      - ./instance:/app/instance
+      # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
+      - ./app/static/uploads:/app/app/static/uploads
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Bogota
