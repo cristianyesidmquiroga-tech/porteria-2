@@ -15,8 +15,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY carnet-sena/ .
 
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
 # Expose port 5000
 EXPOSE 5000
 
-# Run the application using the built-in Flask server
-CMD ["python", "run.py"]
+# Run entrypoint: creates admin user + starts Flask server
+ENTRYPOINT ["./entrypoint.sh"]
