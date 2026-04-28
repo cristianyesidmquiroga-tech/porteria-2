@@ -11,7 +11,6 @@ WORKDIR /app
 # Install dependencies
 COPY carnet-sena/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir gunicorn
 
 # Copy project files
 COPY carnet-sena/ .
@@ -19,5 +18,5 @@ COPY carnet-sena/ .
 # Expose port 5000
 EXPOSE 5000
 
-# Run the application using gunicorn for better production performance
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "run:app"]
+# Run the application using the built-in Flask server
+CMD ["python", "run.py"]
