@@ -8,3 +8,5 @@ qrcode
 pillow
 pandas
 openpyxl
+Flask-APScheduler
+python-dotenv
