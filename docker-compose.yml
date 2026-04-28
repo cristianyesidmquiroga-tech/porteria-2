@@ -9,10 +9,10 @@ services:
       - "5000:5000"
     volumes:
       # Montamos la carpeta instance para no perder la base de datos SQLite
-      - ./instance:/app/instance
+      - ./carnet-sena/instance:/app/instance
       # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
-      - ./app/static/uploads:/app/app/static/uploads
+      - ./carnet-sena/app/static/uploads:/app/app/static/uploads
     env_file:
-      - .env
+      - ./carnet-sena/.env
     environment:
       - TZ=America/Bogota

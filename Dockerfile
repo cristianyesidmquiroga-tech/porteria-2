@@ -9,12 +9,12 @@ ENV FLASK_ENV=production
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY carnet-sena/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir gunicorn
 
 # Copy project files
-COPY . .
+COPY carnet-sena/ .
 
 # Expose port 5000
 EXPOSE 5000
