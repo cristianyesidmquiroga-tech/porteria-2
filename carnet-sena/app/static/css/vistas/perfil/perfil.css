@@ -279,13 +279,6 @@
     .info-grid small { font-size: 0.65rem !important; }
     .carnet-info-value { font-size: 0.85rem !important; }
 
-    /* Botón descargar en móvil */
-    .btn-download-carnet {
-        padding: 12px 24px;
-        font-size: 0.9rem;
-        width: 100%;
-        justify-content: center;
-    }
     .carnet-download-wrapper { width: 100%; padding: 0 5px; }
 
     /* QR más pequeño */
@@ -328,7 +321,6 @@
     .info-grid { grid-template-columns: 1fr !important; }
     .qr-image { width: 80px; height: 80px; }
     .btn-action { font-size: 0.85rem; padding: 0.7rem 1rem; }
-    .btn-download-carnet { font-size: 0.85rem; padding: 10px 20px; }
 }
 
 /* Nota: Estilos de .kiosk-input ahora son globales en global.css */
