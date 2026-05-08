@@ -8,8 +8,6 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      # Montamos la carpeta instance para no perder la base de datos SQLite
-      - ./carnet-sena/instance:/app/instance
       # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
       - ./carnet-sena/app/static/uploads:/app/app/static/uploads
     env_file:
