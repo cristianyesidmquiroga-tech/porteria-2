@@ -42,8 +42,8 @@
                     <div class="carnet-main">
                         <div class="photo-container-inst">
                             <div class="photo-frame">
-                                <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.foto) if current_user.foto else 'https://ui-avatars.com/api/?name=' + current_user.nombre + '&background=39A900&color=fff' }}"
-                                    alt="Foto Perfil" class="profile-photo-inst" onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre }}&background=39A900&color=fff'">
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.foto) if current_user.foto else 'https://ui-avatars.com/api/?name=' ~ current_user.nombre|urlencode ~ '&background=39A900&color=fff' }}"
+                                    alt="Foto Perfil" class="profile-photo-inst" onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre|urlencode }}&background=39A900&color=fff'">
                             </div>
                         </div>
 
