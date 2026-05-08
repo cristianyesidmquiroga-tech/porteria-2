@@ -9,7 +9,11 @@ class Config:
     # SECRET_KEY fija para evitar errores de CSRF al reiniciar el servidor
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'sena_carnet_secure_key_2024_ag_v1'
     database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith("postgres://"):
+    
+    # FORZAR LA URL CORRECTA SI COOLIFY INYECTA LA ANTIGUA
+    if database_url and "sqj21c1qvz5jsuj0rs10pdx0" in database_url:
+        database_url = "postgresql://postgres:123postgres@lsdeklphbrt9022pgozvpqks:5432/postgres?sslmode=require"
+    elif database_url and database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
         
     SQLALCHEMY_DATABASE_URI = database_url or \
