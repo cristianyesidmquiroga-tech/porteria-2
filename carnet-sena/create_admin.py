@@ -1,3 +1,4 @@
+import os
 from app import create_app, db
 from app.models.usuarios import Usuario, Rol
 
@@ -21,7 +22,9 @@ with app.app_context():
         print("Rol Usuario creado.")
 
     # Buscar si existe el correo
-    email = "admin@sena.edu.co"
+    email = os.environ.get('ADMIN_EMAIL', 'admin@sena.edu.co')
+    admin_password = os.environ.get('ADMIN_PASSWORD', 'change_me_immediately_2026*')
+    
     admin = Usuario.query.filter_by(correo=email).first()
     
     if admin:
@@ -33,10 +36,10 @@ with app.app_context():
         admin.bloqueado_hasta = None
         admin.tipo_sangre = 'O+'
         admin.foto = 'default_profile.png'
-        admin.set_password('SenaAdmin2026*')
+        admin.set_password(admin_password)
         db.session.commit()
         print(f"Admin actualizado SIN restricciones: {email}")
-        print(f"Contraseña: SenaAdmin2026*")
+        print("Contraseña configurada desde variable de entorno (o default).")
     else:
         admin = Usuario(
             nombre="Super Administrador",
@@ -52,13 +55,13 @@ with app.app_context():
             tipo_sangre='O+',
             foto='default_profile.png'
         )
-        admin.set_password('SenaAdmin2026*')
+        admin.set_password(admin_password)
         db.session.add(admin)
         db.session.commit()
         print(f"========================================")
         print(f"  SUPER ADMIN CREADO SIN RESTRICCIONES")
         print(f"========================================")
         print(f"  Correo:     {email}")
-        print(f"  Contraseña: SenaAdmin2026*")
+        print(f"  Contraseña: [OCULTA]")
         print(f"  Rol:        Admin (acceso total)")
         print(f"========================================")
