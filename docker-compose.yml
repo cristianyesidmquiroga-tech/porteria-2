@@ -14,6 +14,7 @@ services:
       - ./carnet-sena/.env
     environment:
       - TZ=America/Bogota
+      - DATABASE_URL=postgresql://postgres:123postgres@lsdeklphbrt9022pgozvpqks:5432/postgres?sslmode=require
     networks:
       - coolify
 
