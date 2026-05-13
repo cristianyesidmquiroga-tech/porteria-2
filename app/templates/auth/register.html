@@ -32,21 +32,9 @@
                 <form action="{{ url_for('auth.register') }}" method="POST" id="unifiedRegisterForm" class="floating-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
-                    <!-- 1. Selección de Cargo (Diferenciador principal) -->
-                    <div class="floating-group" style="margin-bottom: 2.5rem;">
-                        <select id="cargo" name="cargo" required class="kiosk-input" onchange="toggleCargoFields(this)">
-                             <option value="Aprendiz" selected>Aprendiz (Estudiante)</option>
-                             <option value="Instructor">Instructor (Docente)</option>
-                             <option value="Celador">Portería / Celador</option>
-                            <option value="Coordinador">Coordinador Académico</option>
-                            <option value="Biblioteca">Personal Biblioteca</option>
-                            <option value="Sennova">Investigador Sennova</option>
-                            <option value="Administrativo">Personal Administrativo</option>
-                        </select>
-                        <label for="cargo">¿Quién eres?</label>
-                        <div class="floating-border" style="background: #39A900; height: 3px;"></div>
-                    </div>
-
+                    <!-- 1. Selección de Cargo (Oculto para público, predeterminado Aprendiz) -->
+                    <input type="hidden" name="cargo" value="Aprendiz">
+                    
                     <!-- 2. Información General (Siempre Visible) -->
                     <div id="general-fields" class="stagger-item">
                         <div class="floating-group">
@@ -75,12 +63,10 @@
                         </div>
                     </div>
 
-                    <div class="divider" style="height: 1px; background: rgba(0,0,0,0.05); margin: 2rem 0; display: none;" id="fields-divider"></div>
+                    <div class="divider" style="height: 1px; background: rgba(0,0,0,0.05); margin: 2rem 0;" id="fields-divider"></div>
 
-                    <!-- 3. Campos Dinámicos por Cargo -->
-                    
-                    <!-- Campos para Aprendiz -->
-                    <div id="fields-aprendiz" class="dynamic-fields-group" style="display: none;">
+                    <!-- 3. Información de Formación (Aprendiz) -->
+                    <div id="fields-aprendiz" class="dynamic-fields-group">
                         <div class="floating-group">
                             <input type="text" id="ficha" name="ficha" placeholder=" ">
                             <label for="ficha">Número de Ficha</label>
@@ -92,7 +78,7 @@
                             <div class="floating-border"></div>
                         </div>
                         <div class="floating-group">
-                            <select id="horario" name="horario" class="kiosk-input">
+                            <select id="horario" name="horario" required class="kiosk-input">
                                 <option value="" disabled selected>Selecciona tu Jornada</option>
                                 <option value="Mañana">Mañana</option>
                                 <option value="Tarde">Tarde</option>
@@ -103,7 +89,7 @@
                         </div>
                     </div>
 
-                    <!-- Campos para Instructor -->
+                    <!-- Campos adicionales (Ocultos para registro público) -->
                     <div id="fields-instructor" class="dynamic-fields-group" style="display: none;">
                         <div class="floating-group">
                             <input type="text" id="programa_instructor" name="programa" placeholder=" ">
@@ -131,40 +117,8 @@
 
 
 <script>
-function toggleCargoFields(select) {
-    const cargo = select.value;
-    const divider = document.getElementById('fields-divider');
-    const allGroups = document.querySelectorAll('.dynamic-fields-group');
-    
-    // Ocultar todos y deshabilitar para que no viajen en el form si no corresponden
-    allGroups.forEach(g => {
-        g.style.display = 'none';
-        g.querySelectorAll('input, select').forEach(i => {
-            i.required = false;
-            i.disabled = true;
-        });
-    });
-    
-    divider.style.display = 'block';
-
-    let groupToEnable = null;
-    if (cargo === 'Aprendiz') {
-        groupToEnable = document.getElementById('fields-aprendiz');
-    } else if (cargo === 'Instructor') {
-        groupToEnable = document.getElementById('fields-instructor');
-    }
-
-    if (groupToEnable) {
-        groupToEnable.style.display = 'block';
-        groupToEnable.querySelectorAll('input, select').forEach(i => {
-            i.required = true;
-            i.disabled = false;
-        });
-    } else {
-        // Para otros cargos no hay campos extra, ocultamos el divisor
-        divider.style.display = 'none';
-    }
-}
+// El registro público ahora es exclusivamente para Aprendices
+// Las funciones de toggle quedan inactivas para el usuario final
 </script>
 
 <style>

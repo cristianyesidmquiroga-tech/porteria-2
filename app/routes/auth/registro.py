@@ -27,9 +27,12 @@ def register():
         documento_raw = sanitize_html(request.form.get('documento')).strip()
         documento = documento_raw if documento_raw else None
         contraseña = request.form.get('password')
-
-        # 2. Selección de Cargo (Predeterminado: Aprendiz)
-        cargo = request.form.get('cargo')
+        # 2. Selección de Cargo (Solo Admin elige, público es Aprendiz)
+        if current_user.is_authenticated and current_user.es_admin:
+            cargo = request.form.get('cargo')
+        else:
+            cargo = 'Aprendiz'
+        
         if not cargo:
             cargo = 'Aprendiz'
 
