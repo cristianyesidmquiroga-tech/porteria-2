@@ -10,11 +10,11 @@ from ...utils.security import sanitize_html
 from . import bp
 
 @bp.route('/register', methods=['GET', 'POST'])
-@login_required
 def register():
-    if not current_user.es_admin:
-        flash("Acceso denegado. Solo los administradores pueden crear nuevas cuentas.", "danger")
-        return redirect(url_for('main.index'))
+    # Eliminamos la restricción de admin para permitir registro público
+    # if not current_user.es_admin:
+    #     flash("Acceso denegado. Solo los administradores pueden crear nuevas cuentas.", "danger")
+    #     return redirect(url_for('main.index'))
 
     if request.method == 'POST':
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -28,13 +28,10 @@ def register():
         documento = documento_raw if documento_raw else None
         contraseña = request.form.get('password')
 
-        # 2. Selección de Cargo (Diferenciador principal ahora)
+        # 2. Selección de Cargo (Predeterminado: Aprendiz)
         cargo = request.form.get('cargo')
         if not cargo:
-            msg = "Debes seleccionar un cargo o tipo de usuario."
-            if is_ajax: return {"status": "error", "message": msg}, 400
-            flash(msg, 'danger')
-            return redirect(url_for('auth.register'))
+            cargo = 'Aprendiz'
 
         # 3. Asignación Automática de Rol 'Usuario'
         rol_usuario = Rol.query.filter_by(nombre='Usuario').first()

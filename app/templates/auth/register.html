@@ -35,10 +35,9 @@
                     <!-- 1. Selección de Cargo (Diferenciador principal) -->
                     <div class="floating-group" style="margin-bottom: 2.5rem;">
                         <select id="cargo" name="cargo" required class="kiosk-input" onchange="toggleCargoFields(this)">
-                            <option value="" disabled selected>Selecciona tu Cargo / Dependencia</option>
-                            <option value="Aprendiz">Aprendiz (Estudiante)</option>
-                            <option value="Instructor">Instructor (Docente)</option>
-                            <option value="Celador">Portería / Celador</option>
+                             <option value="Aprendiz" selected>Aprendiz (Estudiante)</option>
+                             <option value="Instructor">Instructor (Docente)</option>
+                             <option value="Celador">Portería / Celador</option>
                             <option value="Coordinador">Coordinador Académico</option>
                             <option value="Biblioteca">Personal Biblioteca</option>
                             <option value="Sennova">Investigador Sennova</option>
@@ -113,9 +112,16 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="glass-btn btn-glow" style="margin-top: 1rem;">
+                     <button type="submit" class="glass-btn btn-glow" style="margin-top: 1rem; margin-bottom: 1.5rem;">
                         <i class="fas fa-paper-plane"></i> Finalizar Registro y Enviar Código
                     </button>
+
+                    <div class="auth-footer" style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">
+                            ¿Ya tienes una cuenta? 
+                            <a href="{{ url_for('auth.login') }}" style="color: #39A900; font-weight: 600; text-decoration: none; margin-left: 5px;">Inicia sesión aquí</a>
+                        </p>
+                    </div>
                 </form>
 
             </div>
