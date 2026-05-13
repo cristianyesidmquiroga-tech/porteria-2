@@ -66,6 +66,10 @@ def update_profile():
                 'uploads',
                 'profiles',
                 unique_filename)
+            
+            # Asegurar que las carpetas existan antes de guardar
+            os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+            
             file.save(upload_path)
             
             # --- VALIDACIÓN FACIAL ---
