@@ -9,9 +9,9 @@ services:
       - "5000:5000"
     volumes:
       # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
-      - ./carnet-sena/app/static/uploads:/app/app/static/uploads
+      - ./app/static/uploads:/app/app/static/uploads
     env_file:
-      - ./carnet-sena/.env
+      - .env
     environment:
       - TZ=America/Bogota
     depends_on:
@@ -30,7 +30,7 @@ services:
         max-size: 10m
         max-file: '3'
     env_file:
-      - ./carnet-sena/.env
+      - .env
     environment:
       POSTGRES_USER: '${POSTGRES_USER:-admin}'
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
@@ -80,7 +80,7 @@ services:
     container_name: postgres_backup_sidecar
     restart: always
     env_file:
-      - ./carnet-sena/.env
+      - .env
     volumes:
       - '/data/postgres/backups:/backups'
     depends_on:
