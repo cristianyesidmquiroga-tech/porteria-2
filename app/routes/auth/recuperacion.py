@@ -19,12 +19,11 @@ def recuperar_solicitar():
             usuario.recuperacion_expiracion = datetime.now(timezone.utc) + timedelta(minutes=15)
             db.session.commit()
             
-            # Simulación de Envío (Copia del patrón de verificación)
-            print("\n" + "=" * 50, flush=True)
-            print(f"RECUPERACIÓN DE CONTRASEÑA PARA: {usuario.correo}", flush=True)
-            print(f"CÓDIGO DE RECUPERACIÓN: {codigo}", flush=True)
-            print("=" * 50 + "\n", flush=True)
-
+            # Enviar Correo Real
+            from ...utils.email import enviar_correo
+            cuerpo = render_template('auth/email_recuperacion.html', usuario=usuario, codigo=codigo)
+            enviar_correo(usuario.correo, "Recuperación de Contraseña - SENA", cuerpo)
+            
             try:
                 with open('CODIGOS_DESARROLLO.txt', 'a', encoding='utf-8') as f:
                     f.write(f"[{datetime.now().strftime('%H:%M:%S')}] Recuperación: {usuario.correo} -> CÓDIGO: {codigo}\n")
