@@ -92,8 +92,13 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            # Logging
-            print(f"\n[REGISTRO] {correo} registrado como {cargo}")
+            # Enviar Correo Real
+            from ...utils.email import enviar_correo
+            cuerpo = render_template('auth/email_verificacion.html', usuario=new_user, codigo=new_user.codigo_verificacion)
+            enviado = enviar_correo(new_user.correo, "Verifica tu cuenta - SENA", cuerpo)
+            
+            if not enviado:
+                print(f"[!] No se pudo enviar correo a {new_user.correo}. Revisa configuración SMTP.")
             
             try:
                 with open('CODIGOS_DESARROLLO.txt', 'a', encoding='utf-8') as f:
