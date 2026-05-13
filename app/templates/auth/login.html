@@ -63,10 +63,17 @@
                         <a href="{{ url_for('auth.recuperar_solicitar') }}" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none; border-bottom: 1px dashed var(--text-muted);">¿Olvidaste tu contraseña?</a>
                     </div>
 
-                    <button type="submit" class="glass-btn btn-glow">
+                    <button type="submit" class="glass-btn btn-glow" style="margin-bottom: 1.5rem;">
                         <span>Ingresar de Forma Segura</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
+
+                    <div class="auth-footer" style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">
+                            ¿No tienes una cuenta? 
+                            <a href="{{ url_for('auth.register') }}" style="color: #39A900; font-weight: 600; text-decoration: none; margin-left: 5px; border-bottom: 2px solid transparent; transition: all 0.3s ease;" onmouseover="this.style.borderBottom='2px solid #39A900'" onmouseout="this.style.borderBottom='2px solid transparent'">Regístrate aquí</a>
+                        </p>
+                    </div>
                 </form>
 
             </div>

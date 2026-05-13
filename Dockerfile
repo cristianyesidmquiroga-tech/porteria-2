@@ -9,11 +9,11 @@ ENV FLASK_ENV=production
 WORKDIR /app
 
 # Install dependencies
-COPY carnet-sena/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
-COPY carnet-sena/ .
+COPY . .
 
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
