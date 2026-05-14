@@ -21,6 +21,15 @@ with app.app_context():
         db.session.commit()
         print("Rol Usuario creado.")
 
+    # Crear Punto de Acceso predeterminado si no existe
+    from app.models.accesos import PuntoAcceso
+    punto = PuntoAcceso.query.get(1)
+    if not punto:
+        punto = PuntoAcceso(id=1, nombre='Portería Principal', tipo='General')
+        db.session.add(punto)
+        db.session.commit()
+        print("Punto de Acceso 'Portería Principal' (ID: 1) creado.")
+
     # Buscar si existe el correo
     email = os.environ.get('ADMIN_EMAIL', 'admin@sena.edu.co')
     admin_password = os.environ.get('ADMIN_PASSWORD', 'change_me_immediately_2026*')
