@@ -300,21 +300,44 @@
     <div id="scanner-result-ui" class="scanner-result-card shadow-lg">
         <div style="text-align: center;">
             <div id="res-status-pill" class="status-pill"></div>
+
+            <!-- Warning/Alert Container -->
+            <div id="res-warnings" style="margin-bottom: 1.5rem; text-align: left; display: none;"></div>
+
             <img id="res-photo" src="" alt="Perfil" class="result-photo" onerror="this.onerror=null; this.src='/static/img/default-profile.png'">
             <h2 id="res-nombre" class="result-name"></h2>
             <p id="res-cargo" class="result-cargo"></p>
             <div id="res-details" style="font-size: 1rem; color: var(--glass-subtext); margin-bottom: 2rem; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 12px;"></div>
 
             <div style="display: flex; gap: 15px; margin-bottom: 1.5rem;">
-                <button id="btn-entrada" class="glass-btn" style="flex: 1; background: #2E7D32 !important;">
+                <button id="btn-entrada" class="glass-btn" style="flex: 1; background: #2E7D32 !important; border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer; height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <i class="fas fa-sign-in-alt"></i> ENTRADA
                 </button>
-                <button id="btn-salida" class="glass-btn" style="flex: 1; background: #C62828 !important;">
+                <button id="btn-salida" class="glass-btn" style="flex: 1; background: #C62828 !important; border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer; height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <i class="fas fa-sign-out-alt"></i> SALIDA
                 </button>
             </div>
 
-            <button onclick="resetUI()" class="btn-outline" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); padding: 12px;">
+            <!-- Quick Incident Report inside result card -->
+            {% if current_user.es_celador_cargo or current_user.cargo == 'Administrador' %}
+            <div id="res-incident-box" style="background: var(--white); padding: 1.2rem; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 1.5rem; text-align: left; display: none;">
+                <p style="font-size: 0.85rem; font-weight: 700; color: #D32F2F; margin-bottom: 8px;">
+                    <i class="fas fa-exclamation-circle"></i> Reportar Anomalía en este Escaneo:
+                </p>
+                <form id="res-incident-form" action="{{ url_for('porteria.register_incidente') }}" method="POST" autocomplete="off" style="display: flex; gap: 8px;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="inc-entidad-id" name="entidad_id" value="">
+                    <input type="hidden" id="inc-tipo-entidad" name="tipo_entidad" value="">
+                    <input type="text" name="detalles" placeholder="Describa la novedad o anomalía..." required 
+                        style="flex: 1; padding: 8px 12px; border: 1px solid var(--glass-border); border-radius: 8px; font-size: 0.85rem; font-family: inherit;">
+                    <button type="submit" class="btn-primary" style="background: #E65100; border: none; font-size: 0.85rem; padding: 8px 15px; border-radius: 8px; font-weight: 600; color: white; cursor: pointer;">
+                        Reportar
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <button onclick="resetUI()" class="btn-outline" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); padding: 12px; border-radius: 10px; cursor: pointer;">
                 <i class="fas fa-redo-alt"></i> VOLVER AL ESCÁNER
             </button>
         </div>
@@ -345,7 +368,6 @@
         try {
             availableCameras = await Html5Qrcode.getCameras();
             if (availableCameras && availableCameras.length > 0) {
-                // Priorizar cámara trasera ("back" o "environment")
                 const backCamera = availableCameras.find(cam => cam.label.toLowerCase().includes('back') || cam.label.toLowerCase().includes('trasera'));
                 currentCameraId = backCamera ? backCamera.id : availableCameras[0].id;
 
@@ -363,7 +385,6 @@
                 overlay.classList.add('hidden');
                 document.getElementById('laser').style.display = 'block';
                 
-                // Mostrar botón de cambio si hay más de una cámara
                 if (availableCameras.length > 1) {
                     document.getElementById('switch-cam-btn').style.display = 'inline-block';
                 }
@@ -399,7 +420,6 @@
     }
 
     async function onScanSuccess(decodedText) {
-        // Efecto visual instantáneo
         document.getElementById('success-flash').classList.remove('hidden');
         document.getElementById('laser').style.display = 'none';
         
@@ -432,25 +452,78 @@
             const data = await res.json();
             
             if(!data.found) {
-                showToast("No Encontrado", "El documento no coincide con ningún perfil activo.", "danger");
+                showToast("No Encontrado", "El documento o código no coincide con ningún perfil registrado.", "danger");
                 resetUI();
                 return;
             }
 
-            // Ocultar escáner y mostrar resultado
             document.querySelector('.scanner-view-container').style.display = 'none';
             document.getElementById('manual-trigger-group').style.display = 'none';
             const resUI = document.getElementById('scanner-result-ui');
             resUI.style.display = 'block';
 
-            // Mapeo de datos
             document.getElementById('res-nombre').textContent = data.nombre;
             document.getElementById('res-cargo').textContent = data.cargo || data.tipo;
-            document.getElementById('res-photo').src = data.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=39A900&color=fff&size=200`;
+            
+            if (data.tipo === 'Vehiculo') {
+                document.getElementById('res-photo').src = `https://ui-avatars.com/api/?name=Vehiculo&background=E8F5E9&color=2E7D32&size=200&bold=true`;
+            } else if (data.tipo === 'ObjetoExterno') {
+                document.getElementById('res-photo').src = `https://ui-avatars.com/api/?name=Objeto&background=ECEFF1&color=37474F&size=200&bold=true`;
+            } else {
+                document.getElementById('res-photo').src = data.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=39A900&color=fff&size=200`;
+            }
             
             const pill = document.getElementById('res-status-pill');
-            pill.textContent = "ESTADO ACTUAL: " + data.status;
+            pill.textContent = "ESTADO ACTUAL: " + (data.status === 'Entrada' ? 'EN SEDE' : 'AFUERA');
             pill.className = "status-pill " + (data.status === 'Entrada' ? "status-entrada" : "status-afuera");
+
+            // Warnings block
+            const warnBox = document.getElementById('res-warnings');
+            warnBox.innerHTML = '';
+            warnBox.style.display = 'none';
+
+            // Visitor duration logic
+            if (data.tipo === 'Visitante' && data.status === 'Entrada') {
+                warnBox.style.display = 'block';
+                const timeColor = data.tiempo_excedido ? '#C62828' : '#2E7D32';
+                const bg = data.tiempo_excedido ? '#FFEBEE' : '#E8F5E9';
+                const border = data.tiempo_excedido ? '#FFCDD2' : '#C8E6C9';
+                let visitorWarn = `
+                    <div style="background: ${bg}; border: 1px solid ${border}; padding: 12px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-clock" style="color: ${timeColor}; font-size: 1.2rem;"></i>
+                            <div>
+                                <strong style="color: #2c3e50;">Permanencia:</strong> <span style="font-weight: 700; color: ${timeColor};">${data.tiempo_transcurrido || 'Menos de 1 min'}</span>
+                            </div>
+                        </div>
+                `;
+                if (data.tiempo_excedido) {
+                    visitorWarn += `<span style="background: #C62828; color: white; padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 0.7rem; animation: pulse 1.5s infinite;">⚠️ TIEMPO EXCEDIDO</span>`;
+                }
+                visitorWarn += `</div>`;
+                warnBox.innerHTML += visitorWarn;
+            }
+
+            // Flow discrepancy alert
+            if (data.status !== 'Entrada') {
+                warnBox.style.display = 'block';
+                warnBox.innerHTML += `
+                    <div style="background: #FFF3E0; border: 1px solid #FFE0B2; color: #E65100; padding: 12px; border-radius: 10px; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; line-height: 1.4; text-align: left;">
+                        <i class="fas fa-exclamation-triangle" style="margin-top: 2px;"></i>
+                        <div>
+                            <strong>Alerta de Flujo:</strong> Figura como **AFUERA**. Si registra una **SALIDA** forzada sin ingreso previo, se creará un log de auditoría por flujo irregular.
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Setup Quick Incident box
+            const incBox = document.getElementById('res-incident-box');
+            if (incBox) {
+                incBox.style.display = 'block';
+                document.getElementById('inc-entidad-id').value = data.id;
+                document.getElementById('inc-tipo-entidad').value = data.tipo;
+            }
 
             let equiposHtml = '';
             if (data.equipos && data.equipos.length > 0) {
@@ -490,15 +563,34 @@
                     </div>`;
             }
 
-            document.getElementById('res-details').innerHTML = `
-                <div style="display:flex; justify-content:space-around;">
-                    <p><strong>Cédula:</strong><br>${data.documento}</p>
-                    <p><strong>Rol:</strong><br>${data.rol}</p>
-                </div>
-                ${equiposHtml}
-            `;
+            let detailsHtml = '';
+            if (data.tipo === 'Vehiculo') {
+                detailsHtml = `
+                    <div style="display:flex; justify-content:space-around;">
+                        <p><strong>Placa:</strong><br>${data.documento}</p>
+                        <p><strong>Clase/Tipo:</strong><br>${data.cargo}</p>
+                        <p><strong>Rol:</strong><br>${data.rol}</p>
+                    </div>
+                `;
+            } else if (data.tipo === 'ObjetoExterno') {
+                detailsHtml = `
+                    <div style="display:flex; justify-content:space-around;">
+                        <p><strong>Serial:</strong><br>${data.documento}</p>
+                        <p><strong>Propietario:</strong><br>${data.cargo}</p>
+                        <p><strong>Rol:</strong><br>${data.rol}</p>
+                    </div>
+                `;
+            } else {
+                detailsHtml = `
+                    <div style="display:flex; justify-content:space-around;">
+                        <p><strong>Cédula:</strong><br>${data.documento}</p>
+                        <p><strong>Rol:</strong><br>${data.rol}</p>
+                    </div>
+                `;
+            }
 
-            // Lógica de botones
+            document.getElementById('res-details').innerHTML = detailsHtml + equiposHtml;
+
             const bEntrada = document.getElementById('btn-entrada');
             const bSalida = document.getElementById('btn-salida');
             bEntrada.onclick = () => registerMove(data.id, 'Entrada', data.tipo);
@@ -552,6 +644,9 @@
         document.getElementById('laser').style.display = 'none';
         document.getElementById('manual-form').style.display = 'none';
         document.getElementById('manualDoc').value = '';
+        if (document.getElementById('res-incident-form')) {
+            document.getElementById('res-incident-form').reset();
+        }
     }
 </script>
 {% endblock %}

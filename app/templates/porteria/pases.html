@@ -15,6 +15,7 @@
 <div class="top-tabs stagger-item">
     <button id="btn-tab-visitantes" class="tab-btn active magnetic-btn" onclick="switchPaseTab('visitantes')">Personas (Visitantes)</button>
     <button id="btn-tab-vehiculos" class="tab-btn magnetic-btn" onclick="switchPaseTab('vehiculos')">Vehículos (Logística)</button>
+    <button id="btn-tab-objetos" class="tab-btn magnetic-btn" onclick="switchPaseTab('objetos')">Objetos Externos</button>
 </div>
 
 <!-- VISITANTES TAB -->
@@ -152,6 +153,84 @@
     </div>
 </div>
 
+<!-- OBJETOS EXTERNOS TAB -->
+<div id="view-objetos" style="display: none;">
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+        <!-- Formulario Registro Objeto Externo -->
+        <div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="flex: 1; min-width: 300px; max-width: 400px; padding: 2rem;">
+            <form action="{{ url_for('porteria.crear_objeto') }}" method="POST" style="margin-top: 1.5rem;" class="floating-form" autocomplete="off">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="floating-group stagger-item">
+                    <input type="text" name="descripcion" placeholder=" " required>
+                    <label>Descripción del Objeto (ej. Portátil, Taladro)</label>
+                    <div class="floating-border"></div>
+                </div>
+                <div class="floating-group stagger-item">
+                    <input type="text" name="serial" placeholder=" ">
+                    <label>Serial / Placa de Control (Opcional)</label>
+                    <div class="floating-border"></div>
+                </div>
+                <div class="floating-group stagger-item">
+                    <input type="text" name="propietario" placeholder=" ">
+                    <label>Propietario / Portador</label>
+                    <div class="floating-border"></div>
+                </div>
+                <div class="floating-group stagger-item">
+                    <textarea name="motivo" rows="3" placeholder=" " style="resize: vertical;"></textarea>
+                    <label>Motivo de Ingreso</label>
+                    <div class="floating-border"></div>
+                </div>
+                <button type="submit" class="btn-primary magnetic-btn stagger-item" style="width: 100%; height: 50px; margin-top: 1rem;">
+                    <i class="fas fa-plus"></i> Registrar y Generar QR
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabla Objetos -->
+        <div class="card animate-on-scroll" data-animation="fade-in-up" style="flex: 2; min-width: 400px; max-width: 100%;">
+            <h3>Equipos y Objetos de Terceros</h3>
+            <div style="overflow-x: auto; margin-top: 1rem;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--glass-border); text-align: left;">
+                            <th style="padding: 1rem;">Descripción / Serial</th>
+                            <th style="padding: 1rem;">Dueño / Motivo</th>
+                            <th style="padding: 1rem;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obj in objetos %}
+                        <tr style="border-bottom: 1px solid var(--glass-border);">
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 700; color: var(--secondary-text); font-size: 1.1rem;">{{ obj.descripcion }}</div>
+                                <span class="badge-tipo badge-externo" style="font-size: 0.75rem; background: rgba(57,169,0,0.1); color: #39A900; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+                                    S/N: {{ obj.serial or 'Sin serial' }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 500;">{{ obj.propietario or 'Anónimo' }}</div>
+                                <small style="color: var(--text-muted);">{{ obj.motivo or '-' }}</small>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <button onclick="showQR('{{ obj.qr_code }}', '{{ obj.descripcion }}')" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color);">
+                                    <i class="fas fa-qrcode"></i> Ver QR
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                No hay objetos externos registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL QR -->
 <div id="qrModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
     <div class="card" style="max-width: 500px; text-align: center; position: relative; animation: slideUp 0.3s ease;">
@@ -173,6 +252,7 @@
         document.getElementById('btn-tab-' + view).classList.add('active');
         document.getElementById('view-visitantes').style.display = (view === 'visitantes' ? 'block' : 'none');
         document.getElementById('view-vehiculos').style.display = (view === 'vehiculos' ? 'block' : 'none');
+        document.getElementById('view-objetos').style.display = (view === 'objetos' ? 'block' : 'none');
     }
 
     function showQR(text, title) {
