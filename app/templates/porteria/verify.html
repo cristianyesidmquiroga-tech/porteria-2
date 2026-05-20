@@ -81,7 +81,34 @@
                 No tiene equipos registrados en su perfil.
             </div>
             {% endif %}
+
+            <div style="background: #FFF9C4; border: 1px solid #FFF59D; padding: 12px; border-radius: 10px; margin-top: 15px; text-align: left; font-size: 0.8rem; color: #F57F17; display: flex; align-items: flex-start; gap: 8px;">
+                <i class="fas fa-exclamation-circle" style="margin-top: 3px;"></i>
+                <div>
+                    <strong>Verificación de Equipos:</strong> Si el aprendiz porta un computador u objeto que no está en la lista superior, por favor repórtelo como novedad utilizando la sección de reporte inferior.
+                </div>
+            </div>
         </div>
+
+        <!-- Sección de Incidente de Equipos o Anomalía -->
+        {% if current_user.es_celador_cargo or current_user.cargo == 'Administrador' %}
+        <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 0 20px;">
+        <div style="padding: 15px 20px;">
+            <p style="font-size: 0.85rem; font-weight: 700; color: #D32F2F; text-align: left; margin-bottom: 5px;">
+                <i class="fas fa-exclamation-triangle"></i> Reportar Novedad / Anomalía:
+            </p>
+            <form action="{{ url_for('porteria.register_incidente') }}" method="POST" autocomplete="off" style="display: flex; flex-direction: column; gap: 8px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="entidad_id" value="{{ user_profile.id }}">
+                <input type="hidden" name="tipo_entidad" value="Usuario">
+                <input type="text" name="detalles" placeholder="Ej. Porta portátil HP negro no registrado..." required 
+                    style="padding: 8px 12px; border: 1px solid var(--glass-border); border-radius: 8px; font-size: 0.85rem; font-family: inherit;">
+                <button type="submit" class="btn-primary" style="background: #E65100; font-size: 0.8rem; padding: 6px 12px; border-radius: 8px; width: 100%; border: none; font-weight: 600; color: white;">
+                    <i class="fas fa-paper-plane"></i> Reportar Anomalía de Equipos
+                </button>
+            </form>
+        </div>
+        {% endif %}
 
         <div class="carnet-footer" style="flex-direction: column; gap: 10px; padding: 20px;">
             {% if current_user.es_celador_cargo or current_user.cargo == 'Administrador' %}

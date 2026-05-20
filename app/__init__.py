@@ -86,6 +86,21 @@ def create_app():
         # Crear las tablas de la base de datos si no existen
         db.create_all()
 
+        # Migración dinámica para objetos_externos
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS serial VARCHAR(100) UNIQUE;"))
+            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS propietario VARCHAR(100);"))
+            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS motivo TEXT;"))
+            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;"))
+            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS qr_code VARCHAR(255) UNIQUE;"))
+            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP WITHOUT TIME ZONE;"))
+            db.session.commit()
+            print("Migración de objetos_externos completada.")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error en migración: {e}")
+
         # Configurar tareas automáticas (Programador de tareas)
         from .utils.tareas import auto_exit_all
         from .utils.respaldos import ejecutar_respaldo_mensual

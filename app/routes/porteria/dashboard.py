@@ -16,10 +16,33 @@ def dashboard():
         return redirect(url_for('usuarios.profile'))
 
     # Estadísticas clave (KPIs)
-    # Estadísticas de usuarios activos por su cargo
     aprendiz_count = Usuario.query.filter_by(cargo='Aprendiz').count()
     instructor_count = Usuario.query.filter_by(cargo='Instructor').count()
     trabajador_count = Usuario.query.join(Rol).filter(Rol.nombre == 'Trabajador').count()
+
+    # Calcular cuántos visitantes, vehículos y objetos externos están actualmente adentro de la sede
+    from ...models.entidades import Visitante, Vehiculo, ObjetoExterno
+    
+    total_visitantes_adentro = 0
+    visitantes = Visitante.query.all()
+    for v in visitantes:
+        ultimo = Acceso.query.filter_by(referencia_id=v.id, tipo_referencia='Visitante').order_by(Acceso.fecha.desc()).first()
+        if ultimo and ultimo.tipo == 'Entrada':
+            total_visitantes_adentro += 1
+
+    total_vehiculos_adentro = 0
+    vehiculos = Vehiculo.query.all()
+    for veh in vehiculos:
+        ultimo = Acceso.query.filter_by(referencia_id=veh.id, tipo_referencia='Vehiculo').order_by(Acceso.fecha.desc()).first()
+        if ultimo and ultimo.tipo == 'Entrada':
+            total_vehiculos_adentro += 1
+
+    total_objetos_adentro = 0
+    objetos = ObjetoExterno.query.all()
+    for obj in objetos:
+        ultimo = Acceso.query.filter_by(referencia_id=obj.id, tipo_referencia='ObjetoExterno').order_by(Acceso.fecha.desc()).first()
+        if ultimo and ultimo.tipo == 'Entrada':
+            total_objetos_adentro += 1
 
     # Historial de entradas de los últimos 7 días por Cargo (para la gráfica)
     colombia_tz = timezone(timedelta(hours=-5))
@@ -58,7 +81,7 @@ def dashboard():
             idx = day_map[d]
             if cargo == 'Aprendiz': stats_aprendiz[idx] += 1
             elif cargo == 'Instructor': stats_instructor[idx] += 1
-            else: stats_trabajador[idx] += 1  # Trabajador, Celador, Admin, etc.
+            else: stats_trabajador[idx] += 1
             total_entries += 1
 
     max_day_val, max_day_lbl = max(((stats_aprendiz[i] + stats_instructor[i] + stats_trabajador[i], labels_7days[i]) for i in range(7)), default=(-1, ""))
@@ -68,16 +91,89 @@ def dashboard():
     cargo_filter = request.args.get('cargo')
     ficha_filter = request.args.get('ficha')
     
-    # Obtener los cargos y fichas disponibles para llenar los selectores de los filtros
     cargos = [c[0] for c in db.session.query(Usuario.cargo).filter(Usuario.cargo.isnot(None), Usuario.cargo != '').distinct().all()]
+    cargos += ['Visitante', 'Vehículo', 'Objeto Externo']
     fichas = [f[0] for f in db.session.query(Usuario.ficha).filter(Usuario.ficha.isnot(None), Usuario.ficha != '').distinct().all()]
 
-    history_query = db.session.query(Acceso, Usuario, Rol).join(Usuario, Acceso.referencia_id == Usuario.id).join(Rol, Usuario.rol_id == Rol.id).filter(Acceso.tipo_referencia == 'Usuario')
-    if cargo_filter: history_query = history_query.filter(Usuario.cargo == cargo_filter)
-    if ficha_filter: history_query = history_query.filter(Usuario.ficha == ficha_filter)
-    historial = history_query.order_by(Acceso.fecha.desc()).limit(100).all()
+    accesos_db = Acceso.query.order_by(Acceso.fecha.desc()).limit(100).all()
+    historial = []
 
-    return render_template('porteria/dashboard.html', kpis={'aprendices': aprendiz_count, 'instructores': instructor_count, 'trabajadores': trabajador_count}, chart_data={'labels': labels_7days, 'aprendices': stats_aprendiz, 'instructores': stats_instructor, 'trabajadores': stats_trabajador}, analisis_texto=analisis_texto, historial=historial, cargos=cargos, fichas=fichas, current_cargo=cargo_filter, current_ficha=ficha_filter)
+    for acc in accesos_db:
+        nombre = "N/A"
+        documento = "N/A"
+        rol_or_tipo = acc.tipo_referencia
+        cargo_or_clase = "N/A"
+        foto = None
+        programa_ficha = "N/A"
+        rsuffix = "trabajador"
+        
+        if acc.tipo_referencia == 'Usuario':
+            u = Usuario.query.get(acc.referencia_id)
+            if u:
+                nombre = u.nombre
+                documento = u.documento
+                rol_or_tipo = u.rol.nombre if u.rol else 'Usuario'
+                cargo_or_clase = u.cargo or "N/A"
+                foto = u.foto
+                rsuffix = 'aprendiz' if rol_or_tipo == 'Aprendiz' else ('instructor' if rol_or_tipo == 'Instructor' else 'trabajador')
+                if u.programa:
+                    programa_ficha = f"{u.programa} (Ficha: {u.ficha or 'N/A'})"
+        elif acc.tipo_referencia == 'Visitante':
+            v = Visitante.query.get(acc.referencia_id)
+            if v:
+                nombre = v.nombre
+                documento = v.documento
+                rol_or_tipo = "Visitante"
+                cargo_or_clase = "Visitante"
+                rsuffix = "visitante"
+                programa_ficha = f"Motivo: {v.motivo or 'N/A'}"
+        elif acc.tipo_referencia == 'Vehiculo':
+            veh = Vehiculo.query.get(acc.referencia_id)
+            if veh:
+                nombre = f"Vehículo {veh.placa}"
+                documento = veh.placa
+                rol_or_tipo = "Vehículo"
+                cargo_or_clase = "Vehículo"
+                rsuffix = "vehiculo"
+                programa_ficha = f"Motivo: {veh.motivo or 'N/A'}"
+        elif acc.tipo_referencia == 'ObjetoExterno':
+            obj = ObjetoExterno.query.get(acc.referencia_id)
+            if obj:
+                nombre = obj.descripcion
+                documento = obj.serial
+                rol_or_tipo = "Objeto Externo"
+                cargo_or_clase = "Objeto Externo"
+                rsuffix = "objeto"
+                programa_ficha = f"Motivo: {obj.motivo or 'N/A'}"
+
+        if cargo_filter and cargo_filter != cargo_or_clase and cargo_filter != rol_or_tipo:
+            continue
+        if ficha_filter:
+            if acc.tipo_referencia != 'Usuario':
+                continue
+            u = Usuario.query.get(acc.referencia_id)
+            if not u or u.ficha != ficha_filter:
+                continue
+
+        historial.append({
+            "acceso": acc,
+            "nombre": nombre,
+            "documento": documento,
+            "rol_or_tipo": rol_or_tipo,
+            "cargo_or_clase": cargo_or_clase,
+            "foto": foto,
+            "programa_ficha": programa_ficha,
+            "rsuffix": rsuffix
+        })
+
+    return render_template('porteria/dashboard.html', kpis={
+        'aprendices': aprendiz_count,
+        'instructores': instructor_count,
+        'trabajadores': trabajador_count,
+        'visitantes': total_visitantes_adentro,
+        'vehiculos': total_vehiculos_adentro,
+        'objetos': total_objetos_adentro
+    }, chart_data={'labels': labels_7days, 'aprendices': stats_aprendiz, 'instructores': stats_instructor, 'trabajadores': stats_trabajador}, analisis_texto=analisis_texto, historial=historial, cargos=cargos, fichas=fichas, current_cargo=cargo_filter, current_ficha=ficha_filter)
 
 @bp.route('/export_dashboard')
 @login_required
