@@ -107,34 +107,44 @@ def api_crear_usuario():
             asunto = "Bienvenido al Sistema de Acceso - SENA Vélez Santander"
             link_login = url_for('auth.login', _external=True)
             cuerpo_html = f"""
-            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #39A900; padding: 20px; text-align: center;">
-                    <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
-                    <p style="color: white; margin: 5px 0 0 0;">Centro de Gestión Agroempresarial del Oriente (Vélez)</p>
+            <div style="font-family: Arial, sans-serif; color: #333333; max-width: 680px; margin: 0 auto; border: 1px solid #dddddd; border-radius: 10px; overflow: hidden; background-color: #ffffff;">
+                <div style="background-color: #ffffff; padding: 24px 24px 16px 24px; text-align: center; border-bottom: 5px solid #39A900;">
+                    <div style="font-size: 44px; font-weight: 900; color: #39A900; letter-spacing: 1px; line-height: 1;">SENA</div>
+                    <h2 style="color: #39A900; margin: 12px 0 4px 0;">SENA Vélez Santander</h2>
+                    <p style="color: #555555; margin: 0;">Sistema de Acceso y Carnet Digital</p>
                 </div>
-                <div style="padding: 20px;">
+                <div style="padding: 26px;">
                     <h3>Hola, {data['nombre']}</h3>
-                    <p>Se te ha creado un perfil institucional para el ingreso a la plataforma de gestión de accesos.</p>
-                    <p>Estas son tus credenciales de acceso temporal:</p>
-                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                        <p style="margin: 5px 0;"><strong>Usuario/Correo:</strong> {data['correo'].lower()}</p>
-                        <p style="margin: 5px 0;"><strong>Contraseña:</strong> {data['contraseña']}</p>
-                    </div>
-                    
-                    <h4 style="color: #e74c3c;">¡IMPORTANTE! Instrucciones Obligatorias:</h4>
-                    <ol>
-                        <li>Ingresa a la plataforma a través del siguiente enlace: <a href="{link_login}" style="color: #39A900; font-weight: bold;">Ingresar al Sistema</a>.</li>
-                        <li>Apenas ingreses, el sistema te exigirá <strong>cambiar tu contraseña temporal</strong> por una propia y segura.</li>
-                        <li>Una vez cambiada, deberás dirigirte a tu <strong>Perfil</strong> y diligenciar toda tu información personal.</li>
-                        <li><strong>Código QR:</strong> Solo cuando tu perfil esté 100% completo, se activará tu código QR, el cual es necesario para poder entrar y salir de la institución.</li>
-                        <li><strong>Registro de Equipos:</strong> Si vas a ingresar con dispositivos (como computadores portátiles), debes registrarlos previamente en tu perfil usando el número de serie (S/N) y el nombre del equipo.</li>
-                    </ol>
-                    <p style="color: #e74c3c; font-weight: bold; text-align: center; margin-top: 30px;">
-                        ⚠️ Si no realizas este proceso, NO podrás ingresar a la institución.
+                    <p>Somos del <strong>SENA Vélez</strong> y te comunicamos que, para el ingreso a nuestra institución por portería, debes contar con un <strong>carnet digital activo</strong>.</p>
+                    <p>Para iniciar el proceso, ingresa a la plataforma desde el siguiente enlace:</p>
+                    <p style="text-align: center; margin: 26px 0;">
+                        <a href="{link_login}" style="background-color: #39A900; color: #ffffff; padding: 13px 24px; text-decoration: none; border-radius: 7px; font-weight: bold; display: inline-block;">Ingresar a la plataforma</a>
                     </p>
+                    <p>Si el botón no funciona, copia y pega esta URL en tu navegador:</p>
+                    <p style="word-break: break-all;"><a href="{link_login}" style="color: #39A900;">{link_login}</a></p>
+                    <p>Estas son tus credenciales de acceso temporal:</p>
+                    <div style="background-color: #f5f5f5; padding: 16px; border-radius: 7px; margin-bottom: 22px; border-left: 4px solid #39A900;">
+                        <p style="margin: 6px 0;"><strong>Usuario:</strong> {data['correo'].lower()}</p>
+                        <p style="margin: 6px 0;"><strong>Contraseña temporal:</strong> {data['contraseña']}</p>
+                    </div>
+                    <h4 style="color: #39A900;">Paso a paso obligatorio</h4>
+                    <ol>
+                        <li>Ingresa a la plataforma usando la URL enviada en este correo.</li>
+                        <li>Inicia sesión con tu usuario y contraseña temporal.</li>
+                        <li>Cambia la contraseña temporal apenas ingreses y asigna una nueva contraseña personal y segura.</li>
+                        <li>Completa tu perfil con toda tu información personal.</li>
+                        <li>Carga una fotografía clara y actual de ti mismo. No deben aparecer otras personas, logos, objetos, paisajes ni imágenes que no correspondan a tu identidad.</li>
+                        <li>Si vas a ingresar algún computador u otro equipo tecnológico, debes registrarlo en la plataforma antes de presentarte en portería.</li>
+                    </ol>
+                    <div style="background-color: #fff8f8; border-left: 4px solid #e74c3c; padding: 14px; margin-top: 22px; color: #555555;">
+                        <strong>Importante:</strong> Si tu perfil no tiene una foto válida de ti, o si la imagen cargada no corresponde a tu identidad, no podrás ingresar a la institución hasta que la fotografía sea corregida y verificada.
+                    </div>
+                    <div style="background-color: #f9f9f9; border-left: 4px solid #39A900; padding: 12px; margin-top: 22px; font-size: 13px; color: #555555;">
+                        <strong>Política de privacidad:</strong> La información registrada será utilizada únicamente para procesos de identificación, control de acceso y seguridad institucional del SENA Vélez, conforme a las políticas institucionales de protección de datos personales.
+                    </div>
                 </div>
-                <div style="background-color: #f9f9f9; padding: 15px; text-align: center; font-size: 12px; color: #777;">
-                    <p>Este es un correo generado automáticamente, por favor no respondas a este mensaje.</p>
+                <div style="background-color: #f4f4f4; padding: 16px; text-align: center; font-size: 12px; color: #777777;">
+                    <p style="margin: 0;">Este es un correo generado automáticamente por el Sistema de Acceso SENA Vélez. Por favor, no respondas a este mensaje.</p>
                 </div>
             </div>
             """
@@ -356,20 +366,44 @@ def api_importar_usuarios_excel():
                 asunto = "Bienvenido al Sistema de Acceso - SENA Vélez"
                 link_login = url_for('auth.login', _external=True)
                 cuerpo_html = f"""
-                <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <div style="background-color: #39A900; padding: 20px; text-align: center;">
-                        <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
-                        <p style="color: white; margin: 5px 0 0 0;">Centro de Gestión Agroempresarial del Oriente (Vélez)</p>
+                <div style="font-family: Arial, sans-serif; color: #333333; max-width: 680px; margin: 0 auto; border: 1px solid #dddddd; border-radius: 10px; overflow: hidden; background-color: #ffffff;">
+                    <div style="background-color: #ffffff; padding: 24px 24px 16px 24px; text-align: center; border-bottom: 5px solid #39A900;">
+                        <div style="font-size: 44px; font-weight: 900; color: #39A900; letter-spacing: 1px; line-height: 1;">SENA</div>
+                        <h2 style="color: #39A900; margin: 12px 0 4px 0;">SENA Vélez Santander</h2>
+                        <p style="color: #555555; margin: 0;">Sistema de Acceso y Carnet Digital</p>
                     </div>
-                    <div style="padding: 20px;">
+                    <div style="padding: 26px;">
                         <h3>Hola, {nombre}</h3>
-                        <p>Se te ha creado un perfil institucional para el ingreso a la plataforma de gestión de accesos (Ingreso Masivo).</p>
+                        <p>Somos del <strong>SENA Vélez</strong> y te comunicamos que, para el ingreso a nuestra institución por portería, debes contar con un <strong>carnet digital activo</strong>.</p>
+                        <p>Para iniciar el proceso, ingresa a la plataforma desde el siguiente enlace:</p>
+                        <p style="text-align: center; margin: 26px 0;">
+                            <a href="{link_login}" style="background-color: #39A900; color: #ffffff; padding: 13px 24px; text-decoration: none; border-radius: 7px; font-weight: bold; display: inline-block;">Ingresar a la plataforma</a>
+                        </p>
+                        <p>Si el botón no funciona, copia y pega esta URL en tu navegador:</p>
+                        <p style="word-break: break-all;"><a href="{link_login}" style="color: #39A900;">{link_login}</a></p>
                         <p>Estas son tus credenciales de acceso temporal:</p>
-                        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                            <p style="margin: 5px 0;"><strong>Usuario/Correo:</strong> {correo}</p>
-                            <p style="margin: 5px 0;"><strong>Contraseña:</strong> {password}</p>
+                        <div style="background-color: #f5f5f5; padding: 16px; border-radius: 7px; margin-bottom: 22px; border-left: 4px solid #39A900;">
+                            <p style="margin: 6px 0;"><strong>Usuario:</strong> {correo}</p>
+                            <p style="margin: 6px 0;"><strong>Contraseña temporal:</strong> {password}</p>
                         </div>
-                        <p>Por favor, ingresa a <a href="{link_login}" style="color: #39A900; font-weight: bold;">este enlace</a> y completa tu perfil para activar tu carnet digital.</p>
+                        <h4 style="color: #39A900;">Paso a paso obligatorio</h4>
+                        <ol>
+                            <li>Ingresa a la plataforma usando la URL enviada en este correo.</li>
+                            <li>Inicia sesión con tu usuario y contraseña temporal.</li>
+                            <li>Cambia la contraseña temporal apenas ingreses y asigna una nueva contraseña personal y segura.</li>
+                            <li>Completa tu perfil con toda tu información personal.</li>
+                            <li>Carga una fotografía clara y actual de ti mismo. No deben aparecer otras personas, logos, objetos, paisajes ni imágenes que no correspondan a tu identidad.</li>
+                            <li>Si vas a ingresar algún computador u otro equipo tecnológico, debes registrarlo en la plataforma antes de presentarte en portería.</li>
+                        </ol>
+                        <div style="background-color: #fff8f8; border-left: 4px solid #e74c3c; padding: 14px; margin-top: 22px; color: #555555;">
+                            <strong>Importante:</strong> Si tu perfil no tiene una foto válida de ti, o si la imagen cargada no corresponde a tu identidad, no podrás ingresar a la institución hasta que la fotografía sea corregida y verificada.
+                        </div>
+                        <div style="background-color: #f9f9f9; border-left: 4px solid #39A900; padding: 12px; margin-top: 22px; font-size: 13px; color: #555555;">
+                            <strong>Política de privacidad:</strong> La información registrada será utilizada únicamente para procesos de identificación, control de acceso y seguridad institucional del SENA Vélez, conforme a las políticas institucionales de protección de datos personales.
+                        </div>
+                    </div>
+                    <div style="background-color: #f4f4f4; padding: 16px; text-align: center; font-size: 12px; color: #777777;">
+                        <p style="margin: 0;">Este es un correo generado automáticamente por el Sistema de Acceso SENA Vélez. Por favor, no respondas a este mensaje.</p>
                     </div>
                 </div>
                 """
