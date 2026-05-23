@@ -208,8 +208,8 @@ def register_movement_entidad(tipo_entidad, entidad_id, mov):
     return redirect(url_for('porteria.dashboard'))
 
     
-    nuevo_acceso = Acceso(punto_id=1, referencia_id=user.id, tipo_referencia='Usuario', tipo=type)
-    if nombres_equipos:
+
+
         nuevo_acceso.equipos_str = ", ".join(nombres_equipos)
     
     db.session.add(nuevo_acceso)
