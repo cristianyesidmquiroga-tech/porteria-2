@@ -14,7 +14,7 @@ class Config:
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
     # Si la URL apunta a un host placeholder sin credenciales, usar SQLite local
-    if database_url and ('postgres-db' in database_url) and ('@' not in database_url):
+    if database_url and ('postgres-db' in database_url):
         database_url = None
 
     SQLALCHEMY_DATABASE_URI = database_url or (
