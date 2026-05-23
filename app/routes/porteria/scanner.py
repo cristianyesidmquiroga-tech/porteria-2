@@ -210,7 +210,7 @@ def register_movement_entidad(tipo_entidad, entidad_id, mov):
     
 
 
-        nuevo_acceso.equipos_str = ", ".join(nombres_equipos)
+
     
     db.session.add(nuevo_acceso)
     db.session.commit()
