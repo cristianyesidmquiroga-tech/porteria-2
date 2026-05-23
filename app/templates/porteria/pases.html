@@ -212,9 +212,18 @@
                                 <small style="color: var(--text-muted);">{{ obj.motivo or '-' }}</small>
                             </td>
                             <td style="padding: 1rem;">
-                                <button onclick="showQR('{{ obj.qr_code }}', '{{ obj.descripcion }}')" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color);">
+                                <button onclick="showQR('{{ obj.qr_code }}', '{{ obj.descripcion }}')" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color); margin-right: 5px;">
                                     <i class="fas fa-qrcode"></i> Ver QR
                                 </button>
+                                <a href="{{ url_for('porteria.editar_objeto', obj_id=obj.id) }}" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--primary-color); margin-right: 5px;">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <form action="{{ url_for('porteria.eliminar_objeto', obj_id=obj.id) }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <button type="submit" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: #C62828; border: none;">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% else %}

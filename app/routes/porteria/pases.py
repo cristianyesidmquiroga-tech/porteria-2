@@ -105,3 +105,47 @@ def crear_objeto():
     flash(msg, 'success')
     return redirect(url_for('porteria.pases'))
 
+
+# Edit ObjetoExterno (GET) - render form with existing data
+@bp.route('/pases/editar_objeto/<int:obj_id>', methods=['GET'])
+@login_required
+def editar_objeto(obj_id):
+    if not current_user.puede_operar_porteria:
+        flash('No tienes permiso para editar objetos.', 'danger')
+        return redirect(url_for('porteria.pases'))
+    obj = ObjetoExterno.query.get_or_404(obj_id)
+    return render_template('porteria/editar_objeto.html', objeto=obj)
+
+# Update ObjetoExterno (POST)
+@bp.route('/pases/actualizar_objeto/<int:obj_id>', methods=['POST'])
+@login_required
+def actualizar_objeto(obj_id):
+    if not current_user.puede_operar_porteria:
+        flash('No tienes permiso para actualizar objetos.', 'danger')
+        return redirect(url_for('porteria.pases'))
+    obj = ObjetoExterno.query.get_or_404(obj_id)
+    descripcion = request.form.get('descripcion')
+    serial = request.form.get('serial')
+    propietario = request.form.get('propietario')
+    motivo = request.form.get('motivo')
+    if descripcion:
+        obj.descripcion = descripcion
+    obj.serial = serial or obj.serial
+    obj.propietario = propietario
+    obj.motivo = motivo
+    db.session.commit()
+    flash('Objeto actualizado correctamente.', 'success')
+    return redirect(url_for('porteria.pases'))
+
+# Delete (deactivate) ObjetoExterno
+@bp.route('/pases/eliminar_objeto/<int:obj_id>', methods=['POST'])
+@login_required
+def eliminar_objeto(obj_id):
+    if not current_user.puede_operar_porteria:
+        flash('No tienes permiso para eliminar objetos.', 'danger')
+        return redirect(url_for('porteria.pases'))
+    obj = ObjetoExterno.query.get_or_404(obj_id)
+    obj.activo = False
+    db.session.commit()
+    flash('Objeto desactivado.', 'warning')
+    return redirect(url_for('porteria.pases'))
