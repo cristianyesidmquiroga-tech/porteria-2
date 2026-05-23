@@ -161,23 +161,29 @@ def verify(doc):
 
     return redirect(url_for('porteria.scanner'))
 
-@bp.route('/register_movement_entidad/<tipo_entidad>/<int:entidad_id>/<mov>', methods=['POST'])
+# Duplicate route decorator removed
+
+
 @login_required
 def register_movement_entidad(tipo_entidad, entidad_id, mov):
     if not current_user.puede_operar_porteria:
         return {"error": "Unauthorized"}, 403
-    
+
+    # Determine current status of the entity
     is_inside = Acceso.query.filter_by(referencia_id=entidad_id, tipo_referencia=tipo_entidad).order_by(Acceso.fecha.desc()).first()
     status_actual = is_inside.tipo if is_inside else 'Afuera'
-    
+
+    # Detect inconsistencies
     discrepancia = False
+    detalles_disc = ''
     if mov == 'Salida' and status_actual != 'Entrada':
         discrepancia = True
         detalles_disc = f'El celador forzó la salida de {tipo_entidad} ID {entidad_id} sin registro de entrada previo.'
     elif mov == 'Entrada' and status_actual == 'Entrada':
         discrepancia = True
         detalles_disc = f'El celador forzó la entrada de {tipo_entidad} ID {entidad_id} que ya figuraba adentro.'
-        
+
+    # Log audit if there is a discrepancy
     if discrepancia:
         db.session.add(Auditoria(
             usuario_id=current_user.id,
@@ -189,7 +195,10 @@ def register_movement_entidad(tipo_entidad, entidad_id, mov):
             motivo='Registro de movimiento con inconsistencia de estado',
             detalles=detalles_disc
         ))
-    
+        db.session.commit()
+        flash(detalles_disc, 'danger')
+
+    # Register the movement
     db.session.add(Acceso(punto_id=1, referencia_id=entidad_id, tipo_referencia=tipo_entidad, tipo=mov))
     db.session.commit()
     msg = f'{mov} registrada correctamente.'
@@ -198,43 +207,6 @@ def register_movement_entidad(tipo_entidad, entidad_id, mov):
     flash(msg, 'success')
     return redirect(url_for('porteria.dashboard'))
 
-@bp.route('/register_movement/<int:user_id>/<type>', methods=['POST'])
-@login_required
-def register_movement(user_id, type):
-    if not current_user.puede_operar_porteria:
-        return {"error": "Unauthorized"}, 403
-    user = Usuario.query.get(user_id)
-    if not user: return {"error": "User not found"}, 404
-    
-    is_inside = Acceso.query.filter_by(referencia_id=user.id, tipo_referencia='Usuario').order_by(Acceso.fecha.desc()).first()
-    status_actual = is_inside.tipo if is_inside else 'Afuera'
-    
-    discrepancia = False
-    if type == 'Salida' and status_actual != 'Entrada':
-        discrepancia = True
-        detalles_disc = f'El celador forzó la salida de Usuario {user.nombre} ({user.documento}) sin registro de entrada previo.'
-    elif type == 'Entrada' and status_actual == 'Entrada':
-        discrepancia = True
-        detalles_disc = f'El celador forzó la entrada de Usuario {user.nombre} ({user.documento}) que ya figuraba adentro.'
-        
-    if discrepancia:
-        db.session.add(Auditoria(
-            usuario_id=current_user.id,
-            nombre_usuario=current_user.nombre,
-            tabla_afectada='usuarios',
-            registro_id=user.id,
-            accion='Inconsistencia de Acceso Detectada',
-            autorizado_por=current_user.nombre,
-            motivo='Registro de movimiento con inconsistencia de estado',
-            detalles=detalles_disc
-        ))
-    
-    equipos_ids = request.form.getlist('equipos_ids')
-    nombres_equipos = []
-    for equipo in user.equipos:
-        if str(equipo.id) in equipos_ids:
-            equipo.estado = 'Adentro' if type == 'Entrada' else 'Afuera'
-            nombres_equipos.append(equipo.nombre)
     
     nuevo_acceso = Acceso(punto_id=1, referencia_id=user.id, tipo_referencia='Usuario', tipo=type)
     if nombres_equipos:
