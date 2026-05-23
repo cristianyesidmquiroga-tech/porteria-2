@@ -197,6 +197,7 @@ def register_movement_entidad(tipo_entidad, entidad_id, mov):
         ))
         db.session.commit()
         flash(detalles_disc, 'danger')
+        return redirect(url_for('porteria.dashboard'))
 
     # Register the movement
     db.session.add(Acceso(punto_id=1, referencia_id=entidad_id, tipo_referencia=tipo_entidad, tipo=mov))
