@@ -163,7 +163,7 @@ def verify(doc):
 
 # Duplicate route decorator removed
 
-
+@bp.route('/register_movement_entidad/<tipo_entidad>/<int:entidad_id>/<mov>', methods=['POST'])
 @login_required
 def register_movement_entidad(tipo_entidad, entidad_id, mov):
     if not current_user.puede_operar_porteria:
@@ -207,19 +207,6 @@ def register_movement_entidad(tipo_entidad, entidad_id, mov):
     flash(msg, 'success')
     return redirect(url_for('porteria.dashboard'))
 
-    
-
-
-
-    
-    db.session.add(nuevo_acceso)
-    db.session.commit()
-    msg = f'{type} registrada para {user.nombre}.'
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return {"status": "success", "message": msg, "redirect": url_for('porteria.dashboard')}
-    flash(msg, 'success')
-    return redirect(url_for('porteria.dashboard'))
-
 @bp.route('/register_incidente', methods=['POST'])
 @login_required
 def register_incidente():
@@ -228,11 +215,9 @@ def register_incidente():
     entidad_id = request.form.get('entidad_id')
     tipo_entidad = request.form.get('tipo_entidad')
     detalles = request.form.get('detalles')
-    
     if not detalles:
         flash('Detalles del incidente requeridos.', 'warning')
         return redirect(url_for('porteria.scanner'))
-        
     db.session.add(Auditoria(
         usuario_id=current_user.id,
         nombre_usuario=current_user.nombre,
