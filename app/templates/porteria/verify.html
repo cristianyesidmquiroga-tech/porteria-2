@@ -112,7 +112,7 @@
 
         <div class="carnet-footer" style="flex-direction: column; gap: 10px; padding: 20px;">
             {% if current_user.es_celador_cargo or current_user.cargo == 'Administrador' %}
-            <form id="form-entrada" action="{{ url_for('porteria.register_movement', user_id=user_profile.id, type='Entrada') }}"
+            <form id="form-entrada" action="{{ url_for('porteria.register_movement_entidad', tipo_entidad='Usuario', entidad_id=user_profile.id, mov='Entrada') }}"
                 method="POST" data-no-ajax>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div id="equipos-entrada"></div>
@@ -121,7 +121,7 @@
                     <i class="fas fa-sign-in-alt"></i> ESTA ENTRANDO
                 </button>
             </form>
-            <form id="form-salida" action="{{ url_for('porteria.register_movement', user_id=user_profile.id, type='Salida') }}"
+            <form id="form-salida" action="{{ url_for('porteria.register_movement_entidad', tipo_entidad='Usuario', entidad_id=user_profile.id, mov='Salida') }}"
                 method="POST" data-no-ajax>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div id="equipos-salida"></div>
