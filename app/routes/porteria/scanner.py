@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from . import porteria_bp as bp
 from ...models.usuarios import Usuario
-from ...models.entidades import Visitante, Vehiculo, ObjetoExterno
+from ...models.entidades import Visitante, Vehiculo, ObjetoExterno, Equipo
 from ...models.accesos import Acceso, Auditoria
 from ... import db
 
@@ -161,7 +161,59 @@ def verify(doc):
 
     return redirect(url_for('porteria.scanner'))
 
-# Duplicate route decorator removed
+@bp.route('/register_movement/<int:user_id>/<type>', methods=['POST'])
+@login_required
+def register_movement(user_id, type):
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if not current_user.puede_operar_porteria:
+        msg = 'No tienes permiso para registrar movimientos.'
+        if is_ajax:
+            return {"status": "error", "message": msg}, 403
+        flash(msg, 'danger')
+        return redirect(url_for('usuarios.profile'))
+
+    if type not in ['Entrada', 'Salida']:
+        msg = 'Tipo de movimiento no válido.'
+        if is_ajax:
+            return {"status": "error", "message": msg}, 400
+        flash(msg, 'danger')
+        return redirect(url_for('porteria.dashboard'))
+
+    Usuario.query.get_or_404(user_id)
+
+    try:
+        equipos_ids = request.form.getlist('equipos_ids')
+        equipos_str = ','.join(equipos_ids) if equipos_ids else None
+
+        db.session.add(Acceso(
+            punto_id=1,
+            referencia_id=user_id,
+            tipo_referencia='Usuario',
+            tipo=type,
+            equipos_str=equipos_str
+        ))
+
+        if equipos_ids:
+            nuevo_estado = 'Adentro' if type == 'Entrada' else 'Afuera'
+            Equipo.query.filter(
+                Equipo.usuario_id == user_id,
+                Equipo.id.in_(equipos_ids)
+            ).update({Equipo.estado: nuevo_estado}, synchronize_session=False)
+
+        db.session.commit()
+        msg = f'{type} registrada correctamente.'
+        if is_ajax:
+            return {"status": "success", "message": msg}
+        flash(msg, 'success')
+        return redirect(url_for('porteria.dashboard'))
+    except Exception:
+        db.session.rollback()
+        msg = 'No se pudo registrar el movimiento.'
+        if is_ajax:
+            return {"status": "error", "message": msg}, 500
+        flash(msg, 'danger')
+        return redirect(url_for('porteria.dashboard'))
 
 @bp.route('/register_movement_entidad/<tipo_entidad>/<int:entidad_id>/<mov>', methods=['POST'])
 @login_required
