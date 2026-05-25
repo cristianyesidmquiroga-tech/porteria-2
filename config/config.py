@@ -13,6 +13,9 @@ class Config:
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
+    # Forzar SQLite en entorno local (ignorar DATABASE_URL de Docker)
+    database_url = None
+
     SQLALCHEMY_DATABASE_URI = database_url or (
         'sqlite:///' + os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
