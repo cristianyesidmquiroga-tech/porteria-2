@@ -107,7 +107,38 @@ input[type="file"] {
     color: transparent !important;
 }
 
-/* 7. Checkboxes Customizados */
+/* 7. Custom File Input Wrapper */
+.file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.file-input-hidden {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.file-input-button {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+    padding: 14px 20px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid var(--glass-border) !important;
+    color: var(--glass-text) !important;
+}
+
+.file-input-button:hover {
+    background: rgba(57, 169, 0, 0.1) !important;
+    border-color: #39A900 !important;
+    color: #39A900 !important;
+}
+
+/* 8. Checkboxes Customizados */
 .glass-checkbox {
     display: inline-flex;
     align-items: center;
