@@ -175,42 +175,38 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for acceso, usuario, rol in historial %}
+                    {% for item in historial %}
                     <tr>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                {% set rsuffix = 'aprendiz' if rol.nombre == 'Aprendiz' else ('instructor' if rol.nombre ==
-                                'Instructor' else 'trabajador') %}
-                                <img src="{{ url_for('static', filename='uploads/profiles/' + usuario.foto) if usuario.foto else 'https://ui-avatars.com/api/?name=' + usuario.nombre|urlencode + '&background=39A900&color=fff' }}"
-                                    alt="Foto" class="role-img role-border-{{ rsuffix }}" onerror="this.src='https://ui-avatars.com/api/?name={{ usuario.nombre|urlencode }}&background=39A900&color=fff'">
-                                <span style="font-weight: 600;">{{ usuario.nombre }}</span>
+                                {% set rsuffix = item.rsuffix %}
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + item.foto) if item.foto else 'https://ui-avatars.com/api/?name=' + item.nombre|urlencode + '&background=39A900&color=fff' }}"
+                                    alt="Foto" class="role-img role-border-{{ rsuffix }}" onerror="this.src='https://ui-avatars.com/api/?name={{ item.nombre|urlencode }}&background=39A900&color=fff'">
+                                <span style="font-weight: 600;">{{ item.nombre }}</span>
                             </div>
                         </td>
-                        <td>{{ usuario.documento or 'N/A' }}</td>
+                        <td>{{ item.documento or 'N/A' }}</td>
                         <td>
-                            {% set rsuffix = 'aprendiz' if rol.nombre == 'Aprendiz' else ('instructor' if rol.nombre ==
-                            'Instructor' else 'trabajador') %}
                             <span class="role-badge role-badge-{{ rsuffix }}">
-                                {{ usuario.cargo or rol.nombre }}
+                                {{ item.cargo_or_clase }}
                             </span>
                         </td>
                         <td>
-                            {% if usuario.programa %}
-                            <div style="font-weight: 600;">{{ usuario.programa }}</div>
-                            <small style="opacity: 0.7;">Ficha: {{ usuario.ficha or 'N/A' }}</small>
+                            {% if item.programa_ficha != 'N/A' %}
+                            <div style="font-weight: 600;">{{ item.programa_ficha }}</div>
                             {% else %}
                             <span style="opacity: 0.5; font-style: italic;">N/A</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if acceso.equipos_str %}
-                            <span style="font-size: 0.85rem; background: rgba(57,169,0,0.1); color: #39A900; padding: 4px 8px; border-radius: 6px; font-weight: 600;"><i class="fas fa-laptop"></i> {{ acceso.equipos_str }}</span>
+                            {% if item.acceso.equipos_str %}
+                            <span style="font-size: 0.85rem; background: rgba(57,169,0,0.1); color: #39A900; padding: 4px 8px; border-radius: 6px; font-weight: 600;"><i class="fas fa-laptop"></i> {{ item.acceso.equipos_str }}</span>
                             {% else %}
                             <span style="opacity: 0.5; font-style: italic; font-size: 0.85rem;">Ninguno</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if acceso.tipo == 'Entrada' %}
+                            {% if item.acceso.tipo == 'Entrada' %}
                             <span
                                 class="text-entrada" style="display: flex; align-items: center; gap: 5px;"><i
                                     class="fas fa-arrow-right"
@@ -222,8 +218,7 @@
                                     style="background: rgba(231,76,60,0.1); padding: 4px; border-radius: 50%;"></i> Salida</span>
                             {% endif %}
                         </td>
-                        <td style="font-size: 0.85rem;">{{ acceso.fecha.strftime('%Y-%m-%d
-                            %H:%M:%S') }}</td>
+                        <td style="font-size: 0.85rem;">{{ item.acceso.fecha.strftime('%Y-%m-%d %H:%M:%S') if item.acceso.fecha else 'N/A' }}</td>
                     </tr>
                     {% else %}
                     <tr>
