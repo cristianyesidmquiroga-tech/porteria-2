@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 @bp.route('/recuperar', methods=['GET', 'POST'])
 def recuperar_solicitar():
     if request.method == 'POST':
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         email = request.form.get('email', '').strip().lower()
         usuario = Usuario.query.filter_by(correo=email).first()
         
@@ -31,8 +32,12 @@ def recuperar_solicitar():
             
             session['recovery_email'] = email
             flash('Se ha enviado un código de recuperación a tu correo.', 'info')
+            if is_ajax:
+                return {"status": "success", "message": "Se ha enviado un código de recuperación a tu correo.", "redirect": url_for('auth.recuperar_verificar')}
             return redirect(url_for('auth.recuperar_verificar'))
         else:
+            if is_ajax:
+                return {"status": "error", "message": "Correo no existe"}, 404
             flash('No encontramos ninguna cuenta asociada a ese correo.', 'danger')
             
     return render_template('auth/recuperar_paso1.html')

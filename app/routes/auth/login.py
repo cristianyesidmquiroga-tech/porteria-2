@@ -43,6 +43,12 @@ def login():
                 from datetime import timezone
                 session['last_activity'] = datetime.now(timezone.utc).timestamp()
 
+                if user.debe_cambiar_contrasena:
+                    msg = 'Por seguridad, debes cambiar tu contraseña temporal antes de continuar.'
+                    if is_ajax: return {"status": "success", "message": msg, "redirect": url_for('auth.cambiar_password_obligatorio')}
+                    flash(msg, 'warning')
+                    return redirect(url_for('auth.cambiar_password_obligatorio'))
+
                 if not user.correo_verificado:
                     msg = 'Debes verificar tu correo.'
                     if is_ajax: return {"status": "success", "message": msg, "redirect": url_for('auth.verificar_correo')}
@@ -122,7 +128,11 @@ def cambiar_password_obligatorio():
             current_user.contraseña = generate_password_hash(nueva_contraseña)
             current_user.debe_cambiar_contrasena = False
             db.session.commit()
-            flash('¡Contraseña actualizada exitosamente! Ahora completa tu perfil.', 'success')
-            return redirect(url_for('usuarios.profile'))
+            flash('¡Contraseña actualizada exitosamente!', 'success')
+            if not current_user.correo_verificado:
+                return redirect(url_for('auth.verificar_correo'))
+            if not current_user.perfil_completo:
+                return redirect(url_for('usuarios.profile'))
+            return redirect(url_for('main.index'))
 
     return render_template('auth/cambio_obligatorio.html')

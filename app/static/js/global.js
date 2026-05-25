@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 "max-glare": 0.15,
             });
 
-            VanillaTilt.init(document.querySelectorAll(".glass-card, .carnet-card"), {
+            VanillaTilt.init(document.querySelectorAll(".glass-card:not(.carnet-card)"), {
                 max: 3,
                 speed: 400,
                 glare: true,

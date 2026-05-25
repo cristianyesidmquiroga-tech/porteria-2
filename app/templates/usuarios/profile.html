@@ -74,12 +74,12 @@
                             </div>
                             {% endif %}
                             {% if current_user.programa %}
-                            <div class="info-item full-width">
+                            <div class="info-item">
                                 <span class="label">{% if current_user.es_instructor_cargo %}ÁREA DE ESPECIALIDAD{% else %}PROGRAMA DE FORMACIÓN{% endif %}</span>
                                 <span class="value">{{ current_user.programa }}</span>
                             </div>
                             {% endif %}
-                            <div class="info-item full-width">
+                            <div class="info-item">
                                 <span class="label">CORREO INSTITUCIONAL</span>
                                 <span class="value email-text">{{ current_user.correo }}</span>
                             </div>

@@ -89,7 +89,7 @@ def api_crear_usuario():
             programa=data.get('programa'),
             horario=data.get('horario'),
             perfil_completo=False if es_usuario_normal else True,
-            correo_verificado=data.get('verificado', False),
+            correo_verificado=True,
             debe_cambiar_contrasena=es_usuario_normal
         )
         nuevo_usuario.set_password(data['contraseña'])
