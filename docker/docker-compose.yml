@@ -7,8 +7,8 @@ services:
       dockerfile: docker/Dockerfile
     container_name: carnet_sena_web
     restart: always
-    ports:
-      - "5000:5000"
+    expose:
+      - 5000
     volumes:
       # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
       - ./app/static/uploads:/app/app/static/uploads
@@ -16,89 +16,6 @@ services:
       - ../config/.env
     environment:
       - TZ=America/Bogota
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-    networks:
-      - coolify
-
-  postgres-db:
-    image: 'postgres:16-alpine'
-    container_name: postgres_prod_central
-    restart: always
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-    env_file:
-      - ../config/.env
-    environment:
-      POSTGRES_USER: '${POSTGRES_USER:-admin}'
-      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
-      POSTGRES_DB: '${POSTGRES_DB:-master_db}'
-      POSTGRES_INITDB_ARGS: '--auth-host=md5 --auth-local=md5'
-      POSTGRES_HOST_AUTH_METHOD: md5
-      TZ: America/Bogota
-    command:
-      - postgres
-      - '-c'
-      - shared_buffers=256MB
-      - '-c'
-      - effective_cache_size=768MB
-      - '-c'
-      - work_mem=16MB
-      - '-c'
-      - maintenance_work_mem=128MB
-      - '-c'
-      - max_connections=100
-      - '-c'
-      - effective_io_concurrency=200
-      - '-c'
-      - log_timezone=America/Bogota
-    volumes:
-      - '/data/postgres/prod_data:/var/lib/postgresql/data'
-    ports:
-      - '5434:5432'
-    networks:
-      - coolify
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - 'pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-master_db}'
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 1.5G
-        reservations:
-          memory: 512M
-
-  postgres-backup:
-    image: 'prodrigestivill/postgres-backup-local:16-alpine'
-    container_name: postgres_backup_sidecar
-    restart: always
-    env_file:
-      - ../config/.env
-    volumes:
-      - '/data/postgres/backups:/backups'
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-    environment:
-      POSTGRES_HOST: postgres-db
-      POSTGRES_DB: '${POSTGRES_DB:-master_db}'
-      POSTGRES_USER: '${POSTGRES_USER:-admin}'
-      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
-      SCHEDULE: '@daily'
-      BACKUP_KEEP_DAYS: 7
-      BACKUP_KEEP_WEEKS: 4
-      BACKUP_KEEP_MONTHS: 6
-      HEALTHCHECK_PORT: 8080
-      TZ: America/Bogota
     networks:
       - coolify
 
