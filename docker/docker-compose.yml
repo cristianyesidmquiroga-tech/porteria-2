@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: carnet_sena_web
     restart: always
     ports:
@@ -11,7 +13,7 @@ services:
       # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
       - ./app/static/uploads:/app/app/static/uploads
     env_file:
-      - .env
+      - ../config/.env
     environment:
       - TZ=America/Bogota
     depends_on:
@@ -30,7 +32,7 @@ services:
         max-size: 10m
         max-file: '3'
     env_file:
-      - .env
+      - ../config/.env
     environment:
       POSTGRES_USER: '${POSTGRES_USER:-admin}'
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD}'
@@ -80,7 +82,7 @@ services:
     container_name: postgres_backup_sidecar
     restart: always
     env_file:
-      - .env
+      - ../config/.env
     volumes:
       - '/data/postgres/backups:/backups'
     depends_on:

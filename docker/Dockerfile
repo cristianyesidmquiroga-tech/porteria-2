@@ -16,10 +16,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Make entrypoint executable
-RUN chmod +x entrypoint.sh
+RUN chmod +x docker/entrypoint.sh
 
 # Expose port 5000
 EXPOSE 5000
 
 # Run entrypoint: creates admin user + starts Flask server
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["./docker/entrypoint.sh"]
