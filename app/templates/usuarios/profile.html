@@ -144,13 +144,13 @@
                     </div>
                     <div class="floating-group">
                         <input type="text" id="documento" name="documento" value="{{ current_user.documento or '' }}"
-                            placeholder=" " required>
+                            placeholder=" ">
                         <label for="documento">Documento de Identidad</label>
                         <div class="floating-border"></div>
                     </div>
                     <div class="floating-group">
-                        <select id="tipo_sangre" name="tipo_sangre" required>
-                            <option value="" disabled selected placeholder=" ">-- Selecciona Tipo de Sangre --</option>
+                        <select id="tipo_sangre" name="tipo_sangre">
+                            <option value="">-- Selecciona Tipo de Sangre --</option>
                             {% for tipo in ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] %}
                             <option value="{{ tipo }}" {% if current_user.tipo_sangre == tipo %}selected{% endif %}>{{ tipo }}</option>
                             {% endfor %}
