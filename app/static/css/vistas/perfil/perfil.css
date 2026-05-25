@@ -87,14 +87,22 @@
 .user-details-inst {
     text-align: center;
     margin-bottom: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .user-full-name {
-    font-size: 1.3rem !important;
+    font-size: clamp(1.05rem, 3.8vw, 1.3rem) !important;
     font-weight: 700;
     color: #222;
     margin-bottom: 5px;
     text-transform: uppercase;
+    text-align: center;
+    max-width: 100%;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
 }
 
 .user-role-badge {
@@ -113,16 +121,20 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 15px 18px;
+    align-items: start;
 }
 
 .info-item {
     display: flex;
     flex-direction: column;
+    text-align: center;
+    min-width: 0;
 }
 
 .info-item.full-width {
     grid-column: 1 / -1;
+    align-items: center;
 }
 
 .info-item .label {
@@ -130,12 +142,15 @@
     color: #888;
     font-weight: 700;
     margin-bottom: 2px;
+    text-align: center;
 }
 
 .info-item .value {
     font-size: 0.85rem;
     font-weight: 600;
     color: #333;
+    text-align: center;
+    overflow-wrap: anywhere;
 }
 
 .blood-type {
@@ -146,6 +161,7 @@
 .email-text {
     font-size: 0.75rem !important;
     color: #39A900 !important;
+    max-width: 100%;
 }
 
 .carnet-footer-inst {

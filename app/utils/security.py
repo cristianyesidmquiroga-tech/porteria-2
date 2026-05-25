@@ -32,7 +32,7 @@ def check_security_and_verification():
         # 2. Email Verification Check
         is_verified = getattr(current_user, 'correo_verificado', True)
         if not is_verified:
-            allowed_endpoints = ['auth.verificar_correo', 'auth.reenviar_codigo', 'auth.logout', 'static']
+            allowed_endpoints = ['auth.verificar_correo', 'auth.reenviar_codigo', 'auth.cambiar_password_obligatorio', 'auth.logout', 'static']
             if request.endpoint and request.endpoint not in allowed_endpoints:
                 return redirect(url_for('auth.verificar_correo'))
 
