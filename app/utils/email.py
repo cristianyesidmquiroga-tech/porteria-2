@@ -26,6 +26,7 @@ def enviar_correo(destinatario, asunto, cuerpo_html):
     mail_port = int(os.environ.get('MAIL_PORT', 587))
     mail_username = os.environ.get('MAIL_USERNAME')
     mail_password = os.environ.get('MAIL_PASSWORD')
+    mail_default_sender = os.environ.get('MAIL_DEFAULT_SENDER') or mail_username
 
     if not mail_username or not mail_password:
         print("ADVERTENCIA: Credenciales de correo no configuradas. Simulando envío:")
@@ -36,7 +37,7 @@ def enviar_correo(destinatario, asunto, cuerpo_html):
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = asunto
-    msg['From'] = f"SENA Vélez Santander <{mail_username}>"
+    msg['From'] = mail_default_sender
     msg['To'] = destinatario
 
     part = MIMEText(cuerpo_html, 'html')
