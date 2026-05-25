@@ -86,15 +86,26 @@ def create_app():
         # Crear las tablas de la base de datos si no existen
         db.create_all()
 
-        # Migración dinámica para objetos_externos
-        from sqlalchemy import text
+        # Migración dinámica para objetos_externos (SQLite compatible)
+        from sqlalchemy import text, inspect
         try:
-            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS serial VARCHAR(100) UNIQUE;"))
-            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS propietario VARCHAR(100);"))
-            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS motivo TEXT;"))
-            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;"))
-            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS qr_code VARCHAR(255) UNIQUE;"))
-            db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP WITHOUT TIME ZONE;"))
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('objetos_externos')]
+            
+            # Agregar columnas solo si no existen
+            if 'serial' not in columns:
+                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN serial VARCHAR(100) UNIQUE;"))
+            if 'propietario' not in columns:
+                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN propietario VARCHAR(100);"))
+            if 'motivo' not in columns:
+                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN motivo TEXT;"))
+            if 'activo' not in columns:
+                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN activo BOOLEAN DEFAULT TRUE;"))
+            if 'qr_code' not in columns:
+                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN qr_code VARCHAR(255) UNIQUE;"))
+            if 'fecha_creacion' not in columns:
+                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN fecha_creacion TIMESTAMP WITHOUT TIME ZONE;"))
+            
             db.session.commit()
             print("Migración de objetos_externos completada.")
         except Exception as e:
