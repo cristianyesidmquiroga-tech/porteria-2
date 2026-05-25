@@ -124,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Global AJAX Forms
     document.body.addEventListener('submit', async (e) => {
         const form = e.target;
+        if (form.id === 'form-add-user') return;
         if (form.hasAttribute('data-no-ajax')) return;
         e.preventDefault();
         
