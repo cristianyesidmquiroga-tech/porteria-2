@@ -11,3 +11,5 @@ openpyxl
 Flask-APScheduler
 python-dotenv
 psycopg2-binary
+weasyprint
+markdown

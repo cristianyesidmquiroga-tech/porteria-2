@@ -2,7 +2,7 @@
 echo "========================================="
 echo "  Inicializando base de datos..."
 echo "========================================="
-python create_admin.py
+python scripts/create_admin.py
 
 echo "========================================="
 echo "  Iniciando servidor Flask..."

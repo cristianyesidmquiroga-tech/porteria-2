@@ -1,10 +1,13 @@
 /* Tabs for Dashboard/History */
 .top-tabs {
     display: flex; gap: 2rem; margin-bottom: 2rem; border-bottom: 1px solid #EAEAEA; padding-bottom: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 .tab-btn {
     background: none; border: none; padding: 0.5rem 0; font-size: 1.05rem; font-weight: 600;
     color: #999; cursor: pointer; position: relative; transition: color 0.3s;
+    white-space: nowrap;
 }
 .tab-btn:hover { color: #666; }
 .tab-btn.active { color: var(--text-main); }
@@ -14,18 +17,49 @@
 }
 
 /* General Tables */
-.table-responsive { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
-thead tr { border-bottom: 2px solid var(--glass-border); background: rgba(0, 0, 0, 0.02); }
+.table-responsive { 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95rem;
+}
+thead tr { 
+    border-bottom: 2px solid var(--glass-border); 
+    background: rgba(0, 0, 0, 0.02); 
+}
 [data-theme="dark"] thead tr { background: rgba(255, 255, 255, 0.05); }
-th { padding: 1.2rem 1rem; color: var(--glass-subtext); font-weight: 600; }
-tbody tr { border-bottom: 1px solid var(--glass-border); transition: background 0.3s; }
+th { 
+    padding: 1.2rem 1rem; 
+    color: var(--glass-subtext); 
+    font-weight: 600;
+    white-space: nowrap;
+}
+tbody tr { 
+    border-bottom: 1px solid var(--glass-border); 
+    transition: background 0.3s; 
+}
 tbody tr:hover { background-color: rgba(0, 0, 0, 0.02); }
 [data-theme="dark"] tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
-td { padding: 1rem; color: var(--glass-text); }
+td { 
+    padding: 1rem; 
+    color: var(--glass-text);
+}
 
 /* Status Badges within tables */
 .status-badge {
     padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
     letter-spacing: 0.5px; text-transform: uppercase; display: inline-block;
+}
+
+/* Action cells in tables */
+.action-cells {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
 }

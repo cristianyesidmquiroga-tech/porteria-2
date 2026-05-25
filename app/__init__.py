@@ -14,7 +14,7 @@ scheduler = APScheduler()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('config.Config')
+    app.config.from_object('config.config.Config')
     
     # Limitar tamaño de archivos a 10MB (Suficiente para fotos de alta resolución)
     app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
