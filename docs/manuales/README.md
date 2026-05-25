@@ -30,6 +30,38 @@ Guía para instructores y administrativos sobre el registro y control de asisten
 
 **Archivo:** `manual_sistema_asistencia.md`
 
+## Manuales por Rol
+
+### Manual de Usuario - Rol Administrador
+Guía completa para administradores del sistema. Incluye gestión de usuarios, configuración, reportes y todas las funcionalidades administrativas.
+
+**Archivo:** `manual_rol_administrador.md`
+
+### Manual de Usuario - Rol Celador/Portería
+Guía para celadores y personal de portería. Incluye escaneo de QR, verificación de usuarios, registro de accesos, pases temporales y gestión de equipos externos.
+
+**Archivo:** `manual_rol_celador.md`
+
+### Manual de Usuario - Rol Instructor
+Guía para instructores. Incluye gestión de perfil, registro de equipos y sistema de asistencia por ficha.
+
+**Archivo:** `manual_rol_instructor.md`
+
+### Manual de Usuario - Rol Aprendiz
+Guía para aprendices. Incluye gestión de perfil, registro de equipos, carnet digital y verificación de asistencia.
+
+**Archivo:** `manual_rol_aprendiz.md`
+
+### Manual de Usuario - Rol Administrativo
+Guía para personal administrativo. Incluye gestión de perfil, registro de equipos, carnet digital y verificación de accesos.
+
+**Archivo:** `manual_rol_administrativo.md`
+
+### Manual de Usuario - Rol Usuario Estándar
+Guía para usuarios estándar. Incluye gestión de perfil, registro de equipos, carnet digital y verificación de accesos.
+
+**Archivo:** `manual_rol_usuario_estandar.md`
+
 ## Roles del Sistema
 
 ### Aprendiz
