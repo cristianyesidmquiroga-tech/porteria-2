@@ -309,7 +309,12 @@
             <form id="form-import-excel" data-no-ajax onsubmit="importExcel(event)">
                 <div class="form-group">
                     <label>Archivo Excel (.xlsx)</label>
-                    <input type="file" name="file" class="glass-input" accept=".xlsx, .xls" required>
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file" id="excel-file-input" class="file-input-hidden" accept=".xlsx, .xls" required onchange="updateFileName(this)">
+                        <button type="button" class="glass-btn btn-primary file-input-button" onclick="document.getElementById('excel-file-input').click()">
+                            <i class="fas fa-file-excel"></i> <span id="file-name-display">Seleccionar archivo</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="modal-actions" style="margin-top: 1.5rem;">
                     <button type="submit" class="glass-btn btn-primary" id="btn-submit-import" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; background: linear-gradient(135deg, #27ae60, #2ecc71);">
@@ -335,6 +340,15 @@
             fields.style.display = 'grid';
         } else {
             fields.style.display = 'none';
+        }
+    }
+
+    function updateFileName(input) {
+        const fileNameDisplay = document.getElementById('file-name-display');
+        if (input.files && input.files.length > 0) {
+            fileNameDisplay.textContent = input.files[0].name;
+        } else {
+            fileNameDisplay.textContent = 'Seleccionar archivo';
         }
     }
 
