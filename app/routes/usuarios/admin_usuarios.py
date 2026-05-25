@@ -172,6 +172,12 @@ def api_editar_usuario(id):
         from app.models.accesos import Auditoria
         # Actualizar datos básicos
         if 'nombre' in data: usuario.nombre = data['nombre']
+        if 'correo' in data:
+            nuevo_correo = data['correo'].strip().lower()
+            existente = Usuario.query.filter(Usuario.correo == nuevo_correo, Usuario.id != id).first()
+            if existente:
+                return jsonify({"status": "error", "message": "El correo ya está registrado"}), 400
+            usuario.correo = nuevo_correo
         if 'documento' in data: usuario.documento = data['documento']
         if 'cargo' in data: usuario.cargo = data['cargo']
         if 'rol_id' in data: usuario.rol_id = int(data['rol_id'])

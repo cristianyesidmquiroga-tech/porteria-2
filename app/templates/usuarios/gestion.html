@@ -193,6 +193,10 @@
                         <label>Documento</label>
                         <input type="text" id="edit-documento" name="documento" class="glass-input">
                     </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="edit-correo" name="correo" class="glass-input" required>
+                    </div>
                     <div class="form-group">
                         <label>Rol de Sistema</label>
                         <select id="edit-rol" name="rol_id" class="glass-input" required>
@@ -411,6 +415,7 @@
         document.getElementById('edit-id').value = id;
         document.getElementById('edit-nombre').value = targetBtn.dataset.nombre;
         document.getElementById('edit-documento').value = targetBtn.dataset.documento;
+        document.getElementById('edit-correo').value = targetBtn.dataset.correo;
         document.getElementById('edit-cargo').value = targetBtn.dataset.cargo;
         document.getElementById('edit-rol').value = targetBtn.dataset.rol;
         document.getElementById('edit-verificado').value = targetBtn.dataset.verificado;
