@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build:
-      context: ..
+      context: .
       dockerfile: docker/Dockerfile
     container_name: carnet_sena_web
     restart: always
