@@ -89,7 +89,7 @@
             <button class="close-btn" onclick="closeModal('modal-add-user')"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <form id="form-add-user" onsubmit="createUser(event)">
+            <form id="form-add-user" data-no-ajax onsubmit="createUser(event)">
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Nombre Completo</label>
@@ -182,7 +182,7 @@
             <button class="close-btn" onclick="closeModal('modal-edit-user')"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
-            <form id="form-edit-user" onsubmit="updateUser(event)">
+            <form id="form-edit-user" data-no-ajax onsubmit="updateUser(event)">
                 <input type="hidden" id="edit-id" name="id">
                 <div class="form-grid">
                     <div class="form-group">
@@ -302,7 +302,7 @@
                 <strong>Nombre, Correo</strong> (Obligatorias)<br>
                 <em>Documento, Cargo, Rol, Ficha, Programa, Horario, Contraseña</em> (Opcionales)
             </p>
-            <form id="form-import-excel" onsubmit="importExcel(event)">
+            <form id="form-import-excel" data-no-ajax onsubmit="importExcel(event)">
                 <div class="form-group">
                     <label>Archivo Excel (.xlsx)</label>
                     <input type="file" name="file" class="glass-input" accept=".xlsx, .xls" required>
