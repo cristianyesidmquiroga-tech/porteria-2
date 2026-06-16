@@ -115,7 +115,7 @@ def dashboard():
                 rol_or_tipo = u.rol.nombre if u.rol else 'Usuario'
                 cargo_or_clase = u.cargo or "N/A"
                 foto = u.foto
-                rsuffix = 'aprendiz' if rol_or_tipo == 'Aprendiz' else ('instructor' if rol_or_tipo == 'Instructor' else 'trabajador')
+                rsuffix = 'aprendiz' if cargo_or_clase == 'Aprendiz' else ('instructor' if cargo_or_clase == 'Instructor' else 'trabajador')
                 if u.programa:
                     programa_ficha = f"{u.programa} (Ficha: {u.ficha or 'N/A'})"
         elif acc.tipo_referencia == 'Visitante':

@@ -3,7 +3,7 @@ from ..models.usuarios import TurnoCelador, Usuario
 from ..models.entidades import Visitante, Vehiculo, Equipo
 from ..models.accesos import Acceso, Auditoria
 from . import get_colombia_time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def auto_exit_all():
     """

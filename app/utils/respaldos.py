@@ -18,8 +18,8 @@ def ejecutar_respaldo_mensual():
         ultimo_dia_mes_anterior = primer_dia_mes_actual - timedelta(days=1)
         primer_dia_mes_anterior = ultimo_dia_mes_anterior.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
-        fecha_inicio = primer_dia_mes_anterior
-        fecha_fin = primer_dia_mes_actual
+        fecha_inicio = primer_dia_mes_anterior.replace(tzinfo=None)
+        fecha_fin = primer_dia_mes_actual.replace(tzinfo=None)
         
         # Nombre del archivo indicará de qué mes es el respaldo (ej: Respaldo_2026-03)
         nombre_mes_anterior = ultimo_dia_mes_anterior.strftime('%Y-%m')
