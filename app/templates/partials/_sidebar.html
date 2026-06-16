@@ -49,6 +49,9 @@
         <a href="{{ url_for('usuarios.asistencia') }}" class="stagger-item {% if request.endpoint == 'usuarios.asistencia' %}active{% endif %}">
             <i class="fas fa-users"></i> <span>Mi Ficha</span>
         </a>
+        <a href="{{ url_for('usuarios.comunicados') }}" class="stagger-item {% if request.endpoint == 'usuarios.comunicados' or request.endpoint == 'usuarios.api_enviar_comunicado' %}active{% endif %}">
+            <i class="fas fa-envelope-open-text"></i> <span>Comunicados</span>
+        </a>
         {% endif %}
 
         <a href="{{ url_for('usuarios.profile') }}" class="stagger-item {% if request.endpoint == 'usuarios.profile' %}active{% endif %}">

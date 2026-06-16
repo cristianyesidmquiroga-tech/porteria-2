@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+{% block title %}Comunicados - SENA{% endblock %}
+{% block content %}
+
+<div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+    <div class="header-title">
+        <h1><i class="fas fa-envelope-open-text" style="color:var(--primary-color);margin-right:10px;"></i>Comunicados</h1>
+        <p class="subtitle">Envía avisos de llegadas tarde, llamados de atención o reportes de inasistencias a los aprendices.</p>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="padding:0;overflow:hidden;margin-bottom:2rem;">
+    <div style="display:flex;border-bottom:2px solid rgba(var(--primary-rgb,57,169,0),0.2);">
+        <button class="tab-btn active" onclick="switchTab('tab-manual',this)" style="flex:1;padding:16px 20px;border:none;background:transparent;cursor:pointer;font-weight:700;font-size:0.95rem;color:var(--primary-color);border-bottom:3px solid var(--primary-color);transition:all .3s;">
+            <i class="fas fa-exclamation-circle"></i> Comunicado Manual
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-inasistencias',this)" style="flex:1;padding:16px 20px;border:none;background:transparent;cursor:pointer;font-weight:700;font-size:0.95rem;color:var(--text-muted);border-bottom:3px solid transparent;transition:all .3s;">
+            <i class="fas fa-calendar-times"></i> Inasistencias del Mes
+        </button>
+    </div>
+</div>
+
+<!-- ==================== TAB 1: COMUNICADO MANUAL ==================== -->
+<div id="tab-manual" class="tab-panel">
+
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:1.5rem;align-items:start;">
+
+        <!-- Panel izquierdo: configuración del comunicado -->
+        <div class="glass-card animate-on-scroll" data-animation="fade-in-left">
+            <h3 class="glass-title" style="margin-bottom:1.5rem;"><i class="fas fa-cog"></i> Configurar Aviso</h3>
+
+            <div class="form-group" style="margin-bottom:1.2rem;">
+                <label style="font-weight:600;font-size:0.9rem;color:var(--text-muted);display:block;margin-bottom:6px;">Tipo de Aviso</label>
+                <div class="input-icon-wrapper">
+                    <i class="fas fa-tag input-icon"></i>
+                    <select id="tipo-aviso" class="glass-input" onchange="updateTipoColor()">
+                        <option value="Llegada tarde">Llegada tarde</option>
+                        <option value="Llamado de atención">Llamado de atención</option>
+                        <option value="Uniforme incorrecto">Uniforme incorrecto</option>
+                        <option value="Comunicado General">Comunicado General</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.2rem;">
+                <label style="font-weight:600;font-size:0.9rem;color:var(--text-muted);display:block;margin-bottom:6px;">Observación / Mensaje <span style="font-weight:400;">(opcional)</span></label>
+                <textarea id="mensaje-manual" class="glass-input" rows="5" placeholder="Escribe aquí detalles adicionales del aviso. Ej: El aprendiz llegó a las 8:45 AM sin justificación..." style="resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+            </div>
+
+            <!-- Vista previa del badge -->
+            <div id="badge-preview" style="margin-bottom:1.5rem;">
+                <span id="tipo-badge" style="display:inline-block;background:#e67e2222;border:1px solid #e67e22;color:#e67e22;padding:6px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;">LLEGADA TARDE</span>
+            </div>
+
+            <!-- Filtros de búsqueda -->
+            <h4 style="margin-bottom:0.8rem;font-size:0.9rem;color:var(--text-muted);"><i class="fas fa-filter"></i> Filtrar Destinatarios</h4>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <input type="text" id="filtro-nombre" class="glass-input" placeholder="Buscar por nombre o documento..." oninput="filtrarUsuarios()">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1.5rem;">
+                <div>
+                    <label style="font-size:0.82rem;color:var(--text-muted);display:block;margin-bottom:4px;">Cargo</label>
+                    <select id="filtro-cargo" class="glass-input" onchange="filtrarUsuarios()">
+                        <option value="">Todos</option>
+                        <option value="Aprendiz">Aprendiz</option>
+                        <option value="Instructor">Instructor</option>
+                        <option value="Administrativo">Administrativo</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.82rem;color:var(--text-muted);display:block;margin-bottom:4px;">Ficha</label>
+                    <input type="text" id="filtro-ficha" class="glass-input" placeholder="N° ficha..." oninput="filtrarUsuarios()">
+                </div>
+            </div>
+
+            <div style="display:flex;gap:0.8rem;flex-wrap:wrap;">
+                <button onclick="selectAllVisible()" class="glass-btn" style="flex:1;padding:10px;font-size:0.85rem;">
+                    <i class="fas fa-check-double"></i> Seleccionar todos
+                </button>
+                <button onclick="clearAll()" class="glass-btn" style="flex:1;padding:10px;font-size:0.85rem;">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+
+            <div id="contador-seleccionados" style="text-align:center;margin-top:1rem;font-size:0.9rem;color:var(--text-muted);">
+                0 destinatario(s) seleccionado(s)
+            </div>
+
+            <button onclick="enviarComunicado()" class="glass-btn btn-primary btn-glow" style="width:100%;margin-top:1.2rem;padding:14px;font-size:1rem;font-weight:700;">
+                <i class="fas fa-paper-plane"></i> Enviar Comunicado
+            </button>
+        </div>
+
+        <!-- Panel derecho: lista de usuarios -->
+        <div class="glass-card animate-on-scroll" data-animation="fade-in-right">
+            <h3 class="glass-title" style="margin-bottom:1.2rem;"><i class="fas fa-users"></i> Seleccionar Destinatarios</h3>
+            <div id="lista-usuarios" style="max-height:600px;overflow-y:auto;">
+                {% for u in usuarios %}
+                <label id="row-{{ u.id }}"
+                       data-nombre="{{ u.nombre|lower }}"
+                       data-doc="{{ u.documento or '' }}"
+                       data-cargo="{{ u.cargo or '' }}"
+                       data-ficha="{{ u.ficha or '' }}"
+                       style="display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:8px;cursor:pointer;transition:background .2s;margin-bottom:4px;"
+                       onmouseover="this.style.background='rgba(var(--primary-rgb,57,169,0),0.08)'"
+                       onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" class="user-checkbox" value="{{ u.id }}" onchange="actualizarContador()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary-color);">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ u.nombre }}</div>
+                        <div style="font-size:0.8rem;color:var(--text-muted);">
+                            {{ u.correo }}
+                            {% if u.ficha %} &bull; Ficha: <strong>{{ u.ficha }}</strong>{% endif %}
+                        </div>
+                    </div>
+                    <span class="badge {{ 'badge-info' if u.cargo == 'Aprendiz' else 'badge-primary' }}" style="font-size:0.72rem;white-space:nowrap;">{{ u.cargo or 'N/A' }}</span>
+                </label>
+                {% else %}
+                <p style="text-align:center;color:var(--text-muted);padding:2rem;">No hay usuarios con correo verificado.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TAB 2: INASISTENCIAS DEL MES ==================== -->
+<div id="tab-inasistencias" class="tab-panel" style="display:none;">
+
+    <div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div>
+                <h3 class="glass-title" style="margin:0;"><i class="fas fa-calendar-times" style="color:#c0392b;"></i> Inasistencias — {{ mes_actual }}</h3>
+                <p style="margin:4px 0 0;color:var(--text-muted);font-size:0.9rem;">Aprendices con inasistencias registradas en clases este mes.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <label style="font-size:0.9rem;color:var(--text-muted);">Mostrar con al menos:</label>
+                <select id="min-faltas" class="glass-input" style="width:auto;padding:8px 12px;" onchange="filtrarInasistentes()">
+                    <option value="1">1 falta</option>
+                    <option value="2">2 faltas</option>
+                    <option value="3" selected>3 faltas</option>
+                    <option value="5">5 faltas</option>
+                    <option value="10">10 faltas</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    {% if inasistentes %}
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;">
+        <div class="glass-card" style="text-align:center;padding:1.2rem;">
+            <div style="font-size:2rem;font-weight:900;color:#c0392b;">{{ inasistentes|length }}</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">Aprendices con faltas</div>
+        </div>
+        <div class="glass-card" style="text-align:center;padding:1.2rem;">
+            <div style="font-size:2rem;font-weight:900;color:#e67e22;">{{ inasistentes|sum(attribute='faltas') }}</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">Total inasistencias</div>
+        </div>
+        <div class="glass-card" style="text-align:center;padding:1.2rem;">
+            <div style="font-size:2rem;font-weight:900;color:#27ae60;" id="contador-inasistentes">0</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">Seleccionados para notificar</div>
+        </div>
+    </div>
+
+    <!-- Mensaje personalizado para inasistencias -->
+    <div class="glass-card" style="margin-bottom:1.5rem;">
+        <label style="font-weight:600;font-size:0.9rem;color:var(--text-muted);display:block;margin-bottom:8px;"><i class="fas fa-comment-alt"></i> Mensaje adicional para el correo <span style="font-weight:400;">(opcional)</span></label>
+        <textarea id="mensaje-inasistencias" class="glass-input" rows="3" placeholder="Ej: Le informamos que de continuar esta situación, se notificará al coordinador de formación..." style="resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+    </div>
+
+    <!-- Tabla de inasistentes -->
+    <div class="glass-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.8rem;">
+            <h3 class="glass-title" style="margin:0;"><i class="fas fa-list"></i> Lista de Aprendices con Faltas</h3>
+            <div style="display:flex;gap:0.8rem;">
+                <button onclick="selectAllInasistentes()" class="glass-btn" style="padding:8px 16px;font-size:0.85rem;">
+                    <i class="fas fa-check-double"></i> Todos visibles
+                </button>
+                <button onclick="clearAllInasistentes()" class="glass-btn" style="padding:8px 16px;font-size:0.85rem;">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+                <button onclick="enviarReporteInasistencias()" class="glass-btn btn-primary" style="padding:8px 20px;font-size:0.85rem;background:linear-gradient(135deg,#c0392b,#e74c3c);">
+                    <i class="fas fa-paper-plane"></i> Enviar Notificación
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="glass-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">
+                            <input type="checkbox" id="check-all-inasist" onchange="toggleAllInasistentes(this)" style="accent-color:var(--primary-color);width:16px;height:16px;">
+                        </th>
+                        <th>Nombre</th>
+                        <th>Documento</th>
+                        <th>Ficha</th>
+                        <th>Programa</th>
+                        <th>Correo</th>
+                        <th style="text-align:center;">Faltas</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-inasistentes">
+                {% for est in inasistentes %}
+                <tr class="inasist-row" data-faltas="{{ est.faltas }}" data-uid="{{ est.id }}">
+                    <td>
+                        <input type="checkbox" class="inasist-checkbox" value="{{ est.id }}" onchange="actualizarContadorInasist()" style="accent-color:#c0392b;width:16px;height:16px;">
+                    </td>
+                    <td><strong>{{ est.nombre }}</strong></td>
+                    <td>{{ est.documento }}</td>
+                    <td>{{ est.ficha }}</td>
+                    <td style="font-size:0.85rem;">{{ est.programa }}</td>
+                    <td style="font-size:0.85rem;color:var(--text-muted);">{{ est.correo }}</td>
+                    <td style="text-align:center;">
+                        <span style="display:inline-block;background:{% if est.faltas >= 5 %}#c0392b{% elif est.faltas >= 3 %}#e67e22{% else %}#f39c12{% endif %}22;color:{% if est.faltas >= 5 %}#c0392b{% elif est.faltas >= 3 %}#e67e22{% else %}#f39c12{% endif %};border:1px solid {% if est.faltas >= 5 %}#c0392b{% elif est.faltas >= 3 %}#e67e22{% else %}#f39c12{% endif %};padding:4px 12px;border-radius:20px;font-weight:700;font-size:0.9rem;">
+                            {{ est.faltas }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="glass-card" style="text-align:center;padding:3rem;">
+        <i class="fas fa-check-circle" style="font-size:3.5rem;color:#27ae60;margin-bottom:1rem;display:block;"></i>
+        <h3>Sin inasistencias registradas</h3>
+        <p style="color:var(--text-muted);">No hay aprendices con inasistencias registradas en {{ mes_actual }}.</p>
+        <p style="color:var(--text-muted);font-size:0.85rem;">Las inasistencias se registran cuando el instructor marca a un aprendiz como ausente en el módulo <strong>Control de Clase</strong>.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+.tab-btn { outline: none; }
+.tab-btn.active { color: var(--primary-color) !important; border-bottom-color: var(--primary-color) !important; }
+.glass-table th, .glass-table td { padding: 12px 14px; text-align: left; }
+.glass-table th { color: var(--primary-color); font-weight: 700; text-transform: uppercase; font-size: 0.82rem; }
+.inasist-row.oculta { display: none; }
+</style>
+
+{% endblock %}
+{% block scripts %}
+<script>
+const TIPO_COLORES = {
+    'Llegada tarde': '#e67e22',
+    'Llamado de atención': '#e74c3c',
+    'Uniforme incorrecto': '#8e44ad',
+    'Comunicado General': '#2c3e50'
+};
+
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.color = 'var(--text-muted)';
+        b.style.borderBottomColor = 'transparent';
+    });
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
+    btn.style.color = 'var(--primary-color)';
+    btn.style.borderBottomColor = 'var(--primary-color)';
+}
+
+function updateTipoColor() {
+    const tipo = document.getElementById('tipo-aviso').value;
+    const color = TIPO_COLORES[tipo] || '#2c3e50';
+    const badge = document.getElementById('tipo-badge');
+    badge.textContent = tipo.toUpperCase();
+    badge.style.background = color + '22';
+    badge.style.border = '1px solid ' + color;
+    badge.style.color = color;
+}
+
+function filtrarUsuarios() {
+    const nombre = document.getElementById('filtro-nombre').value.toLowerCase();
+    const cargo = document.getElementById('filtro-cargo').value.toLowerCase();
+    const ficha = document.getElementById('filtro-ficha').value.toLowerCase();
+
+    document.querySelectorAll('[id^="row-"]').forEach(row => {
+        const matchNombre = row.dataset.nombre.includes(nombre) || row.dataset.doc.includes(nombre);
+        const matchCargo = !cargo || row.dataset.cargo.toLowerCase() === cargo;
+        const matchFicha = !ficha || row.dataset.ficha.toLowerCase().includes(ficha);
+        row.style.display = (matchNombre && matchCargo && matchFicha) ? 'flex' : 'none';
+    });
+    actualizarContador();
+}
+
+function selectAllVisible() {
+    document.querySelectorAll('[id^="row-"]').forEach(row => {
+        if (row.style.display !== 'none') {
+            row.querySelector('.user-checkbox').checked = true;
+        }
+    });
+    actualizarContador();
+}
+
+function clearAll() {
+    document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+    actualizarContador();
+}
+
+function actualizarContador() {
+    const count = document.querySelectorAll('.user-checkbox:checked').length;
+    document.getElementById('contador-seleccionados').textContent = `${count} destinatario(s) seleccionado(s)`;
+}
+
+async function enviarComunicado() {
+    const tipo = document.getElementById('tipo-aviso').value;
+    const mensaje = document.getElementById('mensaje-manual').value;
+    const ids = [...document.querySelectorAll('.user-checkbox:checked')].map(cb => cb.value);
+
+    if (!ids.length) {
+        showToast('Atención', 'Selecciona al menos un destinatario.', 'warning');
+        return;
+    }
+
+    const confirmed = await window.customConfirm('Confirmar Envío', `¿Enviar comunicado de "${tipo}" a ${ids.length} persona(s)?`);
+    if (!confirmed) return;
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    try {
+        const res = await fetch("{{ url_for('usuarios.api_enviar_comunicado') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+            body: JSON.stringify({ tipo, mensaje, destinatarios: ids })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showToast('Enviado', data.message, 'success');
+            clearAll();
+        } else {
+            showToast('Error', data.message, 'danger');
+        }
+    } catch(e) {
+        showToast('Error', 'No se pudo conectar con el servidor.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Comunicado';
+    }
+}
+
+// ---- Inasistencias ----
+function filtrarInasistentes() {
+    const min = parseInt(document.getElementById('min-faltas').value);
+    document.querySelectorAll('.inasist-row').forEach(row => {
+        const faltas = parseInt(row.dataset.faltas);
+        if (faltas >= min) {
+            row.classList.remove('oculta');
+        } else {
+            row.classList.add('oculta');
+            row.querySelector('.inasist-checkbox').checked = false;
+        }
+    });
+    actualizarContadorInasist();
+}
+
+function selectAllInasistentes() {
+    document.querySelectorAll('.inasist-row:not(.oculta) .inasist-checkbox').forEach(cb => cb.checked = true);
+    actualizarContadorInasist();
+}
+
+function clearAllInasistentes() {
+    document.querySelectorAll('.inasist-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('check-all-inasist').checked = false;
+    actualizarContadorInasist();
+}
+
+function toggleAllInasistentes(master) {
+    document.querySelectorAll('.inasist-row:not(.oculta) .inasist-checkbox').forEach(cb => cb.checked = master.checked);
+    actualizarContadorInasist();
+}
+
+function actualizarContadorInasist() {
+    const count = document.querySelectorAll('.inasist-checkbox:checked').length;
+    document.getElementById('contador-inasistentes').textContent = count;
+}
+
+async function enviarReporteInasistencias() {
+    const ids = [...document.querySelectorAll('.inasist-checkbox:checked')].map(cb => cb.value);
+    const mensaje = document.getElementById('mensaje-inasistencias').value;
+
+    if (!ids.length) {
+        showToast('Atención', 'Selecciona al menos un aprendiz.', 'warning');
+        return;
+    }
+
+    const confirmed = await window.customConfirm('Confirmar Envío', `¿Enviar reporte de inasistencias a ${ids.length} aprendiz(ces)?`);
+    if (!confirmed) return;
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    try {
+        const res = await fetch("{{ url_for('usuarios.api_enviar_comunicado') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+            body: JSON.stringify({ tipo: 'Inasistencias', mensaje, destinatarios: ids })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showToast('Enviado', data.message, 'success');
+            clearAllInasistentes();
+        } else {
+            showToast('Error', data.message, 'danger');
+        }
+    } catch(e) {
+        showToast('Error', 'No se pudo conectar con el servidor.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Notificación';
+    }
+}
+
+// Aplicar filtro inicial de 3 faltas al cargar
+document.addEventListener('DOMContentLoaded', () => {
+    filtrarInasistentes();
+});
+</script>
+{% endblock %}
