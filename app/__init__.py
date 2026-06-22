@@ -76,12 +76,14 @@ def create_app():
         from .routes.usuarios import bp as usuarios_bp
         from .routes.equipos import bp as equipos_bp
         from .routes.porteria import porteria_bp
-        
+        from .routes.coordinacion import coordinacion_bp
+
         app.register_blueprint(main_bp)
         app.register_blueprint(auth_bp)
         app.register_blueprint(usuarios_bp)
         app.register_blueprint(porteria_bp)
         app.register_blueprint(equipos_bp)
+        app.register_blueprint(coordinacion_bp)
 
         # Crear las tablas de la base de datos si no existen
         db.create_all()

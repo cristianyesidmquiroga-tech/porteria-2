@@ -86,7 +86,7 @@ def analytics(rol_nombre):
 @bp.route('/historial_clases', methods=['GET', 'POST'])
 @login_required
 def historial_clases():
-    if not current_user.es_admin:
+    if not (current_user.es_admin or current_user.puede_ver_ambientes):
         flash('No tienes permiso para ver el historial de clases.', 'danger')
         return redirect(url_for('usuarios.profile'))
     from ...models.asistencia import AsistenciaClase

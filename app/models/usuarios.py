@@ -70,13 +70,25 @@ class Usuario(db.Model, UserMixin):
         return self.cargo in ['Celador', 'Portería']
 
     @property
+    def es_coordinacion_cargo(self):
+        return self.cargo == 'Coordinacion'
+
+    @property
+    def es_subdirector_cargo(self):
+        return self.cargo == 'Subdirector'
+
+    @property
     def puede_operar_porteria(self):
         if self.es_admin: return True
         return self.rol and self.rol.nombre == 'Usuario' and (self.es_celador_cargo or self.cargo == 'Administrador')
-    
+
     @property
     def puede_gestionar_asistencia(self):
         return self.es_admin or self.es_instructor_cargo
+
+    @property
+    def puede_ver_ambientes(self):
+        return self.es_admin or self.es_coordinacion_cargo or self.es_subdirector_cargo
 
     @property
     def puede_registrar_equipos(self):

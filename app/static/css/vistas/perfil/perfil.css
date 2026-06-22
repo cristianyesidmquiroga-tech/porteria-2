@@ -208,6 +208,56 @@
     letter-spacing: 1px;
 }
 
+/* === CARNETS POR ROL === */
+
+/* Instructor - Azul */
+.carnet-card.institutional.cargo-instructor .carnet-header-inst { border-bottom-color: #1565C0; }
+.carnet-card.institutional.cargo-instructor .sena-title { color: #1565C0; }
+.carnet-card.institutional.cargo-instructor .user-role-badge { background: #1565C0; }
+.carnet-card.institutional.cargo-instructor .photo-frame { border-color: #1565C0; }
+.carnet-card.institutional.cargo-instructor .footer-bar { background: #1565C0; }
+.carnet-card.institutional.cargo-instructor .email-text { color: #1565C0 !important; }
+
+/* Coordinación - Morado */
+.carnet-card.institutional.cargo-coordinacion .carnet-header-inst { border-bottom-color: #7B1FA2; }
+.carnet-card.institutional.cargo-coordinacion .sena-title { color: #7B1FA2; }
+.carnet-card.institutional.cargo-coordinacion .user-role-badge { background: #7B1FA2; }
+.carnet-card.institutional.cargo-coordinacion .photo-frame { border-color: #7B1FA2; }
+.carnet-card.institutional.cargo-coordinacion .footer-bar { background: #7B1FA2; }
+.carnet-card.institutional.cargo-coordinacion .email-text { color: #7B1FA2 !important; }
+
+/* Subdirector - Azul oscuro */
+.carnet-card.institutional.cargo-subdirector .carnet-header-inst { border-bottom-color: #0D3B6F; }
+.carnet-card.institutional.cargo-subdirector .sena-title { color: #0D3B6F; }
+.carnet-card.institutional.cargo-subdirector .user-role-badge { background: #0D3B6F; }
+.carnet-card.institutional.cargo-subdirector .photo-frame { border-color: #0D3B6F; }
+.carnet-card.institutional.cargo-subdirector .footer-bar { background: #0D3B6F; }
+.carnet-card.institutional.cargo-subdirector .email-text { color: #0D3B6F !important; }
+
+/* Administrativo - Verde azulado */
+.carnet-card.institutional.cargo-administrativo .carnet-header-inst { border-bottom-color: #00695C; }
+.carnet-card.institutional.cargo-administrativo .sena-title { color: #00695C; }
+.carnet-card.institutional.cargo-administrativo .user-role-badge { background: #00695C; }
+.carnet-card.institutional.cargo-administrativo .photo-frame { border-color: #00695C; }
+.carnet-card.institutional.cargo-administrativo .footer-bar { background: #00695C; }
+.carnet-card.institutional.cargo-administrativo .email-text { color: #00695C !important; }
+
+/* Celador - Naranja */
+.carnet-card.institutional.cargo-celador .carnet-header-inst { border-bottom-color: #E65100; }
+.carnet-card.institutional.cargo-celador .sena-title { color: #E65100; }
+.carnet-card.institutional.cargo-celador .user-role-badge { background: #E65100; }
+.carnet-card.institutional.cargo-celador .photo-frame { border-color: #E65100; }
+.carnet-card.institutional.cargo-celador .footer-bar { background: #E65100; }
+.carnet-card.institutional.cargo-celador .email-text { color: #E65100 !important; }
+
+/* Administrador - Negro/dorado */
+.carnet-card.institutional.cargo-administrador .carnet-header-inst { border-bottom-color: #B8860B; }
+.carnet-card.institutional.cargo-administrador .sena-title { color: #B8860B; }
+.carnet-card.institutional.cargo-administrador .user-role-badge { background: #212121; }
+.carnet-card.institutional.cargo-administrador .photo-frame { border-color: #B8860B; }
+.carnet-card.institutional.cargo-administrador .footer-bar { background: #212121; }
+.carnet-card.institutional.cargo-administrador .email-text { color: #B8860B !important; }
+
 /* Quick Actions and Layout */
 .profile-split-layout {
     display: flex; gap: 2.5rem; margin-top: 2rem; align-items: flex-start; flex-wrap: wrap;

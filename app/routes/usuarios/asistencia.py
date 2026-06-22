@@ -49,11 +49,13 @@ def asistencia():
                 from ...models.asistencia import AsistenciaClase
                 for s in students_to_mark:
                     is_present = str(s.id) in estudiantes_presentes
+                    comentario = request.form.get(f'comentario_{s.id}', '').strip() or None
                     nueva_clase = AsistenciaClase(
                         instructor_id=current_user.id,
                         aprendiz_id=s.id,
                         ficha=ficha_id,
-                        presente=is_present
+                        presente=is_present,
+                        evaluacion=comentario
                     )
                     db.session.add(nueva_clase)
                 

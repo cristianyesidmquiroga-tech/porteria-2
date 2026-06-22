@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Panel de Ambientes{% endblock %}
+{% block content %}
+<div class="profile-container animate-on-scroll" data-animation="fade-in-up">
+
+    <div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+        <div class="header-title">
+            <h1><i class="fas fa-door-open"></i> Ambientes Activos</h1>
+            <p class="subtitle">
+                Fichas con aprendices en el campus hoy &mdash;
+                <strong>{{ today.strftime('%d/%m/%Y') }}</strong>
+            </p>
+        </div>
+    </div>
+
+    {% if ambientes %}
+    <div class="ambientes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        {% for amb in ambientes %}
+        <a href="{{ url_for('coordinacion.detalle_ambiente', ficha=amb.ficha) }}" class="ambiente-card glass-card animate-on-scroll"
+           data-animation="fade-in-up"
+           style="text-decoration: none; color: inherit; display: block; padding: 1.5rem; border-radius: 18px;
+                  transition: transform 0.25s, box-shadow 0.25s; cursor: pointer;">
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <span style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">
+                    <i class="fas fa-chalkboard-teacher" style="font-size: 1.6rem; margin-right: 8px; opacity: 0.7;"></i>
+                    Ficha {{ amb.ficha }}
+                </span>
+                <span class="badge {% if amb.asistencia_tomada %}badge-success{% else %}badge-secondary{% endif %}"
+                      style="padding: 4px 12px; border-radius: 20px; font-size: 0.75rem;">
+                    {% if amb.asistencia_tomada %}
+                    <i class="fas fa-check-circle"></i> Lista tomada
+                    {% else %}
+                    <i class="fas fa-clock"></i> Sin lista
+                    {% endif %}
+                </span>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <i class="fas fa-book"></i> {{ amb.programa }}
+            </p>
+
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 1.6rem; font-weight: 700; color: var(--primary-color);">{{ amb.count }}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Aprendices</div>
+                </div>
+                <div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.15); padding-left: 1.2rem;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 3px;">Instructor</div>
+                    <div style="font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ amb.instructor }}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="glass-card" style="text-align: center; padding: 4rem 2rem; margin-top: 2rem;">
+        <i class="fas fa-school" style="font-size: 3.5rem; color: var(--primary-color); opacity: 0.3; margin-bottom: 1.5rem; display: block;"></i>
+        <h3>Sin ambientes activos hoy</h3>
+        <p style="color: var(--text-muted);">No hay aprendices registrados en el campus aún.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .ambiente-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    .badge-success { background: #39A900; color: #fff; }
+    .badge-secondary { background: rgba(255,255,255,0.15); color: var(--text-main); }
+</style>
+{% endblock %}

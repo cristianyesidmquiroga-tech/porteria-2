@@ -23,7 +23,12 @@
         <!-- Parte Izquierda: Carnet / Left Wing: Digital ID -->
         <div class="left-wing">
             <div class="carnet-wrapper animate-on-scroll" data-animation="scale-in">
-                <div class="carnet-card institutional" id="carnet-capture">
+                {% if current_user.cargo %}
+                {% set cargo_class = 'cargo-' + current_user.cargo | lower %}
+                {% else %}
+                {% set cargo_class = '' %}
+                {% endif %}
+                <div class="carnet-card institutional {{ cargo_class }}" id="carnet-capture">
                     <!-- Marca de agua decorativa -->
                     <div class="carnet-watermark">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="">

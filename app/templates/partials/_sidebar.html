@@ -54,6 +54,15 @@
         </a>
         {% endif %}
 
+        {% if current_user.puede_ver_ambientes %}
+        <a href="{{ url_for('coordinacion.ambientes') }}" class="stagger-item {% if 'coordinacion.' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-door-open"></i> <span>Ambientes</span>
+        </a>
+        <a href="{{ url_for('porteria.historial_clases') }}" class="stagger-item {% if request.endpoint == 'porteria.historial_clases' %}active{% endif %}">
+            <i class="fas fa-tasks"></i> <span>Historial de Clases</span>
+        </a>
+        {% endif %}
+
         <a href="{{ url_for('usuarios.profile') }}" class="stagger-item {% if request.endpoint == 'usuarios.profile' %}active{% endif %}">
             <i class="fas fa-id-card"></i> <span>Mi Perfil</span>
         </a>

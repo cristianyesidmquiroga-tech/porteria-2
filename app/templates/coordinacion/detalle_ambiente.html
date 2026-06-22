@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Ambiente – Ficha {{ ficha }}{% endblock %}
+{% block content %}
+<div class="profile-container animate-on-scroll" data-animation="fade-in-up">
+
+    <!-- Encabezado -->
+    <div class="header-actions animate-on-scroll" data-animation="fade-in-down" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="{{ url_for('coordinacion.ambientes') }}"
+           style="text-decoration: none; color: var(--text-muted); font-size: 1.5rem; transition: color 0.2s;"
+           title="Volver">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="header-title">
+            <h1><i class="fas fa-chalkboard-teacher"></i> Ficha {{ ficha }}</h1>
+            <p class="subtitle">{{ programa }} &mdash; {{ today.strftime('%d/%m/%Y') }}</p>
+        </div>
+    </div>
+
+    <!-- Tarjeta resumen -->
+    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.5rem;">
+        <div class="glass-card" style="flex: 1; min-width: 200px; text-align: center; padding: 1.5rem;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-color);">{{ students|length }}</div>
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted);">Aprendices en campus</div>
+        </div>
+        <div class="glass-card" style="flex: 2; min-width: 240px; padding: 1.5rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Instructor</div>
+            {% if instructor %}
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="{{ url_for('static', filename='uploads/profiles/' + instructor.foto) if instructor.foto else 'https://ui-avatars.com/api/?name=' ~ instructor.nombre|urlencode ~ '&background=1565C0&color=fff' }}"
+                     alt="" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;">
+                <div>
+                    <div style="font-weight: 700;">{{ instructor.nombre }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ instructor.programa or 'Sin especialidad' }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div style="color: var(--text-muted); font-style: italic;">
+                <i class="fas fa-exclamation-triangle" style="color: #FF9F40;"></i>
+                Sin lista de asistencia registrada hoy
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabla de aprendices -->
+    {% if students %}
+    <div class="glass-card stagger-item" style="margin-top: 2rem;">
+        <h2 class="glass-title text-3d" style="margin-bottom: 1.5rem;">
+            <i class="fas fa-users"></i> Aprendices en el Ambiente
+        </h2>
+
+        <div class="table-responsive">
+            <table class="glass-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.2);">
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Documento</th>
+                        <th>Hora de llegada</th>
+                        <th style="text-align: center;">Asistencia</th>
+                        <th>Comentario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    {% set asistencia = asistencias_map.get(student.id) %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + student.foto) if student.foto else 'https://ui-avatars.com/api/?name=' ~ student.nombre|urlencode ~ '&background=39A900&color=fff' }}"
+                                     alt="" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">
+                                <strong>{{ student.nombre }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ student.documento or 'N/A' }}</td>
+                        <td>
+                            {% if arrival_times.get(student.id) %}
+                            <span style="font-weight: 600;">
+                                {{ arrival_times[student.id].strftime('%H:%M') }}
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px;">hrs</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if asistencia %}
+                                {% if asistencia.presente %}
+                                <span style="color: #39A900; font-weight: 700;"><i class="fas fa-check-circle"></i> Presente</span>
+                                {% else %}
+                                <span style="color: #e74c3c; font-weight: 700;"><i class="fas fa-times-circle"></i> Ausente</span>
+                                {% endif %}
+                            {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Sin marcar</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if asistencia and asistencia.evaluacion %}
+                            <span style="font-size: 0.85rem; font-style: italic; color: var(--text-muted);">{{ asistencia.evaluacion }}</span>
+                            {% else %}
+                            <span style="color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="glass-card" style="text-align: center; padding: 3rem 2rem; margin-top: 2rem;">
+        <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--primary-color); opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
+        <h3>Sin aprendices en el campus</h3>
+        <p style="color: var(--text-muted);">Ningún aprendiz de la ficha <strong>{{ ficha }}</strong> ha ingresado hoy.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .glass-table th, .glass-table td { padding: 14px 15px; text-align: left; }
+    .glass-table th { color: var(--primary-color); font-weight: 700; text-transform: uppercase; font-size: 0.85rem; }
+</style>
+{% endblock %}

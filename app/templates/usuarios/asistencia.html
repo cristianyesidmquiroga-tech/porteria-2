@@ -50,23 +50,30 @@
                                 <th>Programa</th>
                                 <th>Horario</th>
                                 <th style="text-align: center;">Asistió a Clase</th>
+                                <th>Comentario</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for student in students %}
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <td>{{ loop.index }}</td>
-                                <!-- Nota: NO hay enlace al perfil por privacidad -->
                                 <td><strong>{{ student.nombre }}</strong></td>
                                 <td>{{ student.documento }}</td>
                                 <td>{{ student.programa }}</td>
                                 <td>{{ student.horario or 'N/A' }}</td>
                                 <td style="text-align: center;">
                                     <label class="glass-checkbox" style="display: flex; justify-content: center; margin: 0;">
-                                        <!-- Checked por defecto, ya que si estÃ¡n adentro, es muy probable que asistan a clase -->
                                         <input type="checkbox" name="presente" value="{{ student.id }}" checked>
                                         <span class="checkmark"></span>
                                     </label>
+                                </td>
+                                <td>
+                                    <input type="text" name="comentario_{{ student.id }}"
+                                           placeholder="Opcional..."
+                                           maxlength="255"
+                                           style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+                                                  border-radius: 8px; padding: 6px 10px; color: var(--text-main);
+                                                  font-size: 0.85rem; width: 100%; min-width: 140px; outline: none;">
                                 </td>
                             </tr>
                             {% endfor %}
