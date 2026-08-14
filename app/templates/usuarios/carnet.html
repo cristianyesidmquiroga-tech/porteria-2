@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Carnets - Diseño{% endblock %}
+
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/carnet.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Diseños de Carnets</h2>
+    <p>A continuación se muestran los diseños para los diferentes roles. El logo del SENA utilizado es verde y las generalidades son dinámicas.</p>
+    
+    <div class="carnet-container">
+        
+        <!-- Carnet APRENDIZ -->
+        <div class="carnet">
+            <div class="carnet-header">
+                <!-- Usaremos un logo verde del sena desde wikimedia para el demo -->
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA" class="carnet-logo">
+                <div class="carnet-photo">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+            </div>
+            <div class="carnet-body">
+                <div class="carnet-role">APRENDIZ</div>
+                <div class="carnet-name">{{ aprendiz_nombres | default('{Nombres}') }}</div>
+                <div class="carnet-surname">{{ aprendiz_apellidos | default('{Apellidos}') }}</div>
+                <div class="carnet-info-line" style="margin-top: 8px;">
+                    <span class="carnet-info-label">Tip.</span> {{ aprendiz_documento | default('{Número de documento}') }}
+                </div>
+                <div class="carnet-info-line">
+                    <span class="carnet-info-label">RH</span> {{ aprendiz_rh | default('{Tipo O+}') }}
+                </div>
+                <div class="carnet-info-line">
+                    <span class="carnet-info-label">Jornada:</span> {{ aprendiz_jornada | default('Mañana') }}
+                </div>
+                
+                <div class="carnet-small-text">
+                    Ficha de Formación No. {{ aprendiz_ficha | default('{Código}') }}<br>
+                    Fecha de Finalización: {{ aprendiz_fecha_fin | default('{Fecha Final}') }}<br>
+                    <strong>{{ aprendiz_programa | default('{Nombre del Programa}') }}</strong>
+                </div>
+
+                <div class="carnet-small-text" style="margin-top:5px;">
+                    Aseguradora Aurora<br>
+                    Tel: 601-7443718 Op. 1<br>
+                    Poliza: No. 100603
+                </div>
+            </div>
+            <div class="carnet-footer">
+                <div>{{ regional | default('Regional Santander') }}</div>
+                <div>{{ centro | default('Centro de Gestión') }}</div>
+                <div>{{ centro_2 | default('Agroempresarial del Oriente') }}</div>
+            </div>
+        </div>
+
+        <!-- Carnet INSTRUCTOR -->
+        <div class="carnet">
+            <div class="carnet-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA" class="carnet-logo">
+                <div class="carnet-photo">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+            </div>
+            <div class="carnet-body">
+                <div class="carnet-role">INSTRUCTOR</div>
+                <div class="carnet-name">{{ instructor_nombres | default('{Nombres}') }}</div>
+                <div class="carnet-surname">{{ instructor_apellidos | default('{Apellidos}') }}</div>
+                <div class="carnet-info-line" style="margin-top: 8px;">
+                    <span class="carnet-info-label">C.C.</span> {{ instructor_documento | default('{Número de documento}') }}
+                </div>
+                <div class="carnet-info-line">
+                    <span class="carnet-info-label">RH</span> {{ instructor_rh | default('{Tipo de Sangre}') }}
+                </div>
+                <div class="carnet-barcode">
+                    <div class="barcode-placeholder"></div>
+                </div>
+            </div>
+            <div class="carnet-footer">
+                <div>{{ regional | default('Regional Santander') }}</div>
+                <div>{{ centro | default('Centro de Gestión') }}</div>
+                <div>{{ centro_2 | default('Agroempresarial del Oriente') }}</div>
+            </div>
+        </div>
+
+        <!-- Carnet CONTRATISTA -->
+        <div class="carnet">
+            <div class="carnet-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA" class="carnet-logo">
+                <div class="carnet-photo">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+            </div>
+            <div class="carnet-body">
+                <div class="carnet-role">CONTRATISTA</div>
+                <div class="carnet-name">{{ contratista_nombres | default('{Nombres}') }}</div>
+                <div class="carnet-surname">{{ contratista_apellidos | default('{Apellidos}') }}</div>
+                <div class="carnet-info-line" style="margin-top: 8px;">
+                    <span class="carnet-info-label">C.C.</span> {{ contratista_documento | default('{Número de documento}') }}
+                </div>
+                <div class="carnet-info-line">
+                    <span class="carnet-info-label">RH</span> {{ contratista_rh | default('{Tipo de Sangre}') }}
+                </div>
+                <div class="carnet-barcode">
+                    <div class="barcode-placeholder"></div>
+                </div>
+            </div>
+            <div class="carnet-footer">
+                <div>{{ regional | default('Regional Santander') }}</div>
+                <div>{{ centro | default('Centro de Gestión') }}</div>
+                <div>{{ centro_2 | default('Agroempresarial del Oriente') }}</div>
+            </div>
+        </div>
+
+        <!-- Carnet FUNCIONARIO -->
+        <div class="carnet">
+            <div class="carnet-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA" class="carnet-logo">
+                <div class="carnet-photo">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+            </div>
+            <div class="carnet-body">
+                <div class="carnet-role">FUNCIONARIO</div>
+                <div class="carnet-name">{{ funcionario_nombres | default('{Nombres}') }}</div>
+                <div class="carnet-surname">{{ funcionario_apellidos | default('{Apellidos}') }}</div>
+                <div class="carnet-info-line" style="margin-top: 8px;">
+                    <span class="carnet-info-label">C.C.</span> {{ funcionario_documento | default('{Número de documento}') }}
+                </div>
+                <div class="carnet-info-line">
+                    <span class="carnet-info-label">RH</span> {{ funcionario_rh | default('{Tipo de Sangre}') }}
+                </div>
+                <div class="carnet-barcode">
+                    <div class="barcode-placeholder"></div>
+                </div>
+            </div>
+            <div class="carnet-footer">
+                <div>{{ regional | default('Regional Santander') }}</div>
+                <div>{{ centro | default('Centro de Gestión') }}</div>
+                <div>{{ centro_2 | default('Agroempresarial del Oriente') }}</div>
+            </div>
+        </div>
+
+        <!-- Carnet SUBDIRECTOR -->
+        <div class="carnet">
+            <div class="carnet-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA" class="carnet-logo">
+                <div class="carnet-photo">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+            </div>
+            <div class="carnet-body">
+                <div class="carnet-role">SUBDIRECTOR</div>
+                <div class="carnet-name">{{ subdirector_nombres | default('{Nombres}') }}</div>
+                <div class="carnet-surname">{{ subdirector_apellidos | default('{Apellidos}') }}</div>
+                <div class="carnet-info-line" style="margin-top: 8px;">
+                    <span class="carnet-info-label">C.C.</span> {{ subdirector_documento | default('{Número de documento}') }}
+                </div>
+                <div class="carnet-info-line">
+                    <span class="carnet-info-label">RH</span> {{ subdirector_rh | default('{Tipo de Sangre}') }}
+                </div>
+                <div class="carnet-barcode">
+                    <div class="barcode-placeholder"></div>
+                </div>
+            </div>
+            <div class="carnet-footer">
+                <div>{{ regional | default('Regional Santander') }}</div>
+                <div>{{ centro | default('Centro de Gestión') }}</div>
+                <div>{{ centro_2 | default('Agroempresarial del Oriente') }}</div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

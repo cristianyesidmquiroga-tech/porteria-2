@@ -168,3 +168,9 @@ def update_profile():
         return {"status": "success", "message": "Perfil actualizado correctamente.", "reload": True}
         
     return redirect(url_for('usuarios.profile'))
+
+@bp.route('/carnets')
+@login_required
+def ver_carnets():
+    # Renderizamos la plantilla de prueba
+    return render_template('usuarios/carnet.html')
