@@ -72,14 +72,15 @@ OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "carnets"
 
 def sena_logo_svg(width=128):
     """Logo SENA en verde institucional (#39A900)."""
-    return f'''<svg width="{width}" viewBox="0 0 120 145" xmlns="http://www.w3.org/2000/svg">
+    return f'''<svg width="{width}" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
   <g fill="{VERDE_SENA}">
-    <circle cx="60" cy="16" r="14"/>
-    <path d="M60 44 L28 22 L20 32 L56 56 L64 56 L100 32 L92 22 Z"/>
-    <path d="M56 62 L24 100 L34 108 L60 76 L86 108 L96 100 L64 62 Z"/>
+    <circle cx="100" cy="28" r="25"/>
+    <rect x="6" y="122" width="188" height="20"/>
+    <polygon points="58,142 96,142 66,232 30,232"/>
+    <polygon points="104,142 142,142 170,232 134,232"/>
   </g>
-  <text x="60" y="138" text-anchor="middle" font-family="Arial, sans-serif"
-        font-weight="bold" font-size="30" letter-spacing="3" fill="{VERDE_SENA}">SENA</text>
+  <text x="100" y="106" text-anchor="middle" font-family="Arial, sans-serif"
+        font-weight="900" font-size="54" letter-spacing="3" fill="{VERDE_SENA}">SENA</text>
 </svg>'''
 
 
@@ -139,7 +140,7 @@ html, body { background: #fff; }
 .carnet-body { padding: 18px 34px; flex-grow: 1; font-size: 26px; line-height: 1.35; color: #333; }
 .carnet-role {
     font-weight: bold; font-size: 34px; text-transform: uppercase;
-    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #eee; color: #000;
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #eee; color: %(VERDE)s;
 }
 .carnet-name { font-weight: bold; font-size: 30px; margin-bottom: 4px; }
 .carnet-surname { font-size: 30px; margin-bottom: 14px; }

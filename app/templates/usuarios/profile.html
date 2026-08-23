@@ -31,12 +31,12 @@
                 <div class="carnet-card institutional {{ cargo_class }}" id="carnet-capture">
                     <!-- Marca de agua decorativa -->
                     <div class="carnet-watermark">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="">
+                        <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="">
                     </div>
                     
                     <div class="carnet-header-inst">
                         <div class="header-logo">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA">
+                            <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="SENA">
                         </div>
                         <div class="header-text-inst">
                             <div class="sena-title">SERVICIO NACIONAL DE APRENDIZAJE</div>
@@ -135,7 +135,7 @@
             <!-- Formulario Actualización / Update Form -->
             <div id="update-info-section" class="glass-card stagger-item" style="display: none;">
                 <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                    <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="SENA"
                         style="height: 25px;">
                     Actualizar Datos
                 </h2>
@@ -191,7 +191,7 @@
             <!-- Lista de Equipos / Devices List -->
             <div id="devices-section" class="glass-card stagger-item" style="display: none;">
                 <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                    <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="SENA"
                         style="height: 25px;">
                     Equipos Vinculados
                 </h2>
@@ -224,7 +224,7 @@
             <!-- Añadir Equipo / Add Device Form -->
             <div id="add-device-section" class="glass-card stagger-item" style="display: none;">
                 <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                    <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="SENA"
                         style="height: 25px;">
                     Vincular Nuevo Equipo
                 </h2>

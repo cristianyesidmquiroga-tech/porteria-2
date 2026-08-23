@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" role="img" aria-label="Logo SENA">
+  <!-- Logo SENA verde institucional #39A900 -->
+  <g fill="#39A900">
+    <circle cx="100" cy="28" r="25"/>
+    <rect x="6" y="122" width="188" height="20"/>
+    <polygon points="58,142 96,142 66,232 30,232"/>
+    <polygon points="104,142 142,142 170,232 134,232"/>
+  </g>
+  <text x="100" y="106" text-anchor="middle" font-family="Arial, sans-serif"
+        font-weight="900" font-size="54" letter-spacing="3" fill="#39A900">SENA</text>
+</svg>

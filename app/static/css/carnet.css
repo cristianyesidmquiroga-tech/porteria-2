@@ -71,6 +71,7 @@
     color: #333;
 }
 
+/* Título del rol en verde institucional SENA */
 .carnet-role {
     font-weight: bold;
     font-size: 13px;
@@ -78,7 +79,7 @@
     margin-bottom: 6px;
     border-bottom: 1px solid #eee;
     padding-bottom: 4px;
-    color: #000;
+    color: #39A900;
 }
 
 .carnet-name {
