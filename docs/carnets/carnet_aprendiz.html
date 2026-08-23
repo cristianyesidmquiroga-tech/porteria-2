@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Carnet APRENDIZ</title><style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #fff; }
+.carnet {
+    width: 638px; height: 1011px;
+    border: 4px solid #ccc; border-radius: 26px;
+    background: #fff; font-family: Arial, sans-serif;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.carnet-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 34px 18px 34px; border-bottom: 4px solid #ccc;
+}
+.carnet-photo {
+    width: 132px; height: 176px; background: #ddd; border-radius: 12px;
+    display: flex; justify-content: center; align-items: center; overflow: hidden;
+}
+.carnet-photo img { width: 100%; height: 100%; object-fit: cover; }
+.carnet-body { padding: 18px 34px; flex-grow: 1; font-size: 26px; line-height: 1.35; color: #333; }
+.carnet-role {
+    font-weight: bold; font-size: 34px; text-transform: uppercase;
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #eee; color: #000;
+}
+.carnet-name { font-weight: bold; font-size: 30px; margin-bottom: 4px; }
+.carnet-surname { font-size: 30px; margin-bottom: 14px; }
+.info-line { margin-bottom: 8px; }
+.label { font-weight: bold; }
+.carnet-jornada { margin-bottom: 8px; display: flex; align-items: center; gap: 14px; }
+.jornada-opcion { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.jornada-check {
+    display: inline-block; width: 20px; height: 20px;
+    border: 3px solid #333; border-radius: 4px; background: #fff;
+}
+.jornada-opcion.marcada { font-weight: bold; }
+.jornada-opcion.marcada .jornada-check { background: #39A900; border-color: #39A900; }
+.carnet-small-text { font-size: 21px; line-height: 1.25; margin-top: 12px; color: #444; }
+.carnet-barcode { margin-top: 16px; }
+.carnet-footer {
+    background: #e6e6e6; padding: 16px 34px; font-size: 25px;
+    border-top: 2px solid #ccc; font-weight: bold; color: #333; line-height: 1.3;
+}
+</style></head>
+<body>
+<div class="carnet">
+    <div class="carnet-header">
+        <svg width="128" viewBox="0 0 120 145" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#39A900">
+    <circle cx="60" cy="16" r="14"/>
+    <path d="M60 44 L28 22 L20 32 L56 56 L64 56 L100 32 L92 22 Z"/>
+    <path d="M56 62 L24 100 L34 108 L60 76 L86 108 L96 100 L64 62 Z"/>
+  </g>
+  <text x="60" y="138" text-anchor="middle" font-family="Arial, sans-serif"
+        font-weight="bold" font-size="30" letter-spacing="3" fill="#39A900">SENA</text>
+</svg>
+        <div class="carnet-photo"><svg viewBox="0 0 24 24" width="80" height="80">
+  <path fill="#888" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+</svg></div>
+    </div>
+    <div class="carnet-body">
+        <div class="carnet-role">APRENDIZ</div>
+        <div class="carnet-name">{Nombres}</div>
+        <div class="carnet-surname">{Apellidos}</div>
+        <div class="info-line"><span class="label">Tip.</span> {Número de documento}</div>
+        <div class="info-line"><span class="label">RH</span> {Tipo de Sangre}</div>
+        <div class="carnet-jornada"><span class="label">Jornada:</span><span class="jornada-opcion"><span class="jornada-check"></span>Mañana</span><span class="jornada-opcion"><span class="jornada-check"></span>Mixta</span><span class="jornada-opcion"><span class="jornada-check"></span>Nocturna</span></div>
+        
+        <div class="carnet-small-text">
+            Ficha de Formaci&oacute;n No. {C&oacute;digo}<br>
+            Fecha de Finalizaci&oacute;n: {Fecha Final}<br>
+            <strong>{Nombre del Programa}</strong>
+        </div>
+        <div class="carnet-small-text" style="margin-top:12px;">
+            Aseguradora Aurora<br>
+            Tel: 601-7443718 Op. 1<br>
+            Poliza: No. 100603
+        </div>
+        <div class="carnet-barcode"><svg width="380" height="54" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="3" height="54" fill="#000"/><rect x="5" y="0" width="3" height="54" fill="#000"/><rect x="10" y="0" width="2" height="54" fill="#000"/><rect x="15" y="0" width="4" height="54" fill="#000"/><rect x="21" y="0" width="2" height="54" fill="#000"/><rect x="25" y="0" width="3" height="54" fill="#000"/><rect x="31" y="0" width="3" height="54" fill="#000"/><rect x="38" y="0" width="3" height="54" fill="#000"/><rect x="43" y="0" width="4" height="54" fill="#000"/><rect x="50" y="0" width="5" height="54" fill="#000"/><rect x="57" y="0" width="3" height="54" fill="#000"/><rect x="62" y="0" width="3" height="54" fill="#000"/><rect x="69" y="0" width="2" height="54" fill="#000"/><rect x="73" y="0" width="3" height="54" fill="#000"/><rect x="79" y="0" width="2" height="54" fill="#000"/><rect x="84" y="0" width="3" height="54" fill="#000"/><rect x="89" y="0" width="2" height="54" fill="#000"/><rect x="93" y="0" width="5" height="54" fill="#000"/><rect x="101" y="0" width="4" height="54" fill="#000"/><rect x="108" y="0" width="2" height="54" fill="#000"/><rect x="113" y="0" width="5" height="54" fill="#000"/><rect x="120" y="0" width="3" height="54" fill="#000"/><rect x="127" y="0" width="5" height="54" fill="#000"/><rect x="134" y="0" width="6" height="54" fill="#000"/><rect x="143" y="0" width="2" height="54" fill="#000"/><rect x="148" y="0" width="3" height="54" fill="#000"/><rect x="154" y="0" width="2" height="54" fill="#000"/><rect x="159" y="0" width="6" height="54" fill="#000"/><rect x="168" y="0" width="6" height="54" fill="#000"/><rect x="177" y="0" width="5" height="54" fill="#000"/><rect x="184" y="0" width="2" height="54" fill="#000"/><rect x="188" y="0" width="2" height="54" fill="#000"/><rect x="194" y="0" width="6" height="54" fill="#000"/><rect x="204" y="0" width="6" height="54" fill="#000"/><rect x="212" y="0" width="4" height="54" fill="#000"/><rect x="220" y="0" width="2" height="54" fill="#000"/><rect x="226" y="0" width="5" height="54" fill="#000"/><rect x="234" y="0" width="3" height="54" fill="#000"/><rect x="241" y="0" width="5" height="54" fill="#000"/><rect x="249" y="0" width="2" height="54" fill="#000"/><rect x="254" y="0" width="3" height="54" fill="#000"/><rect x="259" y="0" width="4" height="54" fill="#000"/><rect x="265" y="0" width="3" height="54" fill="#000"/><rect x="270" y="0" width="6" height="54" fill="#000"/><rect x="280" y="0" width="3" height="54" fill="#000"/><rect x="285" y="0" width="2" height="54" fill="#000"/><rect x="290" y="0" width="3" height="54" fill="#000"/><rect x="297" y="0" width="5" height="54" fill="#000"/><rect x="305" y="0" width="5" height="54" fill="#000"/><rect x="314" y="0" width="6" height="54" fill="#000"/><rect x="323" y="0" width="6" height="54" fill="#000"/><rect x="331" y="0" width="6" height="54" fill="#000"/><rect x="340" y="0" width="2" height="54" fill="#000"/><rect x="345" y="0" width="5" height="54" fill="#000"/><rect x="352" y="0" width="3" height="54" fill="#000"/><rect x="357" y="0" width="6" height="54" fill="#000"/><rect x="365" y="0" width="3" height="54" fill="#000"/><rect x="372" y="0" width="2" height="54" fill="#000"/></svg></div>
+    </div>
+    <div class="carnet-footer">
+        <div>Regional Santander</div>
+        <div>Centro de Gestión</div>
+        <div>Agroempresarial del Oriente</div>
+    </div>
+</div>
+</body>
+</html>

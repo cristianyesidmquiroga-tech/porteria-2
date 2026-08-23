@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Carnet CONTRATISTA</title><style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #fff; }
+.carnet {
+    width: 638px; height: 1011px;
+    border: 4px solid #ccc; border-radius: 26px;
+    background: #fff; font-family: Arial, sans-serif;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.carnet-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 34px 18px 34px; border-bottom: 4px solid #ccc;
+}
+.carnet-photo {
+    width: 132px; height: 176px; background: #ddd; border-radius: 12px;
+    display: flex; justify-content: center; align-items: center; overflow: hidden;
+}
+.carnet-photo img { width: 100%; height: 100%; object-fit: cover; }
+.carnet-body { padding: 18px 34px; flex-grow: 1; font-size: 26px; line-height: 1.35; color: #333; }
+.carnet-role {
+    font-weight: bold; font-size: 34px; text-transform: uppercase;
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #eee; color: #000;
+}
+.carnet-name { font-weight: bold; font-size: 30px; margin-bottom: 4px; }
+.carnet-surname { font-size: 30px; margin-bottom: 14px; }
+.info-line { margin-bottom: 8px; }
+.label { font-weight: bold; }
+.carnet-jornada { margin-bottom: 8px; display: flex; align-items: center; gap: 14px; }
+.jornada-opcion { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.jornada-check {
+    display: inline-block; width: 20px; height: 20px;
+    border: 3px solid #333; border-radius: 4px; background: #fff;
+}
+.jornada-opcion.marcada { font-weight: bold; }
+.jornada-opcion.marcada .jornada-check { background: #39A900; border-color: #39A900; }
+.carnet-small-text { font-size: 21px; line-height: 1.25; margin-top: 12px; color: #444; }
+.carnet-barcode { margin-top: 16px; }
+.carnet-footer {
+    background: #e6e6e6; padding: 16px 34px; font-size: 25px;
+    border-top: 2px solid #ccc; font-weight: bold; color: #333; line-height: 1.3;
+}
+</style></head>
+<body>
+<div class="carnet">
+    <div class="carnet-header">
+        <svg width="128" viewBox="0 0 120 145" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#39A900">
+    <circle cx="60" cy="16" r="14"/>
+    <path d="M60 44 L28 22 L20 32 L56 56 L64 56 L100 32 L92 22 Z"/>
+    <path d="M56 62 L24 100 L34 108 L60 76 L86 108 L96 100 L64 62 Z"/>
+  </g>
+  <text x="60" y="138" text-anchor="middle" font-family="Arial, sans-serif"
+        font-weight="bold" font-size="30" letter-spacing="3" fill="#39A900">SENA</text>
+</svg>
+        <div class="carnet-photo"><svg viewBox="0 0 24 24" width="80" height="80">
+  <path fill="#888" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+</svg></div>
+    </div>
+    <div class="carnet-body">
+        <div class="carnet-role">CONTRATISTA</div>
+        <div class="carnet-name">{Nombres}</div>
+        <div class="carnet-surname">{Apellidos}</div>
+        <div class="info-line"><span class="label">C.C.</span> {Número de documento}</div>
+        <div class="info-line"><span class="label">RH</span> {Tipo de Sangre}</div>
+        <div class="carnet-jornada"><span class="label">Jornada:</span><span class="jornada-opcion"><span class="jornada-check"></span>Mañana</span><span class="jornada-opcion"><span class="jornada-check"></span>Mixta</span><span class="jornada-opcion"><span class="jornada-check"></span>Nocturna</span></div>
+        
+        <div class="carnet-barcode"><svg width="380" height="54" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="2" height="54" fill="#000"/><rect x="5" y="0" width="5" height="54" fill="#000"/><rect x="12" y="0" width="6" height="54" fill="#000"/><rect x="22" y="0" width="2" height="54" fill="#000"/><rect x="28" y="0" width="6" height="54" fill="#000"/><rect x="38" y="0" width="3" height="54" fill="#000"/><rect x="45" y="0" width="6" height="54" fill="#000"/><rect x="53" y="0" width="4" height="54" fill="#000"/><rect x="59" y="0" width="4" height="54" fill="#000"/><rect x="66" y="0" width="3" height="54" fill="#000"/><rect x="72" y="0" width="3" height="54" fill="#000"/><rect x="77" y="0" width="6" height="54" fill="#000"/><rect x="87" y="0" width="5" height="54" fill="#000"/><rect x="96" y="0" width="4" height="54" fill="#000"/><rect x="103" y="0" width="2" height="54" fill="#000"/><rect x="107" y="0" width="5" height="54" fill="#000"/><rect x="114" y="0" width="3" height="54" fill="#000"/><rect x="120" y="0" width="5" height="54" fill="#000"/><rect x="129" y="0" width="4" height="54" fill="#000"/><rect x="135" y="0" width="2" height="54" fill="#000"/><rect x="140" y="0" width="6" height="54" fill="#000"/><rect x="149" y="0" width="3" height="54" fill="#000"/><rect x="155" y="0" width="3" height="54" fill="#000"/><rect x="161" y="0" width="2" height="54" fill="#000"/><rect x="167" y="0" width="2" height="54" fill="#000"/><rect x="171" y="0" width="5" height="54" fill="#000"/><rect x="179" y="0" width="3" height="54" fill="#000"/><rect x="186" y="0" width="2" height="54" fill="#000"/><rect x="192" y="0" width="2" height="54" fill="#000"/><rect x="197" y="0" width="6" height="54" fill="#000"/><rect x="206" y="0" width="2" height="54" fill="#000"/><rect x="211" y="0" width="4" height="54" fill="#000"/><rect x="217" y="0" width="2" height="54" fill="#000"/><rect x="221" y="0" width="2" height="54" fill="#000"/><rect x="226" y="0" width="2" height="54" fill="#000"/><rect x="232" y="0" width="3" height="54" fill="#000"/><rect x="237" y="0" width="4" height="54" fill="#000"/><rect x="243" y="0" width="5" height="54" fill="#000"/><rect x="252" y="0" width="2" height="54" fill="#000"/><rect x="257" y="0" width="3" height="54" fill="#000"/><rect x="264" y="0" width="2" height="54" fill="#000"/><rect x="269" y="0" width="6" height="54" fill="#000"/><rect x="278" y="0" width="3" height="54" fill="#000"/><rect x="284" y="0" width="2" height="54" fill="#000"/><rect x="290" y="0" width="4" height="54" fill="#000"/><rect x="297" y="0" width="5" height="54" fill="#000"/><rect x="304" y="0" width="3" height="54" fill="#000"/><rect x="309" y="0" width="6" height="54" fill="#000"/><rect x="317" y="0" width="3" height="54" fill="#000"/><rect x="323" y="0" width="2" height="54" fill="#000"/><rect x="327" y="0" width="2" height="54" fill="#000"/><rect x="333" y="0" width="3" height="54" fill="#000"/><rect x="339" y="0" width="4" height="54" fill="#000"/><rect x="346" y="0" width="3" height="54" fill="#000"/><rect x="352" y="0" width="2" height="54" fill="#000"/><rect x="356" y="0" width="3" height="54" fill="#000"/><rect x="362" y="0" width="5" height="54" fill="#000"/><rect x="369" y="0" width="2" height="54" fill="#000"/><rect x="373" y="0" width="6" height="54" fill="#000"/></svg></div>
+    </div>
+    <div class="carnet-footer">
+        <div>Regional Santander</div>
+        <div>Centro de Gestión</div>
+        <div>Agroempresarial del Oriente</div>
+    </div>
+</div>
+</body>
+</html>

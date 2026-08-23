@@ -28,18 +28,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 15px 10px 15px;
+    padding: 10px 14px 8px 14px;
     border-bottom: 2px solid #ccc;
 }
 
+/* Logo SENA verde institucional #39A900 (SVG en línea) */
 .carnet-logo {
-    width: 60px;
+    width: 50px;
     height: auto;
+    flex-shrink: 0;
 }
 
 .carnet-photo {
-    width: 60px;
-    height: 80px;
+    width: 52px;
+    height: 70px;
     background-color: #ddd;
     border-radius: 5px;
     display: flex;
@@ -56,38 +58,38 @@
 
 /* User icon placeholder if no photo */
 .carnet-photo svg {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     fill: #888;
 }
 
 .carnet-body {
-    padding: 10px 15px;
+    padding: 8px 14px;
     flex-grow: 1;
-    font-size: 11px;
-    line-height: 1.4;
+    font-size: 10px;
+    line-height: 1.35;
     color: #333;
 }
 
 .carnet-role {
     font-weight: bold;
-    font-size: 14px;
+    font-size: 13px;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
+    padding-bottom: 4px;
     color: #000;
 }
 
 .carnet-name {
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     margin-bottom: 2px;
 }
 
 .carnet-surname {
-    font-size: 13px;
-    margin-bottom: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
 }
 
 .carnet-info-line {
@@ -98,13 +100,48 @@
     font-weight: bold;
 }
 
+/* Campo Jornada con opciones marcables (Mañana / Mixta / Nocturna) */
+.carnet-jornada {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.jornada-opcion {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+.jornada-check {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid #333;
+    border-radius: 2px;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.jornada-opcion.marcada .jornada-check {
+    background-color: #39A900;
+    border-color: #39A900;
+}
+
+.jornada-opcion.marcada {
+    font-weight: bold;
+}
+
 .carnet-barcode {
-    margin: 15px 0 5px 0;
+    margin: 8px 0 4px 0;
 }
 
 /* We will use a repeating linear gradient to simulate a barcode */
 .barcode-placeholder {
-    height: 25px;
+    height: 21px;
     width: 150px;
     background-image: repeating-linear-gradient(
         90deg,
@@ -120,16 +157,16 @@
 }
 
 .carnet-small-text {
-    font-size: 9px;
+    font-size: 8.5px;
     line-height: 1.2;
-    margin-top: 10px;
+    margin-top: 6px;
     color: #444;
 }
 
 .carnet-footer {
     background-color: #e6e6e6;
-    padding: 10px 15px;
-    font-size: 11px;
+    padding: 7px 14px;
+    font-size: 10px;
     border-top: 1px solid #ccc;
     font-weight: bold;
     color: #333;
