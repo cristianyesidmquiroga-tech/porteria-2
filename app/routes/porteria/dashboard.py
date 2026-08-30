@@ -7,6 +7,23 @@ from . import porteria_bp as bp
 from ...models.usuarios import Usuario, Rol
 from ...models.accesos import Acceso
 from ... import db
+from ...utils import get_colombia_time, parsear_fecha_bd
+
+_PREFIJOS_PELIGROSOS = ('=', '+', '-', '@', '\t', '\r')
+
+
+def _celda_segura(valor):
+    """Neutraliza formulas antes de escribir una celda del CSV.
+
+    Excel interpreta como formula el contenido que empieza por = + - @ o
+    tabulador. El documento y el nombre los escribe el propio usuario, asi que
+    sin esto un aprendiz podia ejecutar codigo en el equipo del administrador
+    que abriera el reporte de auditoria.
+    """
+    texto = '' if valor is None else str(valor)
+    if texto[:1] in _PREFIJOS_PELIGROSOS:
+        return "'" + texto
+    return texto
 
 @bp.route('/dashboard')
 @login_required
@@ -60,22 +77,21 @@ def dashboard():
         labels_7days.append(lbl)
         day_map[d] = 6 - i
 
-    start_utc = datetime.utcnow() - timedelta(days=8)
+    inicio_ventana = get_colombia_time() - timedelta(days=8)
     entries = db.session.query(Acceso.fecha, Usuario.cargo).join(
         Usuario, Acceso.referencia_id == Usuario.id
     ).filter(
-        Acceso.fecha >= start_utc,
+        Acceso.fecha >= inicio_ventana,
         Acceso.tipo == 'Entrada',
         Acceso.tipo_referencia == 'Usuario'
     ).all()
 
     total_entries = 0
-    for fecha_utc, cargo in entries:
-        if isinstance(fecha_utc, str):
-            try: fecha_utc = datetime.strptime(fecha_utc, '%Y-%m-%d %H:%M:%S')
-            except ValueError: fecha_utc = datetime.strptime(fecha_utc, '%Y-%m-%d %H:%M:%S.%f')
-
-        fecha_local = fecha_utc.replace(tzinfo=timezone.utc).astimezone(colombia_tz)
+    for fecha_registro, cargo in entries:
+        # La fecha ya esta guardada en hora de Colombia: no se convierte.
+        fecha_local = parsear_fecha_bd(fecha_registro)
+        if fecha_local is None:
+            continue
         d = fecha_local.date()
         if d in day_map:
             idx = day_map[d]
@@ -115,7 +131,10 @@ def dashboard():
                 rol_or_tipo = u.rol.nombre if u.rol else 'Usuario'
                 cargo_or_clase = u.cargo or "N/A"
                 foto = u.foto
-                rsuffix = 'aprendiz' if rol_or_tipo == 'Aprendiz' else ('instructor' if rol_or_tipo == 'Instructor' else 'trabajador')
+                # rol_or_tipo es Admin/Usuario/Trabajador; la distincion real esta en cargo.
+                rsuffix = ('aprendiz' if cargo_or_clase == 'Aprendiz'
+                           else 'instructor' if cargo_or_clase == 'Instructor'
+                           else 'trabajador')
                 if u.programa:
                     programa_ficha = f"{u.programa} (Ficha: {u.ficha or 'N/A'})"
         elif acc.tipo_referencia == 'Visitante':
@@ -195,21 +214,20 @@ def export_dashboard():
         writer.writerow(('Documento', 'Nombre Completo', 'Cargo', 'Programa/Especialidad', 'Ficha', 'Equipo(s)', 'Tipo Acceso', 'Fecha', 'Hora'))
         yield data.getvalue(); data.seek(0); data.truncate(0)
         for acceso, usuario, rol in historial:
-            colombia_tz = timezone(timedelta(hours=-5))
-            fecha_utc = acceso.fecha
-            if isinstance(fecha_utc, str):
-                for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f'):
-                    try: fecha_utc = datetime.strptime(fecha_utc, fmt); break
-                    except ValueError: continue
-            if isinstance(fecha_utc, datetime):
-                fecha_local = fecha_utc.replace(tzinfo=timezone.utc).astimezone(colombia_tz)
-                fecha_str, hora_str = fecha_local.strftime('%d/%m/%Y'), fecha_local.strftime('%I:%M:%S %p')
-            else: fecha_str, hora_str = str(acceso.fecha), ""
+            fecha_local = parsear_fecha_bd(acceso.fecha)
+            if fecha_local is not None:
+                fecha_str = fecha_local.strftime('%d/%m/%Y')
+                hora_str = fecha_local.strftime('%I:%M:%S %p')
+            else:
+                fecha_str, hora_str = str(acceso.fecha), ""
             
             equipo_text = acceso.equipos_str if acceso.equipos_str else 'Ninguno'
             cargo_text = usuario.cargo if usuario.cargo else (rol.nombre if rol else 'N/A')
             
-            writer.writerow((usuario.documento or 'N/A', usuario.nombre or 'N/A', cargo_text, usuario.programa or 'N/A', usuario.ficha or 'N/A', equipo_text, acceso.tipo or 'N/A', fecha_str, hora_str))
+            writer.writerow(tuple(_celda_segura(c) for c in (
+                usuario.documento or 'N/A', usuario.nombre or 'N/A', cargo_text,
+                usuario.programa or 'N/A', usuario.ficha or 'N/A', equipo_text,
+                acceso.tipo or 'N/A', fecha_str, hora_str)))
             yield data.getvalue(); data.seek(0); data.truncate(0)
 
     return Response(generate(), mimetype='text/csv', headers={"Content-Disposition": f"attachment; filename=Auditoria_Accesos_{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"})

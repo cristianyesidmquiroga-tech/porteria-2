@@ -31,6 +31,11 @@ class Usuario(db.Model, UserMixin):
     # Sistema de Recuperación
     codigo_recuperacion = db.Column(db.String(6), nullable=True)
     recuperacion_expiracion = db.Column(db.DateTime, nullable=True)
+    # Contador propio para los codigos enviados por correo. Debe ser distinto
+    # de intentos_fallidos: si compartieran contador, pedir un codigo de
+    # recuperacion (endpoint publico) reiniciaria el bloqueo del login y la
+    # fuerza bruta de contrasenas quedaria sin limite.
+    intentos_codigo = db.Column(db.Integer, default=0)
 
     # Campos detallados del perfil del usuario (SENA)
     documento = db.Column(db.String(20), unique=True, nullable=True)
@@ -41,7 +46,7 @@ class Usuario(db.Model, UserMixin):
     foto = db.Column(
         db.String(255),
         nullable=True,
-        default='default_profile.png')
+        default=None)
 
     session_token = db.Column(db.String(100), nullable=True)
 

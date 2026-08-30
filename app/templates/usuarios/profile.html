@@ -43,7 +43,9 @@
                         <div class="photo-container-inst">
                             <div class="photo-frame">
                                 <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.foto) if current_user.foto else 'https://ui-avatars.com/api/?name=' ~ current_user.nombre|urlencode ~ '&background=39A900&color=fff' }}"
-                                    alt="Foto Perfil" class="profile-photo-inst" onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre|urlencode }}&background=39A900&color=fff'">
+                                    alt="Tu foto de perfil" class="profile-photo-inst"
+                                    decoding="async" width="200" height="200"
+                                    onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.nombre|urlencode }}&background=39A900&color=fff'">
                             </div>
                         </div>
 
@@ -373,8 +375,27 @@
                 "Si, Eliminar"
             );
 
-            if (confirmed) {
-                window.location.href = url;
+            if (!confirmed) return;
+
+            // El borrado ahora exige POST con token CSRF; una navegación GET
+            // permitía borrar el equipo desde cualquier sitio externo.
+            try {
+                const respuesta = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                });
+                const datos = await respuesta.json();
+                if (datos.status === 'success') {
+                    showToast("Éxito", datos.message, "success");
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showToast("Atención", datos.message || "No se pudo eliminar.", "danger");
+                }
+            } catch (error) {
+                showToast("Error", "Error de conexión.", "danger");
             }
         });
     });

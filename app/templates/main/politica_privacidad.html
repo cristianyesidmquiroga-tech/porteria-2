@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass-card animate-on-scroll" style="max-width: 900px; margin: 2rem auto; padding: 2.5rem; border-radius: 18px; line-height: 1.7;">
+
+    <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Política de Tratamiento de Datos Personales</h1>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        Sistema de Acceso y Carnet Digital — SENA, Centro de Gestión Agroempresarial del Oriente (Vélez, Santander).
+        <br>Expedida conforme a la Ley 1581 de 2012 y al Decreto 1074 de 2015.
+    </p>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">1. Responsable del tratamiento</h2>
+    <p>
+        Servicio Nacional de Aprendizaje (SENA) — Centro de Gestión Agroempresarial del Oriente,
+        Vélez, Santander, Colombia. Para ejercer tus derechos escribe al correo institucional
+        del Centro indicando en el asunto «Habeas Data — Sistema de Acceso».
+    </p>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">2. Datos que se recolectan</h2>
+    <ul>
+        <li><strong>De identificación:</strong> nombre completo, número de documento y correo electrónico.</li>
+        <li><strong>Académicos o laborales:</strong> cargo, programa de formación, ficha y jornada.</li>
+        <li><strong>Fotografía del rostro:</strong> utilizada exclusivamente para que el personal de
+            portería verifique visualmente la identidad de quien ingresa.</li>
+        <li><strong>Tipo de sangre (dato sensible):</strong> se recolecta únicamente con fines de
+            atención en caso de emergencia dentro de las instalaciones. Es de suministro
+            <strong>facultativo</strong>: no estás obligado a proporcionarlo y puedes dejarlo en blanco.</li>
+        <li><strong>Registros de acceso:</strong> fecha y hora de entrada y salida, y equipos de cómputo
+            declarados al ingresar.</li>
+    </ul>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">3. Finalidad</h2>
+    <p>
+        Los datos se tratan con la única finalidad de controlar y registrar el ingreso y la salida
+        de personas, vehículos y equipos en la sede, garantizar la seguridad de las instalaciones y
+        generar los reportes de asistencia y auditoría propios de la operación del Centro.
+        No se utilizan con fines comerciales, publicitarios ni de perfilamiento, y no se comparten
+        con terceros salvo requerimiento de autoridad competente.
+    </p>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">4. Datos sensibles</h2>
+    <p>
+        La fotografía del rostro y el tipo de sangre son datos sensibles conforme al artículo 5 de la
+        Ley 1581 de 2012. De acuerdo con el artículo 6, <strong>no estás obligado a autorizar su
+        tratamiento</strong>. El tipo de sangre puede omitirse; la fotografía es necesaria para la
+        emisión del carnet digital, y si decides no aportarla el ingreso deberá gestionarse de forma
+        manual en portería.
+    </p>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">5. Tus derechos como titular</h2>
+    <ul>
+        <li>Conocer, actualizar y rectificar tus datos personales.</li>
+        <li>Solicitar prueba de la autorización que otorgaste.</li>
+        <li>Ser informado sobre el uso que se ha dado a tus datos.</li>
+        <li>Presentar quejas ante la Superintendencia de Industria y Comercio (SIC).</li>
+        <li>Revocar la autorización y solicitar la supresión de tus datos, salvo que exista un deber
+            legal o contractual de conservarlos.</li>
+        <li>Acceder de forma gratuita a los datos que hayan sido objeto de tratamiento.</li>
+    </ul>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">6. Conservación</h2>
+    <p>
+        Los registros de acceso y asistencia se conservan durante el mes en curso y se archivan
+        mensualmente en un respaldo cifrado bajo custodia del Centro. Los datos de tu perfil se
+        conservan mientras mantengas vínculo activo con la institución.
+    </p>
+
+    <h2 style="font-size: 1.15rem; margin-top: 2rem;">7. Seguridad</h2>
+    <p>
+        El sistema aplica cifrado en tránsito (HTTPS), almacenamiento de contraseñas mediante
+        funciones hash, control de acceso por roles y registro de auditoría de las operaciones
+        administrativas sobre datos personales.
+    </p>
+
+    <p style="margin-top: 2.5rem; color: var(--text-muted); font-size: 0.9rem;">
+        Última actualización: agosto de 2026.
+    </p>
+
+    <div style="margin-top: 2rem;">
+        <a href="{{ url_for('main.index') }}" class="glass-btn">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+        </a>
+    </div>
+</div>
+{% endblock %}

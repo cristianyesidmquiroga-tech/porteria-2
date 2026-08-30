@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import datetime, timedelta, timezone
 from openpyxl import Workbook
 from flask import current_app
@@ -6,12 +7,17 @@ from .. import db
 from ..models.accesos import Acceso
 from ..models.usuarios import Usuario, Rol
 from ..models.asistencia import AsistenciaClase
+from . import get_colombia_time
+
+logger = logging.getLogger(__name__)
 
 def ejecutar_respaldo_mensual():
     """Exporta los datos del mes anterior a Excel y los elimina de la BD."""
     try:
-        colombia_tz = timezone(timedelta(hours=-5))
-        now_col = datetime.now(colombia_tz)
+        # Fechas naive en hora de Colombia, igual que las columnas de la base.
+        # Comparar aware contra naive desfasaba la ventana de borrado 5 horas
+        # (PostgreSQL) o lanzaba TypeError que el except se tragaba (SQLite).
+        now_col = get_colombia_time()
         
         # Calcular el inicio y fin del mes anterior
         primer_dia_mes_actual = now_col.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -45,6 +51,10 @@ def ejecutar_respaldo_mensual():
         ).join(
             Rol, Usuario.rol_id == Rol.id
         ).filter(
+            # SIN este filtro, referencia_id (que es polimorfico) unia el acceso
+            # del visitante 7 con el usuario 7: el respaldo guardaba el nombre y
+            # la cedula de la persona equivocada y luego borraba el registro.
+            Acceso.tipo_referencia == 'Usuario',
             Acceso.fecha >= fecha_inicio,
             Acceso.fecha < fecha_fin
         ).all()
@@ -65,7 +75,25 @@ def ejecutar_respaldo_mensual():
             ])
             ids_accesos_borrar.append(acceso.id)
             
-        # --- HOJA 2: ASISTENCIAS ---
+        # --- HOJA 2: ACCESOS DE VISITANTES, VEHICULOS Y OBJETOS ---
+        # Antes quedaban fuera del respaldo y nunca se purgaban, acumulando
+        # datos de terceros indefinidamente (art. 4 lit. d, Ley 1581).
+        ws_otros = wb.create_sheet(title="Accesos No Usuarios")
+        ws_otros.append(['ID', 'Tipo de entidad', 'Referencia', 'Tipo', 'Fecha'])
+
+        accesos_otros = Acceso.query.filter(
+            Acceso.tipo_referencia != 'Usuario',
+            Acceso.fecha >= fecha_inicio,
+            Acceso.fecha < fecha_fin
+        ).all()
+        for acc in accesos_otros:
+            fecha_txt = (acc.fecha.strftime('%Y-%m-%d %H:%M:%S')
+                         if isinstance(acc.fecha, datetime) else str(acc.fecha))
+            ws_otros.append([acc.id, acc.tipo_referencia, acc.referencia_id,
+                             acc.tipo, fecha_txt])
+            ids_accesos_borrar.append(acc.id)
+
+        # --- HOJA 3: ASISTENCIAS ---
         ws_asistencias = wb.create_sheet(title="Asistencias Clases")
         ws_asistencias.append(['ID', 'Ficha', 'Instructor', 'Aprendiz Documento', 'Aprendiz Nombre', 'Presente', 'Fecha'])
         
@@ -101,10 +129,10 @@ def ejecutar_respaldo_mensual():
                 AsistenciaClase.query.filter(AsistenciaClase.id.in_(ids_asistencias_borrar)).delete(synchronize_session=False)
             
             db.session.commit()
-            print(f"Respaldo generado exitosamente: {nombre_archivo}")
+            logger.info("Respaldo generado: %s", nombre_archivo)
         else:
-            print("No hay datos antiguos para respaldar este mes.")
+            logger.info("No hay datos antiguos para respaldar este mes.")
             
     except Exception as e:
         db.session.rollback()
-        print(f"Error generando respaldo mensual: {e}")
+        logger.exception("Error generando el respaldo mensual")

@@ -33,47 +33,52 @@ with app.app_context():
         db.session.commit()
         print("Punto de Acceso 'Portería Principal' (ID: 1) creado.")
 
-    # Buscar si existe el correo
-    email = os.environ.get('ADMIN_EMAIL', 'admin@sena.edu.co')
-    admin_password = os.environ.get('ADMIN_PASSWORD', 'change_me_immediately_2026*')
-    
+    # Credenciales del super admin: obligatorias, sin valor por defecto.
+    email = os.environ.get('ADMIN_EMAIL')
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+
+    if not email:
+        raise SystemExit(
+            "ERROR: falta ADMIN_EMAIL. Configuralo antes de arrancar el sistema."
+        )
+
     admin = Usuario.query.filter_by(correo=email).first()
-    
+
     if admin:
-        # Actualizar para quitar todas las restricciones
-        admin.perfil_completo = True
-        admin.correo_verificado = True
-        admin.debe_cambiar_contrasena = False
-        admin.intentos_fallidos = 0
-        admin.bloqueado_hasta = None
-        admin.tipo_sangre = 'O+'
-        admin.foto = 'default_profile.png'
-        admin.set_password(admin_password)
-        db.session.commit()
-        print(f"Admin actualizado SIN restricciones: {email}")
-        print("Contraseña configurada desde variable de entorno (o default).")
+        # NUNCA se resetea la contrasena de un admin existente: este script
+        # corre en cada arranque del contenedor y hacerlo revertiria la clave
+        # del administrador en cada despliegue.
+        print(f"Admin ya existe, no se modifica: {email}")
     else:
+        if not admin_password:
+            raise SystemExit(
+                "ERROR: no existe el admin y falta ADMIN_PASSWORD para crearlo. "
+                "Configura una contrasena fuerte en las variables de entorno."
+            )
+        if len(admin_password) < 12:
+            raise SystemExit(
+                "ERROR: ADMIN_PASSWORD debe tener al menos 12 caracteres."
+            )
+
         admin = Usuario(
             nombre="Super Administrador",
             correo=email,
-            documento="999999999",
+            documento=os.environ.get('ADMIN_DOCUMENTO', '999999999'),
             rol_id=rol_admin.id,
             cargo="Administrador",
             perfil_completo=True,
             correo_verificado=True,
-            debe_cambiar_contrasena=False,
+            debe_cambiar_contrasena=True,
             intentos_fallidos=0,
             bloqueado_hasta=None,
             tipo_sangre='O+',
-            foto='default_profile.png'
+            foto=None
         )
         admin.set_password(admin_password)
         db.session.add(admin)
         db.session.commit()
-        print(f"========================================")
-        print(f"  SUPER ADMIN CREADO SIN RESTRICCIONES")
-        print(f"========================================")
-        print(f"  Correo:     {email}")
-        print(f"  Contraseña: [OCULTA]")
-        print(f"  Rol:        Admin (acceso total)")
-        print(f"========================================")
+        print("========================================")
+        print("  SUPER ADMIN CREADO")
+        print(f"  Correo: {email}")
+        print("  Debe cambiar la contrasena en el primer ingreso.")
+        print("========================================")

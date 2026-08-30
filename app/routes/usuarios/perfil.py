@@ -8,14 +8,19 @@ import io
 import base64
 import os
 import re
-from datetime import date
-from werkzeug.utils import secure_filename
+from ...utils import get_colombia_time
 from app.models.usuarios import TurnoCelador
+from ...utils.security import sanitize_html
+from ...utils.imagenes import (
+    extension_permitida,
+    nombre_foto,
+    procesar_foto,
+    tiene_un_solo_rostro,
+)
 from . import bp
+import logging
 
-def sanitize_html(text):
-    if not text: return text
-    return re.sub(r'<[^>]*?>', '', str(text))
+logger = logging.getLogger(__name__)
 
 def generate_qr(data):
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
@@ -37,7 +42,7 @@ def profile():
     
     turnos_hoy = []
     if current_user.puede_operar_porteria:
-        turnos_hoy = TurnoCelador.query.filter(db.func.date(TurnoCelador.fecha_ingreso) == date.today()).all()
+        turnos_hoy = TurnoCelador.query.filter(db.func.date(TurnoCelador.fecha_ingreso) == get_colombia_time().date()).all()
 
     return render_template('usuarios/profile.html',
                            qr_code=qr_code, equipos=equipos, turnos=turnos_hoy)
@@ -45,72 +50,56 @@ def profile():
 @bp.route('/update_profile', methods=['POST'])
 @login_required
 def update_profile():
-    if 'foto' in request.files:
-        file = request.files['foto']
-        if file.filename != '':
-            ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'tiff'}
-            ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
-            
-            if ext not in ALLOWED_EXTENSIONS:
-                msg = 'Solo se permiten archivos de imagen (png, jpg, jpeg, webp, etc).'
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return {"status": "error", "message": msg}, 400
-                flash(msg, 'danger')
-                return redirect(url_for('usuarios.profile'))
-            
-            filename = secure_filename(file.filename)
-            unique_filename = f"user_{current_user.id}_{filename}"
-            upload_path = os.path.join(
-                current_app.root_path,
-                'static',
-                'uploads',
-                'profiles',
-                unique_filename)
-            
-            # Asegurar que las carpetas existan antes de guardar
-            os.makedirs(os.path.dirname(upload_path), exist_ok=True)
-            
-            file.save(upload_path)
-            
-            # --- VALIDACIÓN FACIAL ---
-            try:
-                import cv2
-                # Cargar el clasificador de rostros (Haar Cascade)
-                face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-                
-                # Leer la imagen guardada
-                img = cv2.imread(upload_path)
-                if img is not None:
-                    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-                    
-                    if len(faces) == 0:
-                        if os.path.exists(upload_path): os.remove(upload_path)
-                        msg = "No se detectó ningún rostro en la foto. Por favor sube una foto real donde se vea tu cara."
-                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                            return {"status": "error", "message": msg}, 400
-                        flash(msg, 'danger')
-                        return redirect(url_for('usuarios.profile'))
-                    
-                    if len(faces) > 1:
-                        if os.path.exists(upload_path): os.remove(upload_path)
-                        msg = "Se detectó más de una persona en la foto. La foto de perfil debe ser individual."
-                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                            return {"status": "error", "message": msg}, 400
-                        flash(msg, 'danger')
-                        return redirect(url_for('usuarios.profile'))
-                else:
-                    # Si no se pudo leer la imagen (formato extraño), la borramos por seguridad
-                    if os.path.exists(upload_path): os.remove(upload_path)
-                    msg = "No se pudo procesar la imagen. Intenta con otro formato (JPG o PNG)."
-                    flash(msg, 'danger')
-                    return redirect(url_for('usuarios.profile'))
-                    
-            except Exception as e:
-                print(f"Error en validación facial (omitido para no bloquear): {e}")
-                # Si falla por algo técnico de la librería, dejamos pasar la foto para no bloquear el sistema
-            
-            current_user.foto = unique_filename
+    es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    def _error(mensaje):
+        if es_ajax:
+            return {"status": "error", "message": mensaje}, 400
+        flash(mensaje, 'danger')
+        return redirect(url_for('usuarios.profile'))
+
+    archivo = request.files.get('foto')
+    if archivo and archivo.filename:
+        if not extension_permitida(archivo.filename):
+            return _error('Solo se permiten imágenes (png, jpg, jpeg, webp, bmp, tiff).')
+
+        carpeta = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
+        nombre_final = nombre_foto(current_user.id)
+        destino = os.path.join(carpeta, nombre_final)
+
+        # Se escribe primero a un temporal: si la imagen no es valida o no pasa
+        # la validacion facial, la foto anterior del usuario sigue intacta.
+        temporal = os.path.join(carpeta, f".tmp_{nombre_final}")
+
+        # procesar_foto reescala, aplana transparencias, quita los metadatos
+        # EXIF (que en fotos de celular llevan coordenadas GPS) y guarda un
+        # JPEG optimizado. Tambien hace de validacion: un archivo que no sea
+        # una imagen real falla aqui y nunca llega al disco definitivo.
+        if not procesar_foto(archivo, temporal):
+            if os.path.exists(temporal):
+                os.remove(temporal)
+            return _error('No se pudo procesar la imagen. Intenta con un JPG o PNG.')
+
+        valida, mensaje = tiene_un_solo_rostro(temporal)
+        if not valida:
+            os.remove(temporal)
+            return _error(mensaje)
+
+        # os.replace es atomico: no queda una foto a medio escribir si algo falla.
+        os.replace(temporal, destino)
+
+        # Las fotos anteriores tenian el nombre original del archivo, asi que
+        # cada cambio de foto dejaba la vieja huerfana en el disco para siempre.
+        anterior = current_user.foto
+        if anterior and anterior != nombre_final:
+            ruta_anterior = os.path.join(carpeta, anterior)
+            if os.path.isfile(ruta_anterior):
+                try:
+                    os.remove(ruta_anterior)
+                except OSError:
+                    logger.warning("No se pudo borrar la foto anterior %s", anterior)
+
+        current_user.foto = nombre_final
 
     documento_val = request.form.get('documento')
     if documento_val:
@@ -153,7 +142,7 @@ def update_profile():
         req_fields.extend([current_user.programa, current_user.ficha])
 
     # Check if profile is now complete
-    if all(req_fields) and current_user.foto != 'default_profile.png':
+    if all(req_fields) and current_user.foto not in (None, 'default-profile.png', 'default_profile.png'):
         current_user.perfil_completo = True
         flash('¡Perfil completado! Tu carnet digital ya está disponible.', 'success')
     else:

@@ -245,18 +245,23 @@ function showToast(title, message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${toastType}`;
+    // El icono es una constante del propio codigo y puede ir como HTML. El
+    // titulo y el mensaje llegan del servidor y pueden contener texto escrito
+    // por un usuario, asi que se insertan como texto, nunca como HTML.
     toast.innerHTML = `
         <div class="toast-icon">
             <i class="fas ${iconMap[toastType]}"></i>
         </div>
         <div class="toast-content">
-            <span class="toast-title">${title}</span>
-            <p class="toast-message">${message}</p>
+            <span class="toast-title"></span>
+            <p class="toast-message"></p>
         </div>
         <div class="toast-progress">
             <div class="toast-progress-bar"></div>
         </div>
     `;
+    toast.querySelector('.toast-title').textContent = title;
+    toast.querySelector('.toast-message').textContent = message;
 
     container.appendChild(toast);
     void toast.offsetWidth;

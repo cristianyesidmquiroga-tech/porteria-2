@@ -20,7 +20,9 @@
             </div>
             <div class="photo-area {{ 'photo-entrada' if status == 'Entrada' else 'photo-salida' }}">
                 <img src="{{ url_for('static', filename='uploads/profiles/' + user_profile.foto) if user_profile.foto else 'https://ui-avatars.com/api/?name=' + user_profile.nombre|urlencode + '&background=39A900&color=fff' }}"
-                    alt="Foto Perfil" class="profile-photo-carnet" onerror="this.src='https://ui-avatars.com/api/?name={{ user_profile.nombre|urlencode }}&background=39A900&color=fff'">
+                    alt="Foto de {{ user_profile.nombre }}" class="profile-photo-carnet"
+                    fetchpriority="high" decoding="async" width="200" height="200"
+                    onerror="this.src='https://ui-avatars.com/api/?name={{ user_profile.nombre|urlencode }}&background=39A900&color=fff'">
             </div>
 
             <div class="info-area">
@@ -34,7 +36,7 @@
                 <h2 class="user-name">{{ user_profile.nombre }}</h2>
                 <p class="detail-text"><strong>ID:</strong> {{ user_profile.documento or 'N/A' }}</p>
                 
-                {% if user_profile.rol.nombre == 'Aprendiz' %}
+                {% if user_profile.cargo == 'Aprendiz' %}
                 <p class="detail-text"><strong>Ficha:</strong> {{ user_profile.ficha or 'N/A' }}</p>
                 <p class="detail-text"><strong>Programa:</strong> {{ user_profile.programa or 'N/A' }}</p>
                 {% elif user_profile.rol.nombre == 'Instructor' %}

@@ -1,23 +1,32 @@
-# Secretos y configuración
+# Secretos y configuracion
 config/.env
+.env
 
 # Base de datos local
 instance/
 
-# Entorno virtual (Librerías)
+# Datos personales: fotos de perfil de usuarios reales (Ley 1581 de 2012).
+# Nunca deben viajar en el repositorio.
+app/static/uploads/
+
+# Respaldos generados
+app/respaldos_mensuales/
+
+# Archivo de depuracion con codigos OTP (eliminado del codigo, se ignora por si acaso)
+CODIGOS_DESARROLLO.txt
+
+# Entorno virtual
+.venv/
 venv/
 env/
 ENV/
 
-# Archivos temporales de Python
+# Temporales de Python
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Archivos de sistema
+# Sistema
 .DS_Store
 Thumbs.db
-
-# Respaldos generados (opcional, si no quieres subirlos a Git)
-app/respaldos_mensuales/

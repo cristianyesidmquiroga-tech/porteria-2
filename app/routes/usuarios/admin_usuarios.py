@@ -152,6 +152,18 @@ def api_crear_usuario():
 
 
 
+        from app.models.accesos import Auditoria
+        db.session.add(Auditoria(
+            usuario_id=current_user.id,
+            nombre_usuario=current_user.nombre,
+            tabla_afectada='usuarios',
+            registro_id=nuevo_usuario.id,
+            accion='Creacion de Usuario',
+            autorizado_por=data.get('autorizado_por'),
+            motivo=data.get('motivo'),
+            detalles=(f"Alta de {nuevo_usuario.correo} con rol_id={nuevo_usuario.rol_id} "
+                      f"y cargo={nuevo_usuario.cargo}"),
+        ))
         db.session.commit()
         return jsonify({"status": "success", "message": "Usuario creado exitosamente"})
 
@@ -178,7 +190,18 @@ def api_editar_usuario(id):
             if existente:
                 return jsonify({"status": "error", "message": "El correo ya está registrado"}), 400
             usuario.correo = nuevo_correo
-        if 'documento' in data: usuario.documento = data['documento']
+        if 'documento' in data:
+            nuevo_documento = (data['documento'] or '').strip() or None
+            if nuevo_documento:
+                # La columna es unica: sin esta comprobacion el choque salia
+                # como IntegrityError y se devolvia un 500 con el texto crudo
+                # de la excepcion al cliente.
+                duplicado = Usuario.query.filter(
+                    Usuario.documento == nuevo_documento, Usuario.id != id).first()
+                if duplicado:
+                    return jsonify({"status": "error",
+                                    "message": "El documento ya esta registrado"}), 400
+            usuario.documento = nuevo_documento
         if 'cargo' in data: usuario.cargo = data['cargo']
         if 'rol_id' in data: usuario.rol_id = int(data['rol_id'])
         if 'ficha' in data: usuario.ficha = data['ficha']
@@ -193,6 +216,11 @@ def api_editar_usuario(id):
                 usuario.bloqueado_hasta = None
                 usuario.intentos_fallidos = 0
             
+        if 'rol_id' in data or ('contraseña' in data and data['contraseña'].strip()):
+            # Cambiar el rol o la contrasena debe expulsar las sesiones activas:
+            # si no, un intruso conserva el acceso pese al restablecimiento.
+            usuario.session_token = None
+
         if 'contraseña' in data and data['contraseña'].strip():
             usuario.set_password(data['contraseña'])
 

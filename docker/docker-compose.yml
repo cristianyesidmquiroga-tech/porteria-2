@@ -1,21 +1,30 @@
-version: '3.8'
-
 services:
   web:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
     container_name: carnet_sena_web
     restart: always
     expose:
       - 5000
     volumes:
-      # Montamos la carpeta de uploads para no perder las imágenes o códigos QR generados
-      - ./app/static/uploads:/app/app/static/uploads
+      # Fotos de perfil subidas por los usuarios
+      - ../app/static/uploads:/app/app/static/uploads
+      # Respaldos mensuales: el proceso de respaldo BORRA los datos de la base
+      # despues de exportarlos, asi que este volumen no es opcional.
+      - ../app/respaldos_mensuales:/app/app/respaldos_mensuales
     env_file:
       - ../config/.env
     environment:
       - TZ=America/Bogota
+    mem_limit: 1g
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5000/salud"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - coolify
 

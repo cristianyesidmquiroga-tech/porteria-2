@@ -448,7 +448,7 @@
         showToast("Escaneando", "Analizando identidad de... " + doc, "info");
         
         try {
-            const res = await fetch(`/porteria/api/verify/${doc}`);
+            const res = await fetch(`/porteria/api/verify/${encodeURIComponent(doc)}`);
             const data = await res.json();
             
             if(!data.found) {
@@ -493,7 +493,7 @@
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-clock" style="color: ${timeColor}; font-size: 1.2rem;"></i>
                             <div>
-                                <strong style="color: #2c3e50;">Permanencia:</strong> <span style="font-weight: 700; color: ${timeColor};">${data.tiempo_transcurrido || 'Menos de 1 min'}</span>
+                                <strong style="color: #2c3e50;">Permanencia:</strong> <span style="font-weight: 700; color: ${timeColor};">${esc(data.tiempo_transcurrido || 'Menos de 1 min')}</span>
                             </div>
                         </div>
                 `;
@@ -537,21 +537,21 @@
                     const checked = eq.estado === 'Adentro' ? 'checked' : '';
                     const badgeBg = eq.estado === 'Adentro' ? '#E8F5E9' : '#FFF3E0';
                     const badgeColor = eq.estado === 'Adentro' ? '#2E7D32' : '#E65100';
-                    const serialHtml = eq.serial ? `<span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 4px;">${eq.serial}</span>` : '';
+                    const serialHtml = eq.serial ? `<span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 4px;">${esc(eq.serial)}</span>` : '';
                     const icon = eq.tipo === 'Tablet' ? '📱' : (eq.tipo === 'Computador' || eq.tipo === 'Portátil' ? '💻' : '📦');
                     
                     equiposHtml += `
                     <label style="display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 10px 14px; border: 1px solid var(--glass-border); border-radius: 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.3s;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" name="equipos_ids" value="${eq.id}" class="equipo-checkbox-ajax" ${checked} style="width: 18px; height: 18px; accent-color: #39A900;">
+                            <input type="checkbox" name="equipos_ids" value="${esc(eq.id)}" class="equipo-checkbox-ajax" ${checked} style="width: 18px; height: 18px; accent-color: #39A900;">
                             <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
-                                ${icon} ${eq.nombre} <small style="opacity: 0.6;">(${eq.tipo})</small>
+                                ${icon} ${esc(eq.nombre)} <small style="opacity: 0.6;">(${esc(eq.tipo)})</small>
                             </span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             ${serialHtml}
                             <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; background: ${badgeBg}; color: ${badgeColor};">
-                                ${eq.estado}
+                                ${esc(eq.estado)}
                             </span>
                         </div>
                     </label>`;
@@ -567,24 +567,24 @@
             if (data.tipo === 'Vehiculo') {
                 detailsHtml = `
                     <div style="display:flex; justify-content:space-around;">
-                        <p><strong>Placa:</strong><br>${data.documento}</p>
-                        <p><strong>Clase/Tipo:</strong><br>${data.cargo}</p>
-                        <p><strong>Rol:</strong><br>${data.rol}</p>
+                        <p><strong>Placa:</strong><br>${esc(data.documento)}</p>
+                        <p><strong>Clase/Tipo:</strong><br>${esc(data.cargo)}</p>
+                        <p><strong>Rol:</strong><br>${esc(data.rol)}</p>
                     </div>
                 `;
             } else if (data.tipo === 'ObjetoExterno') {
                 detailsHtml = `
                     <div style="display:flex; justify-content:space-around;">
-                        <p><strong>Serial:</strong><br>${data.documento}</p>
-                        <p><strong>Propietario:</strong><br>${data.cargo}</p>
-                        <p><strong>Rol:</strong><br>${data.rol}</p>
+                        <p><strong>Serial:</strong><br>${esc(data.documento)}</p>
+                        <p><strong>Propietario:</strong><br>${esc(data.cargo)}</p>
+                        <p><strong>Rol:</strong><br>${esc(data.rol)}</p>
                     </div>
                 `;
             } else {
                 detailsHtml = `
                     <div style="display:flex; justify-content:space-around;">
-                        <p><strong>Cédula:</strong><br>${data.documento}</p>
-                        <p><strong>Rol:</strong><br>${data.rol}</p>
+                        <p><strong>Cédula:</strong><br>${esc(data.documento)}</p>
+                        <p><strong>Rol:</strong><br>${esc(data.rol)}</p>
                     </div>
                 `;
             }
@@ -603,6 +603,20 @@
             showToast("Fallo Crítico", "No se pudo conectar con el servidor de validación.", "danger");
             resetUI();
         }
+    }
+
+    // Los datos vienen de la base y los escribe personal de porteria o los
+    // propios usuarios (nombre de equipo, propietario de un objeto). Sin
+    // escapar, un valor como <img onerror=...> se ejecutaria en la sesion del
+    // celador al escanear. Todo dato dinamico pasa por aqui.
+    function esc(valor) {
+        if (valor === null || valor === undefined) return '';
+        return String(valor)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     async function registerMove(id, type, entityType) {

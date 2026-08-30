@@ -181,7 +181,9 @@
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 {% set rsuffix = item.rsuffix %}
                                 <img src="{{ url_for('static', filename='uploads/profiles/' + item.foto) if item.foto else 'https://ui-avatars.com/api/?name=' + item.nombre|urlencode + '&background=39A900&color=fff' }}"
-                                    alt="Foto" class="role-img role-border-{{ rsuffix }}" onerror="this.src='https://ui-avatars.com/api/?name={{ item.nombre|urlencode }}&background=39A900&color=fff'">
+                                    alt="Foto de {{ item.nombre }}" class="role-img role-border-{{ rsuffix }}"
+                                    loading="lazy" decoding="async" width="44" height="44"
+                                    onerror="this.src='https://ui-avatars.com/api/?name={{ item.nombre|urlencode }}&background=39A900&color=fff'">
                                 <span style="font-weight: 600;">{{ item.nombre }}</span>
                             </div>
                         </td>

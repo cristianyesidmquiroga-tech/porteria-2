@@ -1,9 +1,12 @@
 import smtplib
 import os
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from threading import Thread
 from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 def _send_async_email(app, msg, mail_server, mail_port, mail_username, mail_password):
     with app.app_context():
@@ -13,9 +16,9 @@ def _send_async_email(app, msg, mail_server, mail_port, mail_username, mail_pass
             server.login(mail_username, mail_password)
             server.send_message(msg)
             server.quit()
-            print(f"Correo enviado exitosamente a {msg['To']}")
+            logger.info("Correo enviado correctamente")
         except Exception as e:
-            print(f"Error enviando correo: {e}")
+            logger.error("Error enviando correo: %s", e)
 
 def enviar_correo(destinatario, asunto, cuerpo_html):
     """
@@ -29,10 +32,7 @@ def enviar_correo(destinatario, asunto, cuerpo_html):
     mail_default_sender = os.environ.get('MAIL_DEFAULT_SENDER') or mail_username
 
     if not mail_username or not mail_password:
-        print("ADVERTENCIA: Credenciales de correo no configuradas. Simulando envío:")
-        print(f"Para: {destinatario}")
-        print(f"Asunto: {asunto}")
-        # print(f"Cuerpo: {cuerpo_html}")
+        logger.warning("Credenciales SMTP no configuradas: no se envio el correo.")
         return False
 
     msg = MIMEMultipart('alternative')

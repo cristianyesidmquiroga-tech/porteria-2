@@ -1,9 +1,10 @@
-from flask import Flask, session, redirect, url_for, flash
+from flask import Flask, session, redirect, url_for, flash, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, logout_user
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_apscheduler import APScheduler
 from datetime import datetime, timedelta, timezone
+import logging
 import os
 
 db = SQLAlchemy()
@@ -11,192 +12,253 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 scheduler = APScheduler()
 
+# Inactividad permitida para usuarios que no operan porteria.
+TIEMPO_INACTIVIDAD_SEGUNDOS = 10 * 60
+
+
+def _registrar_cabeceras_seguridad(app):
+    @app.after_request
+    def add_header(response):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = (
+            'geolocation=(), microphone=(), payment=(), usb=(), camera=(self)'
+        )
+
+        # HSTS solo cuando la peticion llego por HTTPS, para no romper el
+        # desarrollo local en HTTP.
+        if request.is_secure:
+            response.headers['Strict-Transport-Security'] = (
+                'max-age=31536000; includeSubDomains'
+            )
+
+        # CSP. Las plantillas usan estilos y manejadores inline (48 onclick /
+        # onerror repartidos por las vistas, entre ellos todos los botones del
+        # escaner), asi que script-src necesita 'unsafe-inline' HOY. Quitarlo
+        # exige migrar antes esos manejadores a addEventListener; hacerlo ahora
+        # dejaria el escaner de porteria inutilizable.
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
+            "https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: blob: https://ui-avatars.com "
+            "https://upload.wikimedia.org; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "object-src 'none'"
+        )
+        return response
+
+
+def _registrar_manejadores_error(app):
+    @app.errorhandler(413)
+    def archivo_muy_grande(error):
+        flash("El archivo es demasiado pesado (maximo 10MB).", "danger")
+        return redirect(url_for('usuarios.profile'))
+
+    @app.errorhandler(CSRFError)
+    def csrf_invalido(error):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return {"status": "error",
+                    "message": "Tu sesion expiro. Recarga la pagina."}, 400
+        flash("Tu sesion expiro. Vuelve a intentarlo.", "warning")
+        return redirect(url_for('auth.login'))
+
+    @app.errorhandler(404)
+    def no_encontrado(error):
+        return render_template('errores/404.html'), 404
+
+    @app.errorhandler(500)
+    def error_interno(error):
+        db.session.rollback()
+        app.logger.exception("Error interno no controlado")
+        return render_template('errores/500.html'), 500
+
+
+# Columnas que db.create_all() no puede anadir a tablas que ya existen.
+# Cada entrada corre solo si la columna falta, asi que es idempotente.
+COLUMNAS_PENDIENTES = {
+    'objetos_externos': {
+        'serial': 'VARCHAR(100)',
+        'propietario': 'VARCHAR(100)',
+        'motivo': 'TEXT',
+        'activo': 'BOOLEAN DEFAULT TRUE',
+        'qr_code': 'VARCHAR(255)',
+        'fecha_creacion': 'TIMESTAMP',
+    },
+    'usuarios': {
+        'intentos_codigo': 'INTEGER DEFAULT 0',
+    },
+    'accesos': {
+        'operador_id': 'INTEGER',
+    },
+}
+
+
+def _migrar_columnas():
+    """Anade las columnas que falten en una base creada por una version previa."""
+    from sqlalchemy import text, inspect
+
+    registro = logging.getLogger(__name__)
+    try:
+        inspector = inspect(db.engine)
+        tablas = set(inspector.get_table_names())
+        for tabla, columnas in COLUMNAS_PENDIENTES.items():
+            if tabla not in tablas:
+                continue
+            existentes = {c['name'] for c in inspector.get_columns(tabla)}
+            faltantes = [c for c in columnas if c not in existentes]
+            for columna in faltantes:
+                db.session.execute(text(
+                    f"ALTER TABLE {tabla} ADD COLUMN {columna} {columnas[columna]}"))
+            if faltantes:
+                registro.info("Migracion %s: columnas agregadas %s", tabla, faltantes)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        registro.exception("Fallo la migracion de columnas")
+
+
+def _registrar_tareas(app):
+    from .utils.tareas import auto_exit_all
+    from .utils.respaldos import ejecutar_respaldo_mensual
+
+    # Con varios workers de gunicorn cada proceso intentaria programar las
+    # mismas tareas. Se puede desactivar por worker con EJECUTAR_TAREAS=false.
+    if os.environ.get('EJECUTAR_TAREAS', 'true').lower() == 'false':
+        return
+
+    if scheduler.get_jobs():
+        return
+
+    scheduler.add_job(
+        id='auto_exit_midnight', func=auto_exit_all,
+        trigger='cron', hour=0, minute=0, second=5,
+        replace_existing=True, misfire_grace_time=3600,
+    )
+    scheduler.add_job(
+        id='respaldo_mensual_db', func=ejecutar_respaldo_mensual,
+        trigger='cron', day=1, hour=0, minute=0, second=10,
+        replace_existing=True, misfire_grace_time=3600,
+    )
+    scheduler.start()
+
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.config.Config')
-    
-    # Limitar tamaño de archivos a 10MB (Suficiente para fotos de alta resolución)
-    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
-    # Asegurar que la carpeta de la instancia (donde se guarda la BD) exista
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    )
 
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
     scheduler.init_app(app)
     login_manager.login_view = 'auth.login'
-    login_manager.login_message = "Por favor, inicia sesión para acceder a esta página."
+    login_manager.login_message = "Por favor, inicia sesion para acceder a esta pagina."
     login_manager.login_message_category = "info"
+
+    from .utils.security import check_security_and_verification
+    app.before_request(check_security_and_verification)
 
     @app.before_request
     def check_session_timeout():
-        from flask import request
-        
-        if current_user.is_authenticated:
-            # INTERCEPTOR: Cambio de contraseña obligatorio
-            if getattr(current_user, 'debe_cambiar_contrasena', False):
-                allowed_endpoints = ['auth.cambiar_password_obligatorio', 'auth.logout', 'static']
-                if request.endpoint not in allowed_endpoints:
-                    flash("Por seguridad, debes cambiar tu contraseña temporal antes de continuar.", "warning")
-                    return redirect(url_for('auth.cambiar_password_obligatorio'))
-            
-            # Determinamos si es personal de portería (Excepción)
-            es_personal_porteria = current_user.puede_operar_porteria
-            
-            if not es_personal_porteria:
-                last_activity = session.get('last_activity')
-                now = datetime.now(timezone.utc)
-                
-                if last_activity:
-                    # Tiempo de inactividad: 10 minutos
-                    if (now.timestamp() - last_activity) > (10 * 60):
-                        logout_user()
-                        session.clear()
-                        flash("Tu sesión ha expirado por inactividad.", "warning")
-                        return redirect(url_for('auth.login'))
-                
-                session['last_activity'] = now.timestamp()
-            else:
-                # Para celadores, refrescamos last_activity pero no aplicamos el timeout de 10 min
-                session['last_activity'] = datetime.now(timezone.utc).timestamp()
-                session.permanent = True  # Asegura que la cookie no sea de sesión (que se borre al cerrar navegador)
+        if not current_user.is_authenticated:
+            return None
+
+        if getattr(current_user, 'debe_cambiar_contrasena', False):
+            permitidos = ['auth.cambiar_password_obligatorio', 'auth.logout',
+                          'static', 'main.politica_privacidad', 'main.salud']
+            if request.endpoint not in permitidos:
+                flash("Por seguridad, debes cambiar tu contrasena temporal antes de continuar.",
+                      "warning")
+                return redirect(url_for('auth.cambiar_password_obligatorio'))
+
+        ahora = datetime.now(timezone.utc).timestamp()
+        ultima = session.get('last_activity')
+
+        # El personal de porteria tiene una ventana mas larga porque opera el
+        # escaner durante todo el turno, pero ya no es una sesion sin caducidad.
+        if current_user.puede_operar_porteria:
+            limite = app.config['PERMANENT_SESSION_LIFETIME'].total_seconds()
+            session.permanent = True
+        else:
+            limite = TIEMPO_INACTIVIDAD_SEGUNDOS
+
+        if ultima and (ahora - ultima) > limite:
+            logout_user()
+            session.clear()
+            flash("Tu sesion expiro por inactividad.", "warning")
+            return redirect(url_for('auth.login'))
+
+        session['last_activity'] = ahora
+        return None
 
     with app.app_context():
-        # Importar los modelos de la base de datos
         from .models import usuarios, accesos, movimientos, entidades, asistencia  # noqa: F401
 
-        # Registrar los Blueprints (Módulos de rutas)
         from .routes.main import bp as main_bp
         from .routes.auth import bp as auth_bp
         from .routes.usuarios import bp as usuarios_bp
         from .routes.equipos import bp as equipos_bp
         from .routes.porteria import porteria_bp
-        
+
         app.register_blueprint(main_bp)
         app.register_blueprint(auth_bp)
         app.register_blueprint(usuarios_bp)
         app.register_blueprint(porteria_bp)
         app.register_blueprint(equipos_bp)
 
-        # Crear las tablas de la base de datos si no existen
         db.create_all()
-
-        # Migración dinámica para objetos_externos (SQLite compatible)
-        from sqlalchemy import text, inspect
-        try:
-            inspector = inspect(db.engine)
-            columns = [col['name'] for col in inspector.get_columns('objetos_externos')]
-            
-            # Agregar columnas solo si no existen
-            if 'serial' not in columns:
-                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN serial VARCHAR(100) UNIQUE;"))
-            if 'propietario' not in columns:
-                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN propietario VARCHAR(100);"))
-            if 'motivo' not in columns:
-                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN motivo TEXT;"))
-            if 'activo' not in columns:
-                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN activo BOOLEAN DEFAULT TRUE;"))
-            if 'qr_code' not in columns:
-                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN qr_code VARCHAR(255) UNIQUE;"))
-            if 'fecha_creacion' not in columns:
-                db.session.execute(text("ALTER TABLE objetos_externos ADD COLUMN fecha_creacion TIMESTAMP WITHOUT TIME ZONE;"))
-            
-            db.session.commit()
-            print("Migración de objetos_externos completada.")
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error en migración: {e}")
-
-        # Configurar tareas automáticas (Programador de tareas)
-        from .utils.tareas import auto_exit_all
-        from .utils.respaldos import ejecutar_respaldo_mensual
-        
-        # Evitar que se registren las mismas tareas varias veces al recargar el servidor
-        if not scheduler.get_jobs():
-            # Programar a las 00:00:05 (5 segundos después de medianoche) cada día
-            scheduler.add_job(
-                id='auto_exit_midnight',
-                func=auto_exit_all,
-                trigger='cron',
-                hour=0,
-                minute=0,
-                second=5
-            )
-            # Programar a las 00:00:10 el día 1 de cada mes
-            scheduler.add_job(
-                id='respaldo_mensual_db',
-                func=ejecutar_respaldo_mensual,
-                trigger='cron',
-                day=1,
-                hour=0,
-                minute=0,
-                second=10
-            )
-            scheduler.start()
+        _migrar_columnas()
+        _registrar_tareas(app)
 
     @login_manager.user_loader
     def load_user(user_id):
         from .models.usuarios import Usuario
-        return Usuario.query.get(int(user_id))
+        return db.session.get(Usuario, int(user_id))
 
-    @app.after_request
-    def add_header(response):
-        """
-        Configuración de seguridad y caché.
-        """
-        # Prevención de Caché (ya existente)
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '-1'
-
-        # Cabeceras de Seguridad Hardening
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
-        response.headers['Referrer-Policy'] = 'no-referrer-when-downgrade'
-        
-        # Opcional: CSP básica para permitir solo scripts locales y de fuentes confiables (ej. Google Fonts, ChartJS)
-        # response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.fontawesome.com; font-src 'self' https://fonts.gstatic.com https://use.fontawesome.com; img-src 'self' data: https://upload.wikimedia.org https://ui-avatars.com;"
-
-        return response
+    _registrar_cabeceras_seguridad(app)
+    _registrar_manejadores_error(app)
 
     @app.context_processor
     def inject_backup_warning():
-        from flask import session
-        if current_user.is_authenticated and current_user.rol.nombre == 'Admin':
-            colombia_tz = timezone(timedelta(hours=-5))
-            now = datetime.now(colombia_tz)
-            
-            # Calcular el primer día del próximo mes
-            if now.month == 12:
-                next_month = now.replace(year=now.year+1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            else:
-                next_month = now.replace(month=now.month+1, day=1, hour=0, minute=0, second=0, microsecond=0)
-                
-            days_left = (next_month - now).days
-            
-            warning_msg = None
-            if days_left == 30 and not session.get('backup_warn_30'):
-                warning_msg = "Aviso (1 mes): El sistema realizará un respaldo y limpieza de datos antiguos el 1er día del mes."
-                session['backup_warn_30'] = True
-            elif days_left == 15 and not session.get('backup_warn_15'):
-                warning_msg = "Aviso (15 días): El sistema realizará un respaldo y limpieza de datos antiguos el 1er día del mes."
-                session['backup_warn_15'] = True
-            elif days_left <= 3 and not session.get('backup_warn_3'):
-                warning_msg = f"¡ATENCIÓN! Faltan {days_left} días para la limpieza automática de la base de datos."
-                session['backup_warn_3'] = True
-                
-            return {'backup_warning': warning_msg}
-        return {'backup_warning': None}
+        if not (current_user.is_authenticated and current_user.es_admin):
+            return {'backup_warning': None}
 
-    @app.errorhandler(413)
-    def request_entity_too_large(error):
-        flash("El archivo es demasiado pesado (Máximo 10MB). Por favor, intenta con una imagen más pequeña.", "danger")
-        return redirect(url_for('usuarios.profile'))
+        colombia_tz = timezone(timedelta(hours=-5))
+        ahora = datetime.now(colombia_tz)
+        if ahora.month == 12:
+            proximo_mes = ahora.replace(year=ahora.year + 1, month=1, day=1,
+                                        hour=0, minute=0, second=0, microsecond=0)
+        else:
+            proximo_mes = ahora.replace(month=ahora.month + 1, day=1,
+                                        hour=0, minute=0, second=0, microsecond=0)
+
+        dias_restantes = (proximo_mes - ahora).days
+        aviso = None
+        if dias_restantes <= 3 and not session.get('backup_warn_3'):
+            aviso = (f"ATENCION: faltan {dias_restantes} dias para la limpieza "
+                     "automatica de la base de datos.")
+            session['backup_warn_3'] = True
+        elif dias_restantes == 15 and not session.get('backup_warn_15'):
+            aviso = ("Aviso (15 dias): el sistema hara un respaldo y limpieza de "
+                     "datos antiguos el primer dia del mes.")
+            session['backup_warn_15'] = True
+
+        return {'backup_warning': aviso}
 
     return app

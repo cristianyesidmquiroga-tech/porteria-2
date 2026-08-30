@@ -30,6 +30,9 @@ class Acceso(db.Model):
     tipo = db.Column(db.String(50), nullable=False)  # 'Entrada' o 'Salida'
     fecha = db.Column(db.DateTime, default=get_colombia_time)
     equipos_str = db.Column(db.String(255), nullable=True)
+    # Sin este campo no habia forma de saber que celador registro un ingreso:
+    # el historial de accesos no era atribuible a nadie.
+    operador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
 
 
 class Auditoria(db.Model):
