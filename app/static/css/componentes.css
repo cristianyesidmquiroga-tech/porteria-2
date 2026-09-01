@@ -365,3 +365,15 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Efectos que antes eran onmouseover/onmouseout inline. Como CSS ademas
+   responden al teclado (:focus-visible), cosa que el inline no hacia. */
+.user-pill--enlace:hover,
+.user-pill--enlace:focus-visible {
+    transform: scale(1.05);
+}
+
+.enlace-subrayado:hover,
+.enlace-subrayado:focus-visible {
+    border-bottom: 2px solid #39A900 !important;
+}

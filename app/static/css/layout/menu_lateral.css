@@ -175,3 +175,33 @@
         width: 280px; /* Ancho completo al abrir en móvil */
     }
 }
+
+
+/* Cerrar sesión: separado del resto de la navegación y en rojo, porque es la
+   única opción del menú que saca a la persona del sistema. Antes estaba en la
+   barra superior, donde se desbordaba en pantallas estrechas. */
+.enlace-cerrar-sesion {
+    margin-top: auto;
+    border-top: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1));
+    padding-top: 1rem !important;
+    color: #C62828 !important;
+}
+
+.enlace-cerrar-sesion i { color: #C62828 !important; }
+
+.enlace-cerrar-sesion:hover {
+    background: rgba(198, 40, 40, 0.08) !important;
+    color: #B71C1C !important;
+}
+
+.enlace-cerrar-sesion:focus-visible {
+    outline: 3px solid #C62828;
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .enlace-cerrar-sesion,
+[data-theme="dark"] .enlace-cerrar-sesion i { color: #EF5350 !important; }
+
+[data-theme="dark"] .enlace-cerrar-sesion:hover {
+    background: rgba(239, 83, 80, 0.12) !important;
+}

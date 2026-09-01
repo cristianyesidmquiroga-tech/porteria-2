@@ -4,7 +4,7 @@
     </div>
     <div class="sidebar-header animate-on-scroll" data-animation="none">
         <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA" class="sidebar-logo">
-        <p class="highlight-rainbow">Centro de Gestión<br>Agroempresarial<br>del Oriente</p>
+        <p class="highlight-rainbow">{{ generalidades.centro }}</p>
     </div>
     <nav class="sidebar-nav">
         {% if current_user.puede_operar_porteria %}
@@ -12,21 +12,37 @@
             <i class="fas fa-chart-line"></i> <span>Panel General</span>
         </a>
         <a href="{{ url_for('porteria.scanner') }}" class="stagger-item {% if request.endpoint == 'porteria.scanner' %}active{% endif %}">
-            <i class="fas fa-qrcode"></i> <span>Escáner QR</span>
+            <i class="fas fa-barcode"></i> <span>Escáner</span>
         </a>
         <a href="{{ url_for('porteria.pases') }}" class="stagger-item {% if request.endpoint == 'porteria.pases' %}active{% endif %}">
-            <i class="fas fa-ticket-alt"></i> <span>Pases Manuales/QR</span>
+            <i class="fas fa-ticket-alt"></i> <span>Pases Manuales</span>
         </a>
 
         {% if current_user.es_admin %}
         <a href="{{ url_for('usuarios.admin_gestion') }}" class="stagger-item {% if request.endpoint == 'usuarios.admin_gestion' %}active{% endif %}">
             <i class="fas fa-users-cog"></i> <span>Gestión Perfiles</span>
         </a>
+        {# Mientras una foto no se apruebe, esa persona no tiene carnet activo:
+           el contador hace visible cuánta gente está esperando. #}
+        {# Las fichas se registran una vez y los aprendices heredan de ellas el
+           programa y la fecha de finalizacion, en vez de teclearlos cada uno. #}
+        <a href="{{ url_for('usuarios.admin_fichas') }}" class="stagger-item {% if request.endpoint == 'usuarios.admin_fichas' %}active{% endif %}">
+            <i class="fas fa-layer-group"></i> <span>Fichas de Formación</span>
+        </a>
+
+        <a href="{{ url_for('usuarios.revision_fotos') }}" class="stagger-item {% if request.endpoint == 'usuarios.revision_fotos' %}active{% endif %}">
+            <i class="fas fa-user-check"></i> <span>Revisar Fotos</span>
+            {% if fotos_pendientes %}
+            <span aria-label="{{ fotos_pendientes }} fotos pendientes de revisión"
+                  style="margin-left: auto; background: #e74c3c; color: #fff; font-size: 0.72rem;
+                         font-weight: 700; padding: 1px 8px; border-radius: 10px;">{{ fotos_pendientes }}</span>
+            {% endif %}
+        </a>
         {% endif %}
 
         {% if current_user.es_admin or current_user.cargo == 'Administrador' %}
-        <div class="sidebar-dropdown stagger-item {% if 'porteria.analytics' in request.endpoint %}open{% endif %}">
-            <button class="dropdown-btn {% if 'porteria.analytics' in request.endpoint %}active{% endif %}" onclick="this.parentElement.classList.toggle('open')">
+        <div class="sidebar-dropdown stagger-item {% if 'porteria.analytics' in (request.endpoint or '') %}open{% endif %}">
+            <button class="dropdown-btn {% if 'porteria.analytics' in (request.endpoint or '') %}active{% endif %}" data-desplegable>
                 <i class="fas fa-users"></i> <span>Reporte Usuarios</span>
                 <i class="fas fa-chevron-down caret"></i>
             </button>
@@ -55,7 +71,37 @@
             <i class="fas fa-id-card"></i> <span>Mi Perfil</span>
         </a>
 
+        {# Visible para todos: cualquiera puede consultar SU propio historial.
+           Quien opera portería o pasa asistencia además consulta el de otros,
+           por eso cambia el texto. #}
+        <a href="{{ url_for('porteria.historial_persona') }}" class="stagger-item {% if request.endpoint == 'porteria.historial_persona' %}active{% endif %}">
+            <i class="fas fa-user-clock"></i>
+            <span>{% if current_user.puede_operar_porteria or current_user.puede_gestionar_asistencia %}Historial de Ingresos{% else %}Mis Ingresos{% endif %}</span>
+        </a>
+
+        <a href="{{ url_for('usuarios.centro_ayuda') }}" class="stagger-item {% if request.endpoint == 'usuarios.centro_ayuda' %}active{% endif %}">
+            <i class="fas fa-circle-question"></i> <span>Centro de Ayuda</span>
+        </a>
+
+        {# Canal para quien se queda bloqueado y no sabe qué hacer. #}
+        <a href="{{ url_for('usuarios.mis_mensajes') }}" class="stagger-item {% if request.endpoint == 'usuarios.mis_mensajes' %}active{% endif %}">
+            <i class="fas fa-comments"></i> <span>Mensajes</span>
+            {% if mensajes_sin_leer %}
+            <span aria-label="{{ mensajes_sin_leer }} mensajes sin leer"
+                  style="margin-left: auto; background: #e74c3c; color: #fff; font-size: 0.72rem;
+                         font-weight: 700; padding: 1px 8px; border-radius: 10px;">{{ mensajes_sin_leer }}</span>
+            {% endif %}
+        </a>
+
         {% if current_user.es_admin %}
+        <a href="{{ url_for('usuarios.admin_mensajes') }}" class="stagger-item {% if request.endpoint in ('usuarios.admin_mensajes', 'usuarios.admin_hilo') %}active{% endif %}">
+            <i class="fas fa-inbox"></i> <span>Bandeja de Mensajes</span>
+            {% if hilos_pendientes %}
+            <span aria-label="{{ hilos_pendientes }} conversaciones esperando respuesta"
+                  style="margin-left: auto; background: #e74c3c; color: #fff; font-size: 0.72rem;
+                         font-weight: 700; padding: 1px 8px; border-radius: 10px;">{{ hilos_pendientes }}</span>
+            {% endif %}
+        </a>
         <a href="{{ url_for('usuarios.admin_historial') }}" class="stagger-item {% if request.endpoint == 'usuarios.admin_historial' %}active{% endif %}">
             <i class="fas fa-history"></i> <span>Historial de Cambios</span>
         </a>
@@ -63,5 +109,12 @@
             <i class="fas fa-archive"></i> <span>Respaldos del Sistema</span>
         </a>
         {% endif %}
+
+        {# Separado del resto y en rojo: es la única acción del menú que te saca
+           del sistema, y antes vivía en la barra superior, donde en pantallas
+           estrechas se salía del contenedor. #}
+        <a href="{{ url_for('auth.logout') }}" class="stagger-item enlace-cerrar-sesion">
+            <i class="fas fa-right-from-bracket"></i> <span>Cerrar Sesión</span>
+        </a>
     </nav>
 </aside>

@@ -3,9 +3,10 @@
 Documento de continuidad. Registra qué se corrigió, qué queda y qué decisiones
 se tomaron, para poder retomar el trabajo sin releer todo el historial.
 
-**Fecha:** 29 de agosto de 2026
+**Fecha:** 30 de agosto de 2026
 **Rama:** `main` · **Remoto:** `origin` → `cristianyesidmquiroga-tech/porteria-2`
-**Estado del árbol:** cambios aplicados y **sin commitear**
+**Estado:** todo commiteado en local, historial ya reescrito. **Falta empujarlo
+al remoto** (`git push --force origin main`, ver sección 5).
 **Pruebas:** `.venv/Scripts/python.exe -m pytest tests/ -q` → 51 pasando
 
 ---
@@ -72,50 +73,159 @@ la raíz). Por eso en local **siempre** se usaba el `SECRET_KEY` publicado en el
 
 ---
 
-## 4. EN CURSO — retomar aquí
+## 4. Fotos de perfil e historial de git — COMPLETADO
 
-### 4.1 Optimización de fotos de perfil ✅ código hecho, falta comprimir las existentes
-- **Hecho:** `app/utils/imagenes.py` nuevo. Toda foto que se sube se reescala a
-  512 px máx., se aplana, se le quitan los EXIF (llevan GPS) y se guarda como
-  JPEG progresivo de calidad 82. El nombre es fijo (`user_<id>.jpg`), así que
-  una foto nueva reemplaza a la anterior en vez de dejarla huérfana.
-  `perfil.py` reescrito para usarlo, con escritura atómica a un temporal.
-- **Falta:**
-  1. Comprimir las 24 fotos que ya existen (21 MB, una de 2 MB) con
-     `comprimir_en_sitio()` de ese mismo módulo, conservando nombre y formato
-     para no tener que tocar la columna `foto` de la base.
-  2. Añadir `loading="lazy"` y `width`/`height` a los `<img>` de perfil en
-     `templates/porteria/scanner.html`, `verify.html`, `usuarios/profile.html`
-     y `usuarios/gestion.html` (evita el salto de layout y acelera la carga).
+### 4.0 Decisión final: sin fotos en el repositorio ✅
 
-### 4.2 Purga del historial de git ⏳ NO EMPEZADA — es lo destructivo, va al final
-Orden obligatorio, no saltarse pasos:
-1. **Copia de seguridad de las fotos fuera del repo.** Crítico: en producción
-   Coolify clona el repo, así que borrarlas del historial las borra del servidor
-   si no se restauran antes en el volumen.
-2. `git bundle create ../porteria-2-respaldo.bundle --all` — punto de retorno.
-3. `pip install git-filter-repo` (no está instalado).
-4. `git rm -r --cached app/static/uploads/` y commitear.
-5. `git filter-repo --path app/static/uploads --invert-paths --force`.
-6. `git remote add origin ...` (filter-repo borra el remoto) y `git push --force`.
-7. **Restaurar las fotos en el volumen del servidor** antes del siguiente deploy.
+Se eliminaron **todas** las imágenes rasterizadas del proyecto y se sustituyeron
+por avatares vectoriales por cargo. El repositorio ya no contiene ni una sola
+fotografía, así que el problema no puede repetirse.
+
+- **Las 24 fotos de perfil se borraron.** Revisando los nombres, casi todas eran
+  subidas de prueba (`gojo.webp`, `notion.jpg`, capturas de pantalla, fotos
+  publicitarias de portátiles Acer), no rostros reales. Copia en
+  `_respaldo_fotos_porteria2/originales/`.
+- **`app/static/img/default-profile.png` eliminada**: 281 KB para una silueta
+  gris que ahora hace `generico.svg` en 328 bytes.
+- **9 avatares SVG nuevos** en `app/static/img/perfiles/`, 13 KB en total:
+  `aprendiz`, `instructor`, `celador`, `administrador`, `administrativo`,
+  `visitante`, `vehiculo`, `objeto`, `generico`. Un color por cargo para que el
+  celador distinga el tipo de un vistazo, todos con contraste WCAG AA.
+- **Se eliminó `ui-avatars.com`**, que se usaba en 10 sitios como imagen de
+  respaldo. Recibía el **nombre real de cada usuario en la URL**, es decir datos
+  personales enviados a un tercero en cada carga de página (Ley 1581). También
+  se quitó de la CSP.
+- **Resolución centralizada**: `Usuario.ruta_foto` devuelve la foto real si el
+  archivo existe en disco, y si no el avatar del cargo. `avatar_de_cargo()` y
+  `ruta_foto_o_avatar()` en `app/models/usuarios.py` cubren los casos que no
+  pasan por el modelo (historial del panel, respuesta JSON del escáner).
+- **`scripts/limpiar_fotos_huerfanas.py`**: pone a `NULL` la columna `foto` de
+  los usuarios cuyo archivo ya no existe. No es obligatorio (la app degrada al
+  avatar por sí sola), solo deja la base coherente con el disco. Se ejecuta sin
+  argumentos para simular, con `--aplicar` para hacer los cambios.
+- Verificado en navegador: los 9 avatares renderizan bien a 90 px y a 38 px.
+
+### 4.0.1 Validación facial: de cascadas Haar a YuNet ✅
+
+La foto de perfil se le muestra al celador en el escáner para que confirme la
+identidad de quien entra, así que tiene que ser un retrato utilizable. Las
+cascadas Haar no daban la talla: sobre imágenes reales aceptaban iconos,
+infografías, capturas de pantalla y hasta paisajes sin personas, y a la vez
+rechazaban retratos legítimos con gafas.
+
+- **Detector nuevo:** YuNet (`cv2.FaceDetectorYN_create`), umbral de confianza
+  0.8. Modelo en `app/static/modelos/face_detection_yunet_2023mar.onnx` —
+  **232 KB, licencia MIT** (OpenCV Zoo). Va versionado porque el contenedor de
+  producción no tiene internet garantizado en tiempo de ejecución.
+- **Por qué YuNet:** es robusto con gafas, ángulos y luz irregular, y da un
+  *score* de confianza que las cascadas no dan. Ese score es lo que permite
+  cortar dibujos e ilustraciones (puntúan bajo) sin cortar fotos reales.
+- **Reglas:** exactamente un rostro, y que ocupe al menos el 2 % del área. Los
+  mensajes de error dicen qué hacer ("tómala más cerca, tipo foto de documento",
+  "sin nadie más detrás"), porque los lee un aprendiz.
+- **Fail-open:** si falta OpenCV o el modelo, deja pasar la foto y lo registra en
+  el log. La validación es un apoyo, no un guardián: bloquearla dejaría a la
+  gente sin poder completar su perfil.
+- **Bug corregido de paso:** `cv2.imread` no abre rutas con acentos en Windows.
+  Se lee con `numpy.fromfile` + `cv2.imdecode`.
+
+**Verificado con fotos reales** (autorizadas por el usuario, no versionadas):
+un retrato frontal se acepta, y **un retrato con gafas y barba se acepta con
+confianza 0.946** — ese era el requisito explícito. También se aceptan las
+variantes oscura, clara, desenfocada, girada y reducida, que es como llegan las
+fotos tomadas con un móvil.
+
+**Pendiente de verificar:** el rechazo de fotos con más de una persona. Esa
+prueba se salta porque no hay una foto de dos personas autorizada.
+
+### 4.1 Optimización de fotos (sigue vigente para las que suban los usuarios) ✅
+- `app/utils/imagenes.py`: toda foto que se sube se reescala a 512 px máx., se
+  aplana, se le quitan los metadatos EXIF (llevan coordenadas GPS) y se guarda
+  como JPEG progresivo de calidad 82. El nombre es fijo (`user_<id>.jpg`), así
+  que una foto nueva reemplaza a la anterior en vez de dejarla huérfana en disco.
+- `perfil.py` reescrito: escritura atómica a un temporal, de modo que si la
+  imagen no es válida o no pasa la validación facial, la foto anterior queda
+  intacta. SVG queda excluido a propósito (admite `<script>`).
+- **Las 24 fotos existentes se comprimieron: 20,2 MB → 0,63 MB (−97 %).**
+  Verificadas una a una: las 24 abren correctamente.
+- `loading="lazy"` + `width`/`height` en el listado del panel;
+  `fetchpriority="high"` en la tarjeta de verificación, que el celador mira al
+  instante mientras alguien espera en la puerta.
+
+### 4.2 Purga del historial de git ✅ (falta solo el push)
+- Respaldos en `repositorio/_respaldo_fotos_porteria2/`:
+  - `originales/` — las 24 fotos sin comprimir
+  - `porteria-2-ANTES-DE-PURGAR.bundle` — el repositorio completo antes de tocarlo
+- `git filter-repo` en **dos pasadas**: `app/static/uploads` y también
+  `carnet-sena/app/static/uploads`. En los commits antiguos el proyecto vivía
+  bajo ese subdirectorio, así que la primera pasada dejó las fotos ahí.
+- Resultado: 0 fotos en `refs/heads/main` ni en el stash, `.git` de 9,5 MB →
+  738 KB, los 59 commits intactos, las 24 fotos siguen en disco (ya sin versionar).
+- **Falta el `git push --force`**: ver sección 5.
+
+#### Cómo verificar la purga (importante: por rama, no con `--all`)
+
+```bash
+git rev-list --objects refs/heads/main | grep uploads/profiles
+```
+
+**No usar `--all`.** Recorre también `refs/remotes/origin/main`, que es la copia
+local de lo que hay *hoy* en GitHub — y mientras no se haya hecho el push, ese
+historial todavía contiene las fotos. Da un falso positivo alarmante. Tras el
+push, esa referencia se actualiza sola y los objetos viejos quedan inalcanzables.
+
+#### Cuidado con GitHub Desktop
+
+El repositorio se sincroniza con GitHub Desktop (el stash se llama
+`!!GitHub_Desktop<main>` y el reflog muestra `fetch --no-write-fetch-head`).
+**Ciérralo antes del `push --force`**: si está abierto cuando cambie el remoto,
+detecta la divergencia y puede ofrecer un *pull* que devuelva el historial viejo
+al repositorio local, deshaciendo la purga sin aviso.
+
+Después del push, para eliminar también las copias locales de los objetos viejos:
+
+```bash
+git gc --prune=now
+```
 
 ---
 
 ## 5. PENDIENTE del lado del usuario (sin esto el deploy falla)
 
-1. **Variables en Coolify.** La app se niega a arrancar sin ellas, a propósito:
+1. **Publicar el historial reescrito.** Reescribe `origin/main`; el punto de
+   retorno es `_respaldo_fotos_porteria2/porteria-2-ANTES-DE-PURGAR.bundle`.
+   **Cierra GitHub Desktop antes** (ver la advertencia de la sección 4.2):
+   ```bash
+   git push --force origin main
+   git gc --prune=now
+   ```
+   Si alguien más tiene el repositorio clonado, debe volver a clonarlo: su copia
+   conserva el historial viejo, con las fotos dentro.
+
+2. **Limpiar las referencias a fotos borradas en la base de producción.** Las
+   fotos ya no existen, así que la columna `foto` de esos usuarios apunta a
+   archivos inexistentes. La aplicación lo tolera (muestra el avatar del cargo),
+   pero conviene dejarlo coherente:
+   ```bash
+   python scripts/limpiar_fotos_huerfanas.py            # simula
+   python scripts/limpiar_fotos_huerfanas.py --aplicar  # ejecuta
+   ```
+   Esos usuarios verán el avatar de su cargo y el sistema volverá a pedirles que
+   suban una foto. Si en producción hubiera fotos reales que se quieran
+   conservar, hay que copiarlas al volumen del host **antes** de correr esto.
+
+3. **Variables en Coolify.** La app se niega a arrancar sin ellas, a propósito:
    - `SECRET_KEY=143a80b738486159c74e6692dcba13f9e974d719c339add6930f54040362910e`
      (la anterior está comprometida por haber estado en el repo)
    - Confirmar que `DATABASE_URL` está configurada.
-2. **Directorios del host antes del primer arranque** (el contenedor ya no corre como root):
+4. **Directorios del host antes del primer arranque** (el contenedor ya no corre como root):
    ```bash
    mkdir -p app/static/uploads/profiles app/respaldos_mensuales
    chown -R 10001:10001 app/static/uploads app/respaldos_mensuales
    ```
-3. **`DOMINIOS_REGISTRO`**: quedó en `sena.edu.co,soy.sena.edu.co`. Si hay
+5. **`DOMINIOS_REGISTRO`**: quedó en `sena.edu.co,soy.sena.edu.co`. Si hay
    usuarios con correo personal, vaciarlo o añadir sus dominios.
-4. **Confirmar el esquema de `objetos_externos`** contra la base real (`\d objetos_externos`).
+6. **Confirmar el esquema de `objetos_externos`** contra la base real (`\d objetos_externos`).
    La migración automática es idempotente, pero conviene verificarlo.
 
 ---
