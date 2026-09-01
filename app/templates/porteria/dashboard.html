@@ -127,12 +127,24 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="fecha_inicio" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">Desde</label>
+                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ current_fecha_inicio }}"
+                    style="padding: 0.6rem; border: 1px solid var(--glass-border); background-color: var(--white); color: var(--text-main); border-radius: 8px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="fecha_fin" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">Hasta</label>
+                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ current_fecha_fin }}"
+                    style="padding: 0.6rem; border: 1px solid var(--glass-border); background-color: var(--white); color: var(--text-main); border-radius: 8px;">
+            </div>
             <button type="submit" class="btn-primary magnetic-btn" style="height: 42px; padding: 0 1.5rem;"><i
                     class="fas fa-filter"></i> Aplicar</button>
             <a href="{{ url_for('porteria.dashboard', tab='history') }}" class="glass-btn magnetic-btn"
                 style="height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500;">Limpiar</a>
             <div style="flex-grow: 1;"></div>
-            <a href="{{ url_for('porteria.export_dashboard', cargo=current_cargo, ficha=current_ficha) }}" class="btn-primary magnetic-btn"
+            {# La exportacion exige rango de fechas: sin el, la ruta redirige con un aviso. #}
+            <a href="{{ url_for('porteria.export_dashboard', cargo=current_cargo, ficha=current_ficha,
+                                fecha_inicio=current_fecha_inicio, fecha_fin=current_fecha_fin) }}" class="btn-primary magnetic-btn"
                 style="height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.5rem; background-color: var(--primary-color); text-decoration: none;">
                 <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Exportar XLS/CSV
             </a>

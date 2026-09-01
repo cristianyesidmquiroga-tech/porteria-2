@@ -47,7 +47,7 @@
                 {% endif %}
             </p>
             <p style="margin: 0.15rem 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
-                {{ fila.persona.cargo or 'Sin cargo' }} · Doc. {{ fila.persona.documento or 'N/A' }}
+                {{ fila.persona.cargo or 'Sin cargo' }} · Doc. {{ fila.documento_enmascarado }}
             </p>
             {% if fila.ultimo %}
             <p style="margin: 0.35rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);

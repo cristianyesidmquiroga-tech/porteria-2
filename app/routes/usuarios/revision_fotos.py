@@ -43,6 +43,9 @@ from . import bp
 
 logger = logging.getLogger(__name__)
 
+POR_PAGINA = 24
+
+
 MOTIVOS_FRECUENTES = [
     'La foto no corresponde a la persona registrada.',
     'No se distingue el rostro con claridad.',
@@ -121,6 +124,11 @@ def revision_fotos():
     if filtro not in (ESTADO_PENDIENTE, ESTADO_APROBADA, ESTADO_RECHAZADA, 'todos'):
         filtro = ESTADO_PENDIENTE
 
+    try:
+        pagina = max(int(request.args.get('pagina', 1)), 1)
+    except (TypeError, ValueError):
+        pagina = 1
+
     # No se filtra por Usuario.foto: al rechazar se borra la imagen del disco y
     # se pone la columna a NULL, asi que filtrar por foto hacia desaparecer del
     # listado justo lo que el admin necesita poder auditar.
@@ -130,13 +138,19 @@ def revision_fotos():
 
     # Las más antiguas primero: quien lleva más tiempo esperando su carnet
     # es a quien más urge revisarle la foto.
-    usuarios = consulta.order_by(Usuario.foto_fecha_subida.asc().nullsfirst()).all()
+    consulta = consulta.order_by(Usuario.foto_fecha_subida.asc().nullsfirst())
+
+    # `estado=todos` sin paginar volcaba a todos los usuarios con foto en una
+    # sola pantalla, sin tope. Paginado: solo se carga y expone el trozo que
+    # el admin está mirando (minimización, Ley 1581).
+    paginacion = consulta.paginate(page=pagina, per_page=POR_PAGINA, error_out=False)
 
     pendientes = Usuario.query.filter(
         Usuario.foto_estado == ESTADO_PENDIENTE).count()
 
     return render_template('usuarios/revision_fotos.html',
-                           usuarios=usuarios, filtro=filtro,
+                           usuarios=paginacion.items, filtro=filtro,
+                           paginacion=paginacion,
                            pendientes=pendientes,
                            motivos=MOTIVOS_FRECUENTES)
 
@@ -164,6 +178,18 @@ def api_revisar_foto(id):
         # Sin motivo, la persona no sabe qué corregir y volverá a subir lo mismo.
         return jsonify({"status": "error",
                         "message": "Indica el motivo del rechazo"}), 400
+
+    if decision == 'aprobar' and usuario.foto_estado == ESTADO_APROBADA:
+        # Idempotente: sin esto, volver a pulsar "aprobar" (doble clic, dos
+        # pestañas, o llamar la API a mano) reenviaba el correo y añadía otro
+        # mensaje automático idéntico en el hilo cada vez.
+        restantes = Usuario.query.filter(
+            Usuario.foto_estado == ESTADO_PENDIENTE).count()
+        return jsonify({
+            "status": "success",
+            "message": "Esa foto ya estaba aprobada.",
+            "pendientes": restantes,
+        })
 
     try:
         ahora = get_colombia_time()

@@ -7,7 +7,7 @@ import io
 from . import porteria_bp as bp
 from ...models.usuarios import Usuario, Rol, avatar_de_cargo
 from ...utils.fotos import url_de_foto
-from ...models.accesos import Acceso
+from ...models.accesos import Acceso, Auditoria
 from ... import db
 from ...utils import get_colombia_time, parsear_fecha_bd
 
@@ -113,6 +113,11 @@ def dashboard():
     cargos += ['Visitante', 'Vehículo', 'Objeto Externo']
     fichas = [f[0] for f in db.session.query(Usuario.ficha).filter(Usuario.ficha.isnot(None), Usuario.ficha != '').distinct().all()]
 
+    hoy_local = get_colombia_time().date()
+    fecha_inicio_filtro = (request.args.get('fecha_inicio')
+                           or (hoy_local - timedelta(days=30)).isoformat())
+    fecha_fin_filtro = request.args.get('fecha_fin') or hoy_local.isoformat()
+
     accesos_db = Acceso.query.order_by(Acceso.fecha.desc()).limit(100).all()
     historial = []
 
@@ -207,7 +212,9 @@ def dashboard():
         'visitantes': total_visitantes_adentro,
         'vehiculos': total_vehiculos_adentro,
         'objetos': total_objetos_adentro
-    }, chart_data={'labels': labels_7days, 'aprendices': stats_aprendiz, 'instructores': stats_instructor, 'trabajadores': stats_trabajador}, analisis_texto=analisis_texto, historial=historial, cargos=cargos, fichas=fichas, current_cargo=cargo_filter, current_ficha=ficha_filter)
+    }, chart_data={'labels': labels_7days, 'aprendices': stats_aprendiz, 'instructores': stats_instructor, 'trabajadores': stats_trabajador}, analisis_texto=analisis_texto, historial=historial, cargos=cargos, fichas=fichas, current_cargo=cargo_filter, current_ficha=ficha_filter,
+       current_fecha_inicio=fecha_inicio_filtro,
+       current_fecha_fin=fecha_fin_filtro)
 
 @bp.route('/export_dashboard')
 @login_required
@@ -217,10 +224,56 @@ def export_dashboard():
         return redirect(url_for('usuarios.profile'))
 
     cargo_filter, ficha_filter = request.args.get('cargo'), request.args.get('ficha')
-    history_query = db.session.query(Acceso, Usuario, Rol).join(Usuario, Acceso.referencia_id == Usuario.id).join(Rol, Usuario.rol_id == Rol.id).filter(Acceso.tipo_referencia == 'Usuario')
+
+    # Sin rango obligatorio, un clic volcaba TODO el historico de accesos
+    # (documento, nombre, programa, ficha) a un archivo fuera del sistema.
+    # Exigir fechas acota lo que sale de una sola vez (minimizacion, Ley 1581).
+    fecha_inicio_str = request.args.get('fecha_inicio')
+    fecha_fin_str = request.args.get('fecha_fin')
+    if not fecha_inicio_str or not fecha_fin_str:
+        flash('Elige un rango de fechas (inicio y fin) antes de exportar.', 'warning')
+        return redirect(url_for('porteria.dashboard', tab='history',
+                                cargo=cargo_filter, ficha=ficha_filter))
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d')
+        # El fin es inclusivo: se exporta hasta el final de ese dia.
+        fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d') + timedelta(days=1)
+    except ValueError:
+        flash('El rango de fechas no es válido.', 'warning')
+        return redirect(url_for('porteria.dashboard', tab='history',
+                                cargo=cargo_filter, ficha=ficha_filter))
+
+    if fecha_fin <= fecha_inicio:
+        flash('La fecha final debe ser posterior a la inicial.', 'warning')
+        return redirect(url_for('porteria.dashboard', tab='history',
+                                cargo=cargo_filter, ficha=ficha_filter))
+
+    history_query = db.session.query(Acceso, Usuario, Rol).join(Usuario, Acceso.referencia_id == Usuario.id).join(Rol, Usuario.rol_id == Rol.id).filter(
+        Acceso.tipo_referencia == 'Usuario',
+        Acceso.fecha >= fecha_inicio,
+        Acceso.fecha < fecha_fin,
+    )
     if cargo_filter: history_query = history_query.filter(Usuario.cargo == cargo_filter)
     if ficha_filter: history_query = history_query.filter(Usuario.ficha == ficha_filter)
     historial = history_query.order_by(Acceso.fecha.desc()).all()
+
+    # Deja constancia de quien saco el historico y que rango pidio: es el
+    # unico registro que queda de que estos datos salieron del sistema.
+    db.session.add(Auditoria(
+        usuario_id=current_user.id,
+        nombre_usuario=current_user.nombre,
+        tabla_afectada='accesos',
+        registro_id=0,
+        accion='Exportación de histórico de accesos',
+        autorizado_por=current_user.nombre,
+        motivo='Exportación CSV desde el dashboard de portería',
+        detalles=(f'Rango {fecha_inicio_str} a {fecha_fin_str}'
+                  + (f', cargo={cargo_filter}' if cargo_filter else '')
+                  + (f', ficha={ficha_filter}' if ficha_filter else '')
+                  + f'. {len(historial)} registros exportados.'),
+    ))
+    db.session.commit()
 
     def generate():
         yield '\ufeff'

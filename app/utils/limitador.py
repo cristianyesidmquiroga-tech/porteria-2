@@ -130,8 +130,11 @@ LIMITES = [
     ('usuarios.api_importar_usuarios_excel', ["5 per hour"], {}),
     ('usuarios.descargar_respaldo', ["20 per hour"], {}),
 
-    # Consulta de historial: varias consultas pesadas por llamada.
+    # Consulta de historial: varias consultas pesadas por llamada. La version
+    # HTML ejecuta exactamente la misma consulta que la de datos, y antes solo
+    # caia bajo el techo general de la aplicacion; se le pone el mismo limite.
     ('porteria.api_historial_persona', ["60 per minute"], {}),
+    ('porteria.historial_persona', ["60 per minute"], {}),
 
     # Registro de equipos: escribe en base de datos desde un formulario.
     ('equipos.add_device', ["20 per hour"], {}),

@@ -32,7 +32,7 @@
     </h1>
     {% if es_vista_admin %}
     <p style="margin: 0; color: var(--text-muted); font-size: 0.88rem;">
-        {{ persona.cargo or 'Sin cargo' }} · Doc. {{ persona.documento or 'N/A' }} · {{ persona.correo }}
+        {{ persona.cargo or 'Sin cargo' }} · Doc. {{ documento_enmascarado }}
         <br>Estado de la foto: <strong>{{ persona.etiqueta_estado_foto }}</strong>
     </p>
     <p style="margin: 0.75rem 0 0 0;">

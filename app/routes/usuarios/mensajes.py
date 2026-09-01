@@ -28,6 +28,23 @@ logger = logging.getLogger(__name__)
 LARGO_MAXIMO_MENSAJE = 2000
 
 
+def _enmascarar_documento(documento):
+    """Deja visibles solo los últimos cuatro dígitos.
+
+    Quien asesora resuelve preguntas sobre fotos, perfiles o mensajes: no
+    necesita la cédula completa de la persona para eso, y mostrarla es más
+    dato del que la tarea exige (minimización, Ley 1581 de 2012 art. 4 lit.
+    c). Portería sí conserva el documento completo en sus propias vistas,
+    porque ahí sirve para identificar a la persona en la puerta.
+    """
+    if not documento:
+        return 'N/A'
+    documento = str(documento)
+    if len(documento) <= 4:
+        return '*' * len(documento)
+    return '*' * (len(documento) - 4) + documento[-4:]
+
+
 def _texto_valido(bruto):
     """Limpia y valida el texto. Devuelve (texto, error_o_None)."""
     texto = (sanitize_html(bruto) or '').strip()
@@ -94,7 +111,8 @@ def admin_mensajes():
             Mensaje.usuario_id == usuario_id,
             Mensaje.autor_id == usuario_id,
             Mensaje.leido.is_(False)).count()
-        filas.append({'persona': persona, 'ultimo': ultimo, 'sin_leer': sin_leer})
+        filas.append({'persona': persona, 'ultimo': ultimo, 'sin_leer': sin_leer,
+                      'documento_enmascarado': _enmascarar_documento(persona.documento)})
 
     # Primero quien espera respuesta, y dentro de eso lo más reciente.
     filas.sort(key=lambda f: (-f['sin_leer'],
@@ -125,7 +143,8 @@ def admin_hilo(id):
         db.session.commit()
 
     return render_template('usuarios/mensajes.html', mensajes=mensajes,
-                           persona=persona, es_vista_admin=True)
+                           persona=persona, es_vista_admin=True,
+                           documento_enmascarado=_enmascarar_documento(persona.documento))
 
 
 @bp.route('/api/admin/mensajes/<int:id>', methods=['POST'])
