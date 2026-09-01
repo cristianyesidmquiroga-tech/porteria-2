@@ -11,7 +11,11 @@ Referencias de longitud (Registraduría Nacional y Migración Colombia):
     desde 2000 empiezan por 1 y tienen 10.
   - Tarjeta de identidad: 10 u 11 dígitos (las azules antiguas tenían 10).
   - Cédula de extranjería: 6 o 7 dígitos.
-  - PPT (Permiso por Protección Temporal): 9 o 10 dígitos.
+  - PPT (Permiso por Protección Temporal): 7 a 10 dígitos. La Resolución 572
+    de 2022 del Ministerio de Salud fijó el número del PPT como numérico de
+    7 dígitos, y Migración Colombia advirtió que ese cupo puede crecer, así
+    que el rango se deja abierto hasta 10 en vez de exigir 9 como antes
+    (exigir 9 rechazaba los PPT que hoy se expiden).
   - Pasaporte: alfanumérico, de 5 a 15 caracteres según el país emisor.
 """
 import re
@@ -21,11 +25,31 @@ TIPOS_DOCUMENTO = {
     'CC': ('Cédula de ciudadanía', 6, 10, True),
     'TI': ('Tarjeta de identidad', 10, 11, True),
     'CE': ('Cédula de extranjería', 6, 7, True),
-    'PPT': ('Permiso por Protección Temporal', 9, 10, True),
+    'PPT': ('Permiso por Protección Temporal', 7, 10, True),
     'PA': ('Pasaporte', 5, 15, False),
 }
 
 TIPO_POR_DEFECTO = 'CC'
+
+# Tipos cuyo número NO puede empezar por cero, y el porqué de cada uno:
+#
+#   - CC y TI comparten el NUIP (Resolución 3571 de 2003 de la Registraduría
+#     Nacional), que se asigna de forma consecutiva a partir de 1.000.000.000:
+#     por construcción empieza por 1. Las cédulas anteriores al NUIP se
+#     asignaron también en rangos consecutivos desde el 1 y se imprimen sin
+#     ceros de relleno.
+#
+# CE, PPT y PA quedan deliberadamente FUERA: no hay norma publicada de
+# Migración Colombia que prohíba el cero inicial en esos números, y varios
+# países imprimen pasaportes con ceros delante. La prohibición absoluta que
+# había aquí antes (cualquier tipo, cualquier longitud) no tenía respaldo
+# normativo y dejaba fuera del sistema a población migrante con documentos
+# legítimos, que es justo a quien más caro le sale no poder entrar.
+#
+# El motivo original de la regla —documentos copiados de una hoja de cálculo
+# que perdieron el formato— se ataja donde de verdad ocurre: leyendo el Excel
+# con las columnas forzadas a texto (ver api_importar_usuarios_excel).
+TIPOS_SIN_CERO_INICIAL = ('CC', 'TI')
 
 
 def etiqueta_tipo(tipo):
@@ -72,10 +96,11 @@ def validar_documento(tipo, numero):
     if solo_digitos:
         if not limpio.isdigit():
             return limpio, f'El número de {etiqueta.lower()} debe tener solo números.'
-        # Un documento que empieza por cero casi siempre es un error de
-        # digitación o un dato copiado de una hoja de cálculo.
-        if limpio.startswith('0'):
-            return limpio, 'El número de documento no puede empezar por cero.'
+        # Solo para los tipos donde la numeración oficial lo impide (ver
+        # TIPOS_SIN_CERO_INICIAL); en CE y PPT un cero inicial puede ser real.
+        if tipo in TIPOS_SIN_CERO_INICIAL and limpio.startswith('0'):
+            return limpio, (f'Un número de {etiqueta.lower()} no empieza por '
+                            f'cero. Revísalo o cambia el tipo de documento.')
     else:
         if not limpio.isalnum():
             return limpio, f'El {etiqueta.lower()} solo admite letras y números.'
@@ -102,6 +127,11 @@ def tipo_probable(numero):
     limpio = normalizar_numero(numero)
     if not limpio.isdigit():
         return 'PA' if limpio else TIPO_POR_DEFECTO
+    if limpio.startswith('0'):
+        # Ni la cédula ni la tarjeta de identidad empiezan por cero
+        # (ver TIPOS_SIN_CERO_INICIAL), así que sugerir CC sería sugerir un
+        # tipo con el que el número no puede validar.
+        return 'CE' if len(limpio) <= 7 else 'PPT'
     if len(limpio) == 11:
         return 'TI'
     if len(limpio) == 10:
