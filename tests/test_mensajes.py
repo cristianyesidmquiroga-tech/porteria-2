@@ -8,6 +8,8 @@ import os
 from app.models.mensajes import Mensaje
 
 
+from app.utils.fotos import carpeta_fotos
+
 def _entrar(client, usuario, contrasena='Segura2026'):
     return client.post('/auth/login',
                        data={'correo': usuario.correo, 'password': contrasena},
@@ -15,7 +17,7 @@ def _entrar(client, usuario, contrasena='Segura2026'):
 
 
 def _con_foto(usuario, db, app):
-    carpeta = os.path.join(app.root_path, 'static', 'uploads', 'profiles')
+    carpeta = carpeta_fotos()
     os.makedirs(carpeta, exist_ok=True)
     nombre = f'user_{usuario.id}.jpg'
     ruta = os.path.join(carpeta, nombre)

@@ -16,6 +16,8 @@ from app.utils.carnet import (PERFIL_APRENDIZ, PERFIL_CONTRATISTA,
                               partir_nombre, perfil_de_cargo)
 
 
+from app.utils.fotos import carpeta_fotos
+
 def _entrar(client, usuario, contrasena='Segura2026'):
     return client.post('/auth/login',
                        data={'correo': usuario.correo, 'password': contrasena},
@@ -181,7 +183,7 @@ class TestElCarnetMuestraLoSuyoSegunElPerfil:
                                 tipo_sangre='O+', perfil_completo=True,
                                 nombres='María José', apellidos='De La Cruz',
                                 **extras)
-        carpeta = os.path.join(app.root_path, 'static', 'uploads', 'profiles')
+        carpeta = carpeta_fotos()
         os.makedirs(carpeta, exist_ok=True)
         nombre = f'user_{persona.id}.jpg'
         with open(os.path.join(carpeta, nombre), 'wb') as f:

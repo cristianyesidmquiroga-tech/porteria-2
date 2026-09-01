@@ -215,8 +215,15 @@ git gc --prune=now
    conservar, hay que copiarlas al volumen del host **antes** de correr esto.
 
 3. **Variables en Coolify.** La app se niega a arrancar sin ellas, a propósito:
-   - `SECRET_KEY=143a80b738486159c74e6692dcba13f9e974d719c339add6930f54040362910e`
-     (la anterior está comprometida por haber estado en el repo)
+   - `SECRET_KEY`: generar una nueva y pegarla **solo** en el panel de Coolify.
+     Nunca escribirla aquí ni en ningún archivo del repositorio: este documento
+     se sube, y una clave escrita aquí queda igual de comprometida que la que
+     vino a sustituir. Con ella se firman las cookies de sesión y los desafíos
+     anti-bot, así que quien la tenga puede hacerse pasar por el administrador.
+     Para generarla:
+     ```bash
+     python -c "import secrets; print(secrets.token_hex(32))"
+     ```
    - Confirmar que `DATABASE_URL` está configurada.
 4. **Directorios del host antes del primer arranque** (el contenedor ya no corre como root):
    ```bash

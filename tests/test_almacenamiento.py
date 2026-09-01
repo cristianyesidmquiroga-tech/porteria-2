@@ -26,6 +26,8 @@ except ImportError:
     HAY_OPENCV = False
 
 
+from app.utils.fotos import carpeta_fotos
+
 @contextmanager
 def proteger_archivo_real(ruta, tmp_path):
     """Aísla una ruta dentro de una carpeta real del proyecto.
@@ -303,7 +305,7 @@ class TestSubidaCompleta:
                                 perfil_completo=False)
         self._entrar(client, usuario)
 
-        carpeta = os.path.join(app.root_path, 'static', 'uploads', 'profiles')
+        carpeta = carpeta_fotos()
         destino = os.path.join(carpeta, f'user_{usuario.id}.jpg')
         with proteger_archivo_real(destino, tmp_path):
             r = client.post('/usuarios/update_profile',
@@ -324,7 +326,7 @@ class TestSubidaCompleta:
                                                            tmp_path):
         # El procesado escribe primero a un temporal justo para esto.
         usuario = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        carpeta = os.path.join(app.root_path, 'static', 'uploads', 'profiles')
+        carpeta = carpeta_fotos()
         os.makedirs(carpeta, exist_ok=True)
         anterior = os.path.join(carpeta, f'user_{usuario.id}.jpg')
         with proteger_archivo_real(anterior, tmp_path):

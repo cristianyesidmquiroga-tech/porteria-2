@@ -16,6 +16,8 @@ from app.models.usuarios import (
 )
 
 
+from app.utils.fotos import carpeta_fotos
+
 def _entrar(client, usuario, contrasena='Segura2026'):
     return client.post('/auth/login',
                        data={'correo': usuario.correo, 'password': contrasena},
@@ -35,7 +37,7 @@ def _crear_ficha(db, numero='2999999', programa='Análisis y Desarrollo de Softw
 
 def _con_foto(usuario, db, app, estado=ESTADO_PENDIENTE):
     """Le pone al usuario una foto en disco y el estado indicado."""
-    carpeta = os.path.join(app.root_path, 'static', 'uploads', 'profiles')
+    carpeta = carpeta_fotos()
     os.makedirs(carpeta, exist_ok=True)
     nombre = f'user_{usuario.id}.jpg'
     with open(os.path.join(carpeta, nombre), 'wb') as f:
