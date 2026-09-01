@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from ... import db
 import secrets
@@ -65,13 +65,14 @@ def reenviar_codigo():
         current_user.intentos_codigo = 0
         db.session.commit()
 
-        asunto = "Nuevo código de verificación - Sistema de Acceso SENA"
+        _g = current_app.config['GENERALIDADES']
+        asunto = f"Nuevo código de verificación - Sistema de Acceso {_g['entidad']}"
         link_verificacion = url_for('auth.verificar_correo', _external=True)
         cuerpo_html = f"""
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 640px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
             <div style="background-color: #39A900; padding: 24px; text-align: center;">
-                <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
-                <p style="color: white; margin: 6px 0 0 0;">Centro de Gestión Agroempresarial del Oriente - Vélez</p>
+                <h2 style="color: white; margin: 0;">{_g['entidad']} - {_g['regional']}</h2>
+                <p style="color: white; margin: 6px 0 0 0;">{_g['centro']} - {_g['municipio']}</p>
             </div>
             <div style="padding: 24px;">
                 <h3>Hola, {current_user.nombre}</h3>

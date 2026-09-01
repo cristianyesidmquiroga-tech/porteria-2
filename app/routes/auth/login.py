@@ -134,8 +134,16 @@ def cambiar_password_obligatorio():
         return redirect(url_for('main.index'))
 
     if request.method == 'POST':
+        actual = request.form.get('contrasena_actual')
         nueva = request.form.get('nueva_contrasena')
         confirmacion = request.form.get('confirmar_contrasena')
+
+        # Sin pedir la contrasena actual, quien conociera la temporal podia
+        # apropiarse de la cuenta antes de que su dueno entrara por primera vez:
+        # entraba con la temporal y la cambiaba por una suya.
+        if not actual or not current_user.check_password(actual):
+            flash('La contrasena actual no es correcta.', 'danger')
+            return render_template('auth/cambio_obligatorio.html')
 
         error = validar_contrasena(nueva, confirmacion)
         if error:
