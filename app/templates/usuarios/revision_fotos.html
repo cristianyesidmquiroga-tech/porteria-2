@@ -81,7 +81,7 @@
     <div class="glass-card tarjeta-foto" id="tarjeta-{{ usuario.id }}"
          style="padding: 1.25rem; border-radius: 16px;">
 
-        <img src="{{ url_for('static', filename=usuario.ruta_foto) }}"
+        <img src="{{ usuario.url_foto }}"
              alt="Foto de perfil de {{ usuario.nombre }}"
              class="foto-persona" loading="lazy" decoding="async" width="260" height="260"
              data-respaldo="{{ url_for('static', filename=usuario.avatar_cargo) }}">

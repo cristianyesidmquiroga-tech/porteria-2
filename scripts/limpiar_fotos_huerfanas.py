@@ -14,6 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from app.utils.fotos import carpeta_fotos
 from app import create_app, db  # noqa: E402
 from app.models.usuarios import Usuario  # noqa: E402
 
@@ -22,7 +23,7 @@ aplicar = '--aplicar' in sys.argv
 app = create_app()
 
 with app.app_context():
-    carpeta = os.path.join(app.root_path, 'static', 'uploads', 'profiles')
+    carpeta = carpeta_fotos()
     huerfanos = []
 
     for usuario in Usuario.query.filter(Usuario.foto.isnot(None)).all():

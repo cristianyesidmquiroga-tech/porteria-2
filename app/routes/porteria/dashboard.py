@@ -5,7 +5,8 @@ from datetime import datetime, timedelta, timezone
 import csv
 import io
 from . import porteria_bp as bp
-from ...models.usuarios import Usuario, Rol, avatar_de_cargo, ruta_foto_o_avatar
+from ...models.usuarios import Usuario, Rol, avatar_de_cargo
+from ...utils.fotos import url_de_foto
 from ...models.accesos import Acceso
 from ... import db
 from ...utils import get_colombia_time, parsear_fecha_bd
@@ -116,12 +117,12 @@ def dashboard():
     historial = []
 
     for acc in accesos_db:
-        carpeta_fotos = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
         nombre = "N/A"
         documento = "N/A"
         rol_or_tipo = acc.tipo_referencia
         cargo_or_clase = "N/A"
         foto = None
+        usuario_id = None
         programa_ficha = "N/A"
         rsuffix = "trabajador"
         
@@ -133,6 +134,7 @@ def dashboard():
                 rol_or_tipo = u.rol.nombre if u.rol else 'Usuario'
                 cargo_or_clase = u.cargo or "N/A"
                 foto = u.foto
+                usuario_id = u.id
                 # rol_or_tipo es Admin/Usuario/Trabajador; la distincion real esta en cargo.
                 rsuffix = ('aprendiz' if cargo_or_clase == 'Aprendiz'
                            else 'instructor' if cargo_or_clase == 'Instructor'
@@ -179,15 +181,15 @@ def dashboard():
         # Se resuelven aqui, no en la plantilla: asi la vista no tiene que
         # saber donde viven las fotos ni que hacer si falta una.
         if acc.tipo_referencia == 'Usuario':
-            ruta_img = ruta_foto_o_avatar(foto, cargo_or_clase, carpeta_fotos)
+            url_img = url_de_foto(usuario_id, foto, cargo_or_clase)
             avatar_img = avatar_de_cargo(cargo_or_clase)
         else:
             avatar_img = avatar_de_cargo(acc.tipo_referencia)
-            ruta_img = avatar_img
+            url_img = url_for('static', filename=avatar_img)
 
         historial.append({
             "acceso": acc,
-            "ruta_foto": ruta_img,
+            "url_foto": url_img,
             "avatar": avatar_img,
             "nombre": nombre,
             "documento": documento,

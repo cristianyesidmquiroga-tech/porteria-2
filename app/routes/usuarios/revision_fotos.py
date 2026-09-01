@@ -14,6 +14,7 @@ Toda decisión queda en `Auditoria`: quién revisó, cuándo y por qué.
 import logging
 import os
 
+from ...utils.fotos import carpeta_fotos
 from flask import (
     current_app,
     flash,
@@ -185,8 +186,7 @@ def api_revisar_foto(id):
 
             # La foto rechazada se borra: no tiene sentido conservar una imagen
             # que no corresponde a la persona (minimización, Ley 1581).
-            ruta = os.path.join(current_app.root_path, 'static', 'uploads',
-                                'profiles', usuario.foto)
+            ruta = os.path.join(carpeta_fotos(), usuario.foto)
             if os.path.isfile(ruta):
                 try:
                     os.remove(ruta)

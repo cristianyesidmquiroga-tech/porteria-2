@@ -158,7 +158,7 @@
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 {% set rsuffix = item.rsuffix %}
-                                <img src="{{ url_for('static', filename=item.ruta_foto) }}"
+                                <img src="{{ item.url_foto }}"
                                     alt="Foto de {{ item.nombre }}" class="role-img role-border-{{ rsuffix }}"
                                     loading="lazy" decoding="async" width="44" height="44"
                                     data-respaldo="{{ url_for('static', filename=item.avatar) }}">

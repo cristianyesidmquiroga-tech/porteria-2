@@ -39,7 +39,7 @@ def api_verify(doc):
                 # Siempre una URL valida: la foto real si existe, o el
                 # avatar del cargo. Antes se devolvia None y el cliente caia a
                 # ui-avatars.com, enviando el nombre real a un tercero.
-                "foto": url_for('static', filename=u.ruta_foto),
+                "foto": u.url_foto,
                 # El celador tiene que saber si esa foto ya fue verificada por
                 # un administrador: una foto sin aprobar no sirve para
                 # confirmar la identidad de quien esta en la puerta.

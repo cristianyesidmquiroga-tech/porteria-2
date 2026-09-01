@@ -19,7 +19,7 @@
                 </span>
             </div>
             <div class="photo-area {{ 'photo-entrada' if status == 'Entrada' else 'photo-salida' }}">
-                <img src="{{ url_for('static', filename=user_profile.ruta_foto) }}"
+                <img src="{{ user_profile.url_foto }}"
                     alt="Foto de {{ user_profile.nombre }}" class="profile-photo-carnet"
                     fetchpriority="high" decoding="async" width="200" height="200"
                     data-respaldo="{{ url_for('static', filename=user_profile.avatar_cargo) }}">

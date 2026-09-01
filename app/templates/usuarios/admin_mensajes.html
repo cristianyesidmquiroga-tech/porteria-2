@@ -30,7 +30,7 @@
               border-radius: 14px; text-decoration: none; color: inherit;
               {% if fila.sin_leer %}border-left: 4px solid #e74c3c;{% endif %}">
 
-        <img src="{{ url_for('static', filename=fila.persona.ruta_foto) }}"
+        <img src="{{ fila.persona.url_foto }}"
              alt="" aria-hidden="true" loading="lazy" decoding="async"
              width="52" height="52"
              style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"

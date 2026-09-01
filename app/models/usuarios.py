@@ -285,14 +285,16 @@ class Usuario(db.Model, UserMixin):
                                          'Sin foto')
 
     @property
-    def ruta_foto(self):
-        """Ruta estatica para url_for('static', filename=...).
+    def url_foto(self):
+        """Direccion lista para poner en un <img src>.
 
-        Devuelve la foto del usuario si la tiene, o el avatar de su cargo.
+        La foto ya no se sirve desde static/: alli quedaba descargable por
+        cualquiera sin iniciar sesion, y los nombres eran consecutivos. Va por
+        una vista que comprueba quien pregunta. El avatar del cargo si sigue
+        siendo estatico: es un dibujo, no la cara de nadie.
         """
-        from flask import current_app
-        carpeta = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
-        return ruta_foto_o_avatar(self.foto, self.cargo, carpeta)
+        from app.utils.fotos import url_de_foto
+        return url_de_foto(self.id, self.foto, self.cargo)
 
     @property
     def avatar_cargo(self):

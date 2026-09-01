@@ -1,3 +1,4 @@
+from ...utils.fotos import carpeta_fotos
 from flask import render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from ...models.usuarios import Usuario
@@ -93,7 +94,7 @@ def update_profile():
         if not extension_permitida(archivo.filename):
             return _error('Solo se permiten imágenes (png, jpg, jpeg, webp, bmp, tiff).')
 
-        carpeta = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
+        carpeta = carpeta_fotos()
         nombre_final = nombre_foto(current_user.id)
         destino = os.path.join(carpeta, nombre_final)
 
