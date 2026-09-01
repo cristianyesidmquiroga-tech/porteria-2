@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from openpyxl import Workbook, load_workbook
 from flask import current_app
 from .. import db

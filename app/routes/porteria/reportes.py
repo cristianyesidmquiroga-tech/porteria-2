@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 from . import porteria_bp as bp
-from ...models.usuarios import Usuario, Rol
+from ...models.usuarios import Usuario
 from ...models.accesos import Acceso
 from ... import db
 from ...utils import get_colombia_time, parsear_fecha_bd

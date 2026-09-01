@@ -4,7 +4,6 @@ Flask-Login==0.6.3
 Flask-WTF==1.3.0
 Flask-Limiter==4.1.1
 Werkzeug==3.1.8
-email-validator==2.2.0
 pillow==12.2.0
 pandas==2.2.3
 openpyxl==3.1.5
@@ -13,4 +12,7 @@ python-dotenv==1.0.1
 psycopg2-binary==2.9.10
 gunicorn==23.0.0
 opencv-python-headless==4.10.0.84
+# numpy se importa directamente en app/utils/imagenes.py: fijado para que no
+# dependa de que otra libreria lo arrastre.
+numpy==2.4.6
 dnspython==2.7.0

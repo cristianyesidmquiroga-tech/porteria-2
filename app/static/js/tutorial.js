@@ -61,7 +61,7 @@
                    'contigo para dejarte entrar.'
         },
         {
-            selector: '.carnet-card',
+            selector: '.carnet-oficial',
             titulo: '3. Tu carnet digital',
             texto: 'Este es tu carnet institucional. Se completa solo a ' +
                    'medida que llenas tus datos. Tu foto la revisa un asesor: ' +
@@ -69,7 +69,7 @@
                    'permanecen bloqueados.'
         },
         {
-            selector: '.qr-section-inst',
+            selector: '.carnet-of-barras',
             titulo: '4. Tu código de barras de acceso',
             texto: 'Aquí aparecerá tu código de barras cuando tu perfil esté ' +
                    'completo y tu foto aprobada. Es el que presentas al ' +

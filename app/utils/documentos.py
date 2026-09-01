@@ -52,11 +52,6 @@ TIPO_POR_DEFECTO = 'CC'
 TIPOS_SIN_CERO_INICIAL = ('CC', 'TI')
 
 
-def etiqueta_tipo(tipo):
-    datos = TIPOS_DOCUMENTO.get((tipo or '').upper())
-    return datos[0] if datos else 'Documento'
-
-
 def descripcion_formato(tipo):
     """Texto de ayuda para mostrar junto al campo."""
     datos = TIPOS_DOCUMENTO.get((tipo or '').upper())

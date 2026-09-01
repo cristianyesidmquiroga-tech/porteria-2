@@ -1,11 +1,11 @@
 from flask import render_template, redirect, url_for, flash, request
-from flask_login import current_user, login_required
+from flask_login import current_user
 from ...models.usuarios import Usuario, Rol
 from ... import db
 import secrets
 import string
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from ...utils.security import sanitize_html, validar_contrasena, correo_permitido
 from ...utils.captcha import validar_formulario
 from ...utils.documentos import validar_documento

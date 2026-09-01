@@ -11,7 +11,6 @@ De paso resuelve dos problemas de privacidad:
   - El nombre de archivo es fijo por usuario, asi que una foto nueva reemplaza
     a la anterior en vez de dejarla huerfana en el disco para siempre.
 """
-import io
 import logging
 import os
 
@@ -367,45 +366,3 @@ def tiene_un_solo_rostro(ruta):
     except Exception as error:
         logger.warning("La validacion facial no pudo ejecutarse: %s", error)
         return True, None
-
-
-def comprimir_en_sitio(ruta, lado_maximo=LADO_MAXIMO, calidad=CALIDAD_JPEG):
-    """Recomprime una foto ya guardada conservando su nombre y extension.
-
-    Se usa para las fotos que ya estaban en el servidor antes de que existiera
-    el procesado en la subida. Conserva el nombre para no tener que tocar la
-    columna `foto` de la base de datos.
-    """
-    try:
-        with Image.open(ruta) as imagen:
-            formato = imagen.format
-            imagen = ImageOps.exif_transpose(imagen)
-
-            if formato == 'PNG' and imagen.mode in ('RGBA', 'LA', 'P'):
-                imagen = imagen.convert('RGBA')
-            elif imagen.mode not in ('RGB', 'RGBA'):
-                imagen = imagen.convert('RGB')
-
-            imagen.thumbnail((lado_maximo, lado_maximo), Image.LANCZOS)
-
-            memoria = io.BytesIO()
-            if formato == 'PNG':
-                imagen.save(memoria, format='PNG', optimize=True)
-            elif formato in ('WEBP',):
-                imagen.save(memoria, format='WEBP', quality=calidad, method=6)
-            else:
-                if imagen.mode != 'RGB':
-                    imagen = imagen.convert('RGB')
-                imagen.save(memoria, format='JPEG', quality=calidad,
-                            optimize=True, progressive=True)
-
-        datos = memoria.getvalue()
-        # Solo se sobrescribe si de verdad quedo mas ligera.
-        if len(datos) < os.path.getsize(ruta):
-            with open(ruta, 'wb') as archivo:
-                archivo.write(datos)
-            return True
-        return False
-    except (UnidentifiedImageError, OSError, ValueError) as error:
-        logger.warning("No se pudo comprimir %s: %s", ruta, error)
-        return False
