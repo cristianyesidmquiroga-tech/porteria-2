@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Centro de ayuda{% endblock %}
+
+{% block content %}
+<style>
+    .pregunta { border: 1px solid var(--glass-border, rgba(0,0,0,.12));
+                border-radius: 12px; margin-bottom: 0.7rem; overflow: hidden; }
+    .pregunta > summary {
+        cursor: pointer; padding: 0.95rem 1.1rem; font-weight: 600;
+        font-size: 0.94rem; list-style: none; display: flex;
+        align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .pregunta > summary::-webkit-details-marker { display: none; }
+    .pregunta > summary::after { content: '+'; font-size: 1.3rem; font-weight: 400;
+                                 color: #39A900; flex-shrink: 0; }
+    .pregunta[open] > summary::after { content: '\2212'; }
+    .pregunta > summary:focus-visible { outline: 3px solid #1565C0; outline-offset: -3px; }
+    .respuesta { padding: 0 1.1rem 1.1rem 1.1rem; font-size: 0.91rem;
+                 line-height: 1.65; color: var(--text-muted); }
+    .btn-ayuda { background: #39A900; color: #fff; border: none; border-radius: 10px;
+                 padding: 0.75rem 1.5rem; font-weight: 700; cursor: pointer; }
+    .btn-ayuda:focus-visible { outline: 3px solid #1565C0; outline-offset: 2px; }
+</style>
+
+<div class="glass-card animate-on-scroll" style="padding: 1.75rem; border-radius: 16px; margin-bottom: 1.5rem;">
+    <h1 class="text-3d" style="margin: 0 0 0.5rem 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-circle-question" style="color: #39A900;" aria-hidden="true"></i>
+        Centro de ayuda
+    </h1>
+    <p style="margin: 0; color: var(--text-muted); font-size: 0.93rem; line-height: 1.6;">
+        Busca tu duda aquí abajo. Si no la encuentras o tu caso es distinto,
+        escríbele a un asesor al final de la página.
+    </p>
+</div>
+
+{% for categoria in categorias %}
+<div class="glass-card animate-on-scroll" style="padding: 1.4rem 1.5rem; border-radius: 16px; margin-bottom: 1.1rem;">
+    <h2 style="margin: 0 0 1rem 0; font-size: 1.05rem; color: #39A900;">{{ categoria.nombre }}</h2>
+    {% for item in categoria.preguntas %}
+    <details class="pregunta">
+        <summary>{{ item.pregunta }}</summary>
+        <div class="respuesta">{{ item.respuesta }}</div>
+    </details>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="glass-card animate-on-scroll" id="asesor"
+     style="padding: 1.75rem; border-radius: 16px; margin-top: 1.75rem;
+            border-left: 4px solid #39A900;">
+    <h2 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-headset" style="color: #39A900;" aria-hidden="true"></i>
+        Hablar con un asesor
+    </h2>
+    <p style="margin: 0 0 1.35rem 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+        Escríbenos y te respondemos en <a href="{{ url_for('usuarios.mis_mensajes') }}"
+        style="color: #39A900;">Mensajes</a>, dentro del sistema. Nos llega tu nombre,
+        documento y el estado de tu perfil, así que no hace falta que los repitas.
+    </p>
+
+    <form method="POST" action="{{ url_for('usuarios.contactar_asesor') }}" data-no-ajax>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="asunto" style="display: block; font-weight: 600; font-size: 0.87rem; margin-bottom: 0.4rem;">
+            ¿Con qué necesitas ayuda?
+        </label>
+        <select id="asunto" name="asunto"
+                style="width: 100%; padding: 0.7rem; border-radius: 10px; margin-bottom: 1.1rem;">
+            {% for asunto in asuntos %}<option value="{{ asunto }}">{{ asunto }}</option>{% endfor %}
+        </select>
+
+        <label for="detalle" style="display: block; font-weight: 600; font-size: 0.87rem; margin-bottom: 0.4rem;">
+            Cuéntanos qué pasa
+        </label>
+        <textarea id="detalle" name="detalle" rows="4" required maxlength="2000"
+                  style="width: 100%; padding: 0.75rem; border-radius: 10px; resize: vertical;"
+                  placeholder="Por ejemplo: subo mi foto y me dice que está borrosa, pero se ve bien en mi celular."></textarea>
+
+        <div style="margin-top: 1.1rem; text-align: right;">
+            <button type="submit" class="btn-ayuda">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar a un asesor
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
