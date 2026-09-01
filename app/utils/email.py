@@ -41,10 +41,30 @@ PAUSA_ENTRE_CORREOS = float(os.environ.get('MAIL_PAUSA_SEGUNDOS', '1.2'))
 # Reintentos ante fallos pasajeros (el servidor ocupado, un corte de red).
 MAX_REINTENTOS = 2
 
+# Base de la espera creciente entre reintentos: 5 s y luego 20 s.
+ESPERA_REINTENTO_BASE = 5
+
+# Únicos valores admitidos en MAIL_CIFRADO.
+MODOS_CIFRADO = {'ssl', 'starttls', 'ninguno'}
+
+# Resultados de _enviar: entregado, fallo pasajero (se reintenta) y fallo
+# definitivo (insistir solo empeora las cosas: una dirección que no existe no
+# va a existir en 20 segundos, y repetir un login rechazado por Gmail es el
+# patrón que acaba bloqueando la cuenta).
+ENTREGADO = 'entregado'
+FALLO_PASAJERO = 'pasajero'
+FALLO_DEFINITIVO = 'definitivo'
+
 # Cola de salida y su unico hilo enviador.
 _cola = queue.Queue()
 _enviador = None
 _candado = threading.Lock()
+
+# Reintentos ya programados que todavia no han vuelto a la cola. Se cuentan
+# aparte porque durante la espera no estan en _cola: sin esto, el apagado del
+# proceso los daria por salidos y se perderian.
+_reintentos_en_espera = 0
+_candado_reintentos = threading.Lock()
 
 
 def _modo_cifrado(puerto, configurado):
@@ -54,13 +74,23 @@ def _modo_cifrado(puerto, configurado):
     convención universal:
       - 465: TLS implícito, el canal va cifrado desde el primer byte (SMTP_SSL)
       - 587: STARTTLS, se abre en claro y se cifra con el comando STARTTLS
-      - 25 y otros: sin cifrado (solo aceptable contra un relé local)
+      - 25: sin cifrado (solo aceptable contra un relé local)
+      - cualquier otro: STARTTLS
     Antes se llamaba a starttls() siempre, así que un servidor en el 465 (muy
     común en correo institucional) fallaba con "STARTTLS extension not
     supported".
+
+    MAIL_CIFRADO solo se acepta si es uno de los tres valores conocidos: un
+    valor mal escrito (`tls`, `TLS`) caía antes en la rama sin cifrar y la
+    contraseña SMTP salía en claro por la red.
     """
     if configurado:
-        return configurado.strip().lower()
+        elegido = configurado.strip().lower()
+        if elegido in MODOS_CIFRADO:
+            return elegido
+        logger.error("MAIL_CIFRADO=%r no es válido (admitidos: %s). Se deduce "
+                     "del puerto para no dejar la conexión sin cifrar.",
+                     configurado, ', '.join(sorted(MODOS_CIFRADO)))
     if puerto == 465:
         return 'ssl'
     if puerto == 25:
@@ -88,9 +118,9 @@ def _enviar(app, msg, destinatario, servidor, puerto, usuario, clave, cifrado,
     with app.app_context():
         if modo == 'directo':
             if _entregar_directo(msg, destinatario, remitente):
-                return True
+                return ENTREGADO
             if not respaldo_rele or not servidor:
-                return False
+                return FALLO_PASAJERO
             logger.warning("Entrega directa fallida, reintentando por el relé.")
 
         conexion = None
@@ -111,22 +141,45 @@ def _enviar(app, msg, destinatario, servidor, puerto, usuario, clave, cifrado,
             conexion.send_message(msg)
             logger.info("Correo entregado al servidor SMTP para %s",
                         _ofuscar(destinatario))
-            return True
+            return ENTREGADO
         except smtplib.SMTPAuthenticationError:
             # El fallo más habitual con Gmail: hace falta una contraseña de
-            # aplicación, no la del correo.
+            # aplicación, no la del correo. Reintentar no arregla nada y, en una
+            # importación de cientos de personas, son cientos de logins
+            # rechazados seguidos: justo lo que hace que Gmail bloquee la cuenta.
             logger.error("SMTP rechazó las credenciales de %s. Si es Gmail, hay "
                          "que usar una contraseña de aplicación, no la normal.",
-                         usuario)
-            return False
+                         _ofuscar(usuario))
+            return FALLO_DEFINITIVO
         except smtplib.SMTPRecipientsRefused:
-            logger.error("El servidor rechazó al destinatario %s",
+            logger.error("El servidor rechazó al destinatario %s. La dirección "
+                         "no existe o no admite correo: se descarta.",
                          _ofuscar(destinatario))
-            return False
+            return FALLO_DEFINITIVO
+        except smtplib.SMTPSenderRefused:
+            logger.error("El servidor rechazó al remitente %s. Revisa "
+                         "MAIL_DEFAULT_SENDER: insistir no lo arregla.",
+                         _ofuscar(usuario or remitente))
+            return FALLO_DEFINITIVO
+        except smtplib.SMTPNotSupportedError as error:
+            logger.error("El servidor no admite algo que exige la configuración "
+                         "(%s:%s, cifrado=%s): %s", servidor, puerto, cifrado, error)
+            return FALLO_DEFINITIVO
+        except smtplib.SMTPResponseException as error:
+            # 5xx es un rechazo permanente segun la norma SMTP; 4xx es "ahora
+            # no, prueba luego". Solo el segundo merece reintentarse.
+            if 500 <= (error.smtp_code or 0) < 600:
+                logger.error("Rechazo permanente (%s) enviando a %s: se descarta "
+                             "sin reintentar.", error.smtp_code,
+                             _ofuscar(destinatario))
+                return FALLO_DEFINITIVO
+            logger.error("Rechazo temporal (%s) enviando a %s: %s",
+                         error.smtp_code, _ofuscar(destinatario), error)
+            return FALLO_PASAJERO
         except (smtplib.SMTPException, OSError, ssl.SSLError) as error:
             logger.error("Error enviando correo a %s (%s:%s, cifrado=%s): %s",
                          _ofuscar(destinatario), servidor, puerto, cifrado, error)
-            return False
+            return FALLO_PASAJERO
         finally:
             if conexion is not None:
                 try:
@@ -320,20 +373,16 @@ def _procesar_cola():
     abuso en Gmail y similares.
     """
     while True:
-        aplicacion, mensaje, destino, cfg, remitente, intentos = _cola.get()
         try:
-            entregado = _enviar(aplicacion, mensaje, destino, cfg['servidor'],
-                                cfg['puerto'], cfg['usuario'], cfg['clave'],
-                                cfg['cifrado'], cfg['modo'],
-                                cfg['respaldo_rele'], remitente)
-            if not entregado and intentos < MAX_REINTENTOS:
-                # Espera creciente: 5 s, luego 20 s. Si el servidor esta
-                # saturado, insistir de inmediato solo empeora las cosas.
-                espera = 5 * (4 ** intentos)
-                logger.info("Reintentando el correo a %s en %ss (intento %s de %s)",
-                            _ofuscar(destino), espera, intentos + 2, MAX_REINTENTOS + 1)
-                time.sleep(espera)
-                _cola.put((aplicacion, mensaje, destino, cfg, remitente, intentos + 1))
+            aplicacion, mensaje, destino, cfg, remitente, intentos = _cola.get()
+        except Exception:
+            # Si get() fallara, morir aqui dejaria la cola parada sin que nadie
+            # lo note: los correos ya encolados no saldrian nunca.
+            logger.exception("Fallo sacando un correo de la cola")
+            time.sleep(1)
+            continue
+        try:
+            _procesar_uno(aplicacion, mensaje, destino, cfg, remitente, intentos)
         except Exception:
             logger.exception("Fallo inesperado enviando un correo de la cola")
         finally:
@@ -341,9 +390,67 @@ def _procesar_cola():
         time.sleep(PAUSA_ENTRE_CORREOS)
 
 
+def _procesar_uno(aplicacion, mensaje, destino, cfg, remitente, intentos):
+    """Intenta un correo y decide si se reintenta, se descarta o ya esta.
+
+    Va aparte del bucle para poder probarlo sin arrancar el hilo enviador.
+    """
+    resultado = _enviar(aplicacion, mensaje, destino, cfg['servidor'],
+                        cfg['puerto'], cfg['usuario'], cfg['clave'],
+                        cfg['cifrado'], cfg['modo'],
+                        cfg['respaldo_rele'], remitente)
+    if resultado == FALLO_DEFINITIVO:
+        logger.error("Correo a %s descartado sin reintentos: el fallo no se "
+                     "arregla insistiendo.", _ofuscar(destino))
+        return resultado
+    if resultado == FALLO_PASAJERO and intentos < MAX_REINTENTOS:
+        _programar_reintento(aplicacion, mensaje, destino, cfg, remitente,
+                             intentos)
+    elif resultado == FALLO_PASAJERO:
+        logger.error("Correo a %s abandonado tras %s intentos.",
+                     _ofuscar(destino), MAX_REINTENTOS + 1)
+    return resultado
+
+
+def _programar_reintento(aplicacion, mensaje, destino, cfg, remitente, intentos):
+    """Devuelve el correo a la cola tras una espera, sin bloquear al enviador.
+
+    Espera creciente: 5 s y luego 20 s. Si el servidor esta saturado, insistir
+    de inmediato solo empeora las cosas. La espera ocurre en un temporizador
+    aparte y no en el hilo enviador: si durmiera alli, un solo correo
+    problematico dejaria parados hasta 25 s a todos los que vienen detras.
+    """
+    espera = ESPERA_REINTENTO_BASE * (4 ** intentos)
+    logger.info("Reintentando el correo a %s en %ss (intento %s de %s)",
+                _ofuscar(destino), espera, intentos + 2, MAX_REINTENTOS + 1)
+
+    global _reintentos_en_espera
+    with _candado_reintentos:
+        _reintentos_en_espera += 1
+
+    def _reencolar():
+        global _reintentos_en_espera
+        try:
+            _asegurar_enviador()
+            _cola.put((aplicacion, mensaje, destino, cfg, remitente, intentos + 1))
+        finally:
+            with _candado_reintentos:
+                _reintentos_en_espera -= 1
+
+    # Demonio: un reintento pendiente no debe impedir que el proceso se apague.
+    temporizador = threading.Timer(espera, _reencolar)
+    temporizador.daemon = True
+    temporizador.start()
+    return temporizador
+
+
 def correos_pendientes():
-    """Cuantos correos quedan por salir. Util para diagnosticar."""
-    return _cola.qsize()
+    """Cuantos correos quedan por salir. Util para diagnosticar.
+
+    Incluye los reintentos que estan esperando su turno: durante la espera no
+    estan en la cola, pero siguen sin entregarse.
+    """
+    return _cola.qsize() + _reintentos_en_espera
 
 
 @atexit.register
@@ -354,14 +461,16 @@ def _vaciar_cola_al_salir():
     los correos que aun no habian salido, y esas personas se quedarian sin sus
     credenciales sin que nadie se entere.
     """
-    if _cola.empty():
+    if not correos_pendientes():
         return
-    logger.info("Esperando a que salgan %s correos pendientes...", _cola.qsize())
+    logger.info("Esperando a que salgan %s correos pendientes...",
+                correos_pendientes())
     fin = time.time() + 30
-    while not _cola.empty() and time.time() < fin:
+    while correos_pendientes() and time.time() < fin:
         time.sleep(0.5)
-    if not _cola.empty():
-        logger.warning("Quedaron %s correos sin enviar al apagar.", _cola.qsize())
+    if correos_pendientes():
+        logger.warning("Quedaron %s correos sin enviar al apagar.",
+                       correos_pendientes())
 
 
 def probar_conexion():
