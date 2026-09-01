@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Mensajes{% endblock %}
+
+{% block content %}
+<style>
+    .hilo { display: flex; flex-direction: column; gap: 0.9rem; max-height: 55vh;
+            overflow-y: auto; padding: 0.25rem; }
+    .burbuja { max-width: 78%; padding: 0.8rem 1rem; border-radius: 14px;
+               font-size: 0.92rem; line-height: 1.55; white-space: pre-wrap;
+               word-break: break-word; }
+    .burbuja .firma { display: block; font-size: 0.74rem; opacity: 0.75;
+                      margin-top: 0.45rem; }
+    /* Los mensajes propios a la derecha, los de la otra parte a la izquierda:
+       es la convención que la gente ya conoce de cualquier chat. */
+    .mio  { align-self: flex-end; background: #39A900; color: #fff; border-bottom-right-radius: 4px; }
+    .otro { align-self: flex-start; background: var(--white, #fff);
+            border: 1px solid var(--glass-border, rgba(0,0,0,.12));
+            color: var(--text-main); border-bottom-left-radius: 4px; }
+    .automatico { align-self: center; max-width: 92%; background: rgba(21,101,192,.08);
+                  border: 1px solid rgba(21,101,192,.25); color: var(--text-main);
+                  font-size: 0.87rem; }
+    .btn-enviar { background: #39A900; color: #fff; border: none; border-radius: 10px;
+                  padding: 0.7rem 1.4rem; font-weight: 700; cursor: pointer; }
+    .btn-enviar:focus-visible { outline: 3px solid #1565C0; outline-offset: 2px; }
+    .btn-enviar:disabled { opacity: .55; cursor: not-allowed; }
+</style>
+
+<div class="glass-card animate-on-scroll" style="padding: 1.6rem; border-radius: 16px; margin-bottom: 1.25rem;">
+    <h1 class="text-3d" style="margin: 0 0 0.4rem 0; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-comments" style="color: #39A900;" aria-hidden="true"></i>
+        {% if es_vista_admin %}Conversación con {{ persona.nombre }}{% else %}Mensajes{% endif %}
+    </h1>
+    {% if es_vista_admin %}
+    <p style="margin: 0; color: var(--text-muted); font-size: 0.88rem;">
+        {{ persona.cargo or 'Sin cargo' }} · Doc. {{ persona.documento or 'N/A' }} · {{ persona.correo }}
+        <br>Estado de la foto: <strong>{{ persona.etiqueta_estado_foto }}</strong>
+    </p>
+    <p style="margin: 0.75rem 0 0 0;">
+        <a href="{{ url_for('usuarios.admin_mensajes') }}" style="color: #39A900;">&larr; Volver a la bandeja</a>
+    </p>
+    {% else %}
+    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+        Aquí puedes escribirle al administrador si algo no te funciona o no sabes qué
+        hacer: por ejemplo, si te rechazaron la foto y no entiendes por qué, o si un
+        dato de tu perfil está mal y no lo puedes cambiar.
+    </p>
+    {% endif %}
+</div>
+
+<div class="glass-card" style="padding: 1.5rem; border-radius: 16px;">
+    {% if not mensajes %}
+    <p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+        {% if es_vista_admin %}Todavía no hay mensajes con esta persona.
+        {% else %}Todavía no tienes mensajes. Escribe abajo si necesitas ayuda.{% endif %}
+    </p>
+    {% else %}
+    <div class="hilo" id="hilo">
+        {% for mensaje in mensajes %}
+        <div class="burbuja {% if mensaje.automatico %}automatico{% elif (es_vista_admin and mensaje.autor_es_admin) or (not es_vista_admin and mensaje.autor_id == persona.id) %}mio{% else %}otro{% endif %}">
+            {{ mensaje.texto }}
+            <span class="firma">
+                {% if mensaje.automatico %}<i class="fas fa-robot" aria-hidden="true"></i> Aviso del sistema · {% endif %}
+                {{ mensaje.autor_nombre }}{% if mensaje.autor_es_admin and not mensaje.automatico %} (administrador){% endif %}
+                {% if mensaje.fecha %} · {{ mensaje.fecha.strftime('%d/%m/%Y %I:%M %p') }}{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <hr style="border: none; border-top: 1px solid var(--glass-border, rgba(0,0,0,.1)); margin: 1.4rem 0;">
+
+    {% if es_vista_admin %}
+    <label for="texto-admin" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.45rem;">
+        Escribir a {{ persona.nombre }}
+    </label>
+    <textarea id="texto-admin" rows="3" maxlength="2000"
+              style="width: 100%; padding: 0.75rem; border-radius: 10px; resize: vertical;"
+              placeholder="Explícale qué le falta o respóndele su pregunta"></textarea>
+    <div style="margin-top: 0.75rem; text-align: right;">
+        <button type="button" id="btn-admin-enviar" class="btn-enviar">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar
+        </button>
+    </div>
+    {% else %}
+    <form method="POST" action="{{ url_for('usuarios.enviar_mensaje') }}" data-no-ajax>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="texto" style="display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.45rem;">
+            Escribe tu mensaje
+        </label>
+        <textarea id="texto" name="texto" rows="3" required maxlength="2000"
+                  style="width: 100%; padding: 0.75rem; border-radius: 10px; resize: vertical;"
+                  placeholder="Cuéntanos qué problema tienes"></textarea>
+        <div style="margin-top: 0.75rem; text-align: right;">
+            <button type="submit" class="btn-enviar">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/mensajes.js') }}"
+        data-url-enviar="/usuarios/api/admin/mensajes/{{ persona.id }}"
+        data-csrf="{{ csrf_token() }}"></script>
+{% endblock %}

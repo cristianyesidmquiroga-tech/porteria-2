@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Tutorial de primeros pasos{% endblock %}
+
+{% block content %}
+<style>
+    .tut-paso-card { display: flex; gap: 1.1rem; align-items: flex-start; }
+    .tut-paso-num {
+        flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+        background: rgba(57, 169, 0, 0.12); color: #39A900;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem;
+    }
+    .tut-ejemplo {
+        margin-top: 0.8rem; padding: 0.85rem 1rem; border-radius: 10px;
+        background: rgba(57, 169, 0, 0.06);
+        border-left: 3px solid #39A900;
+        font-size: 0.88rem; line-height: 1.6; color: var(--text-main);
+    }
+    .tut-ejemplo strong { color: #39A900; }
+    .btn-tutorial {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #39A900; color: #fff; border: none; border-radius: 10px;
+        padding: 0.75rem 1.5rem; font-weight: 700; cursor: pointer;
+        text-decoration: none; font-size: 0.95rem;
+    }
+    .btn-tutorial:hover { filter: brightness(1.08); }
+    .btn-tutorial:active { transform: translateY(1px); }
+    .btn-tutorial:focus-visible { outline: 3px solid #1565C0; outline-offset: 2px; }
+</style>
+
+<div class="glass-card animate-on-scroll" style="padding: 1.75rem; border-radius: 16px; margin-bottom: 1.5rem;">
+    <h1 class="text-3d" style="margin: 0 0 0.5rem 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-map-signs" style="color: #39A900;" aria-hidden="true"></i>
+        Tutorial: tus primeros pasos en el sistema
+    </h1>
+    <p style="margin: 0; color: var(--text-muted); font-size: 0.93rem; line-height: 1.6;">
+        Para poder entrar al centro con tu código de barras necesitas completar estos
+        pasos, en este orden. Cada uno trae un ejemplo de cómo hacerlo bien.
+    </p>
+</div>
+
+{% for paso in pasos %}
+<div class="glass-card animate-on-scroll" style="padding: 1.4rem 1.5rem; border-radius: 16px; margin-bottom: 1.1rem;">
+    <div class="tut-paso-card">
+        <div class="tut-paso-num" aria-hidden="true">
+            <i class="fas {{ paso.icono }}"></i>
+        </div>
+        <div>
+            <h2 style="margin: 0 0 0.45rem 0; font-size: 1.05rem;">{{ paso.titulo }}</h2>
+            <p style="margin: 0; font-size: 0.91rem; line-height: 1.65; color: var(--text-muted);">
+                {{ paso.descripcion }}
+            </p>
+            <div class="tut-ejemplo">
+                <strong>Ejemplo:</strong> {{ paso.ejemplo }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="glass-card animate-on-scroll"
+     style="padding: 1.75rem; border-radius: 16px; margin-top: 1.75rem;
+            border-left: 4px solid #39A900; display: flex; flex-wrap: wrap;
+            gap: 1rem; align-items: center; justify-content: space-between;">
+    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; max-width: 32rem;">
+        ¿Prefieres que el sistema te lo muestre en la pantalla? El recorrido
+        guiado resalta cada botón de tu perfil y te explica para qué sirve.
+    </p>
+    {# ?tutorial=1 obliga a lanzar el recorrido aunque ya se haya visto. #}
+    <a href="{{ url_for('usuarios.profile', tutorial=1) }}" class="btn-tutorial">
+        <i class="fas fa-play" aria-hidden="true"></i> Ver el recorrido guiado
+    </a>
+</div>
+{% endblock %}
