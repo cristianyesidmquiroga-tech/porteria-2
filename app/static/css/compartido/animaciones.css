@@ -32,17 +32,14 @@
     100% { transform: perspective(1000px) rotateY(360deg); }
 }
 
+/* Antes era un degradado arcoiris animado usado como color de titulo
+   (h1, KPIs del dashboard, nombre del centro). Con tramos que bajaban a
+   1.52:1 y 1.92:1 sobre fondo blanco era ilegible, sobre todo con poca luz.
+   Se reemplaza por el mismo verde/texto institucional que ya usa el resto
+   del sistema (--secondary-text), que ya esta resuelto para claro/oscuro:
+   13.43:1 en claro, 8.77:1 en oscuro sobre la tarjeta. */
 .highlight-rainbow {
-    background: linear-gradient(90deg, #FF6B6B, #F1C40F, #2ECC71, #3498DB, #FF6B6B);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: rainbow-text 3s linear infinite;
-}
-
-@keyframes rainbow-text {
-    to { background-position: 200% center; }
+    color: var(--secondary-text);
 }
 
 /* Page Transition Slide In */
@@ -133,4 +130,20 @@
 @keyframes fadeIn {
     from { opacity: 0; visibility: visible; }
     to { opacity: 1; visibility: visible; }
+}
+
+/* prefers-reduced-motion: el sistema tiene varios bucles infinitos activos
+   a la vez (blobs de fondo, fondo con gradiente animado, logo con
+   pulse-glow, titulo con float-tilt, spin-3d del logo del header). Se
+   apagan todos de un golpe en vez de tener que tocar cada animacion una
+   por una en archivos distintos. Las animaciones de una sola pasada (fade,
+   slide, etc.) terminan casi instantaneas en vez de saltar de estado,
+   evitando que algo quede invisible a mitad de una transicion JS. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

@@ -210,25 +210,39 @@
 [data-theme="dark"] .glass-table tr:hover td .text-entrada,
 [data-theme="dark"] .modern-table tr:hover td .text-success-custom,
 [data-theme="dark"] .glass-table tr:hover td .text-success-custom {
-    color: #39A900 !important;
+    /* #39A900 fijo rondaba el limite (~4.4:1) sobre el hover de fila
+       oscuro; var(--primary-color) en oscuro (#4cd137) da mas margen. */
+    color: var(--primary-color) !important;
 }
 
 [data-theme="dark"] .modern-table tr:hover td .text-salida,
 [data-theme="dark"] .glass-table tr:hover td .text-salida,
 [data-theme="dark"] .modern-table tr:hover td .text-danger-custom,
 [data-theme="dark"] .glass-table tr:hover td .text-danger-custom {
-    color: #c0392b !important;
+    /* #c0392b (pensado para fondo claro) caia a 2.5:1 sobre el hover de
+       fila oscuro. var(--danger-color) en oscuro pasa 5.57:1/4.99:1. */
+    color: var(--danger-color) !important;
 }
 
 [data-theme="dark"] .modern-table tr:hover td .status-badge {
     color: white !important;
 }
 
-/* Status Utilities */
-.text-entrada, .text-success-custom { color: var(--success-color) !important; font-weight: 700; }
+/* Status Utilities
+   var(--success-color) es #39A900, que como texto plano (negrita, tamano
+   normal) da 3.07:1 sobre blanco: no llega a 4.5:1. Estas dos clases
+   marcan "Entrada"/"Salida" en tablas de acceso, asi que se usa la
+   variable pensada para texto pequeno en verde. */
+.text-entrada, .text-success-custom { color: var(--primary-text-color) !important; font-weight: 700; }
 .text-salida, .text-danger-custom { color: var(--danger-color) !important; font-weight: 700; }
-.bg-entrada { background-color: var(--success-color) !important; color: white !important; }
-.bg-salida { background-color: var(--danger-color) !important; color: white !important; }
+/* Igual con texto blanco sobre el verde solido de fondo: 3.07:1. #2d8500
+   pasa 4.70:1 y mantiene el mismo verde institucional. Para el rojo se usa
+   un tono fijo (no var(--danger-color): esa variable se aclara en modo
+   oscuro para servir como TEXTO sobre superficie oscura, y como FONDO con
+   texto blanco encima quedaria en 2.72:1). #a93226 sirve de fondo con
+   texto blanco en los dos temas: 6.62:1. */
+.bg-entrada { background-color: #2d8500 !important; color: white !important; }
+.bg-salida { background-color: #a93226 !important; color: white !important; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -237,7 +251,7 @@
 ::-webkit-scrollbar-thumb:hover { background: var(--glass-subtext); }
 
 .input-error {
-    border-color: #e74c3c !important;
+    border-color: var(--danger-color) !important;
     box-shadow: 0 0 10px rgba(231, 76, 60, 0.2) !important;
 }
 

@@ -28,6 +28,12 @@
     transform: scale(0.9);
 }
 
+.theme-switch:focus-visible,
+.floating-theme-switch:focus-visible {
+    outline: 3px solid #1565C0;
+    outline-offset: 2px;
+}
+
 /* Floating version for unauthenticated pages (Login/Register) */
 .floating-theme-switch {
     position: fixed;

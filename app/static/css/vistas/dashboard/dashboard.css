@@ -61,4 +61,7 @@
 
 .role-badge-aprendiz { background-color: #E8F5E9 !important; color: #2E7D32 !important; }
 .role-badge-instructor { background-color: #E3F2FD !important; color: #1565C0 !important; }
-.role-badge-trabajador { background-color: #FFF3E0 !important; color: #E65100 !important; }
+/* #E65100 sobre #FFF3E0 daba 3.46:1 en texto de badge (pequeno y en
+   negrita, pero por debajo del umbral de "texto grande"). #B34700 pasa
+   5.02:1. */
+.role-badge-trabajador { background-color: #FFF3E0 !important; color: #B34700 !important; }

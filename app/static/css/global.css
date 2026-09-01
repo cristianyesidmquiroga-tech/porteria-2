@@ -1,5 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+/* La tipografia Outfit ya no se trae de Google Fonts (ese @import quedo
+   muerto: la CSP del sitio bloquea ese dominio y el archivo se auto-alojo
+   en app/static/vendor/outfit.css, cargado directo en base.html). Se quita
+   el @import para no generar un error de CSP en cada carga de pagina. */
 
+/* NOTA: este archivo es el sistema de variables "glass" heredado y convive
+   cargado en paralelo con app/static/css/compartido/variables.css (via
+   control.css), que es el que manda para CSS nuevo - ver el comentario en
+   ese archivo. Los nombres no chocan (--primary vs --primary-color, etc.)
+   asi que ambos siguen funcionando, pero evitar anadir aqui variables de
+   color nuevas: van en compartido/variables.css. */
 :root {
     --primary: #2ecc71;
     --primary-dark: #27ae60;
@@ -257,8 +266,10 @@ body.with-sidebar .main-wrapper {
     color: transparent;
 }
 
+/* #f39c12/#e67e22 (2.19:1 / 2.85:1) no llegaban ni al minimo de 3:1 para
+   texto grande. Se oscurecen manteniendo el tono naranja. */
 .text-accent-orange {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
+    background: linear-gradient(135deg, #d35400, #c0630e);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -297,11 +308,18 @@ body.with-sidebar .main-wrapper {
     padding: 5px;
     transition: var(--transition);
     z-index: 5;
-    outline: none;
 }
 
 .password-toggle-btn:hover {
     color: var(--primary);
+}
+
+/* Este boton quitaba el foco (outline: none) sin poner nada en su lugar:
+   quien navega con teclado no podia saber si estaba seleccionado. */
+.password-toggle-btn:focus-visible {
+    outline: 3px solid #1565C0;
+    outline-offset: 2px;
+    border-radius: 6px;
 }
 
 [data-theme="dark"] .password-toggle-btn {
@@ -311,6 +329,9 @@ body.with-sidebar .main-wrapper {
 
 [data-theme="dark"] .password-toggle-btn:hover,
 [data-theme="dark"] .password-toggle-btn.active {
-    color: #39A900;
+    /* #39A900 puro cae a 4.42:1 en tramos del fondo animado oscuro
+       (auth-split, degradado en movimiento). var(--primary-color) en modo
+       oscuro (#4cd137) pasa 6.76-10:1 en todo el rango del degradado. */
+    color: var(--primary-color);
     text-shadow: 0 0 10px rgba(57, 169, 0, 0.5);
 }

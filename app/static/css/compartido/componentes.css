@@ -45,18 +45,40 @@
 .glass-card:hover { transform: translateY(-10px) rotateX(5deg) rotateY(1deg); box-shadow: 0 30px 60px rgba(0,0,0,0.12); }
 
 /* Basic Buttons */
+/* var(--primary-color) = #39A900 solido con texto blanco da 3.07:1: no
+   llega a 4.5:1. Se fija un verde mas oscuro solo para este boton en vez
+   de cambiar la variable global (la usan tambien iconos y bordes donde
+   #39A900 si es valido, por ser elementos grandes/no textuales). */
 .btn-primary {
-    background-color: var(--primary-color); color: var(--white);
+    background-color: #2d8500; color: var(--white);
     padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600;
     cursor: pointer; transition: background 0.3s;
 }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary:hover { background-color: #256a00; opacity: 1; }
 .btn-primary:active { transform: scale(0.98); }
+.btn-primary:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(21, 101, 192, 0.6);
+}
+.btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+}
 
-.btn-delete { color: #E74C3C; padding: 0.5rem; cursor: pointer; transition: transform 0.2s; }
+.btn-delete { color: #a93226; padding: 0.5rem; cursor: pointer; transition: transform 0.2s; }
 .btn-delete:hover { transform: scale(1.2); }
+.btn-delete:focus-visible { outline: 3px solid #1565C0; outline-offset: 2px; }
 
-/* Premium Glow Buttons */
+/* Premium Glow Buttons
+   OJO: .btn-glow tambien se define en botones.css con !important en
+   background/color/padding/border-radius; esas propiedades ganan siempre
+   sobre las de aqui (que no llevan !important), asi que el color real
+   renderizado es el de botones.css (ya corregido a AA). Las propiedades
+   que SI vienen de aqui son box-shadow y los detalles del :hover (esas no
+   estan en botones.css o no llevan !important). No se borra esta regla
+   para no romper esos estilos, pero es la razon de la duplicacion. */
 .btn-glow {
     background: linear-gradient(135deg, var(--primary-color), #4cd137);
     color: white; border: none; border-radius: 15px; padding: 14px 28px;

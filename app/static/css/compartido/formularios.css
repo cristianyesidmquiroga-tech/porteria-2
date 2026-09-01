@@ -63,7 +63,11 @@ textarea:focus {
 .floating-group textarea:not(:placeholder-shown) ~ label {
     top: 0.45rem; /* Un poco más abajo para que no se pegue al borde */
     font-size: 0.75rem;
-    color: #39A900 !important; /* Verde SENA vibrante */
+    /* #39A900 sobre el fondo verde pastel de foco (#f1fcf1) daba 2.91:1.
+       #256a00 pasa 6.35:1 ahi y 6.69:1 sobre blanco (estado flotando sin
+       foco). En oscuro se corrige aparte mas abajo: ese mismo verde
+       oscuro seria casi invisible sobre el input oscuro. */
+    color: #256a00 !important;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -102,8 +106,15 @@ input[type="file"] {
     transform: scaleX(1);
 }
 
-/* Placeholder invisible para que funcione :placeholder-shown */
-::placeholder {
+/* Placeholder invisible SOLO dentro de .floating-group: ahi el placeholder
+   se usa como truco tecnico para detectar :placeholder-shown y mover la
+   etiqueta flotante, el texto de ayuda real vive en la <label>. Antes esta
+   regla era global (::placeholder) y borraba tambien los placeholders con
+   texto de ayuda genuino en formularios sin etiqueta flotante (buscadores,
+   filtros, etc.), dejandolos vacios sin explicacion. */
+.floating-group input::placeholder,
+.floating-group select::placeholder,
+.floating-group textarea::placeholder {
     color: transparent !important;
 }
 
@@ -135,7 +146,9 @@ input[type="file"] {
 .file-input-button:hover {
     background: rgba(57, 169, 0, 0.1) !important;
     border-color: #39A900 !important;
-    color: #39A900 !important;
+    /* #39A900 como texto de boton da 3.07:1. var(--primary-text-color)
+       pasa 6.69:1 en claro y ya resuelve el oscuro por su cuenta. */
+    color: var(--primary-text-color) !important;
 }
 
 /* 8. Checkboxes Customizados */
@@ -220,14 +233,27 @@ input[type="file"] {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="dark"] .floating-group input:focus, 
-[data-theme="dark"] .floating-group select:focus, 
+[data-theme="dark"] .floating-group input:focus,
+[data-theme="dark"] .floating-group select:focus,
 [data-theme="dark"] .floating-group textarea:focus,
-[data-theme="dark"] input:focus, 
-[data-theme="dark"] select:focus, 
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
 [data-theme="dark"] textarea:focus {
     background: rgba(255, 255, 255, 0.12) !important; /* Fondo oscuro y sutil */
     color: #ffffff !important; /* Texto blanco asegurado */
     border-color: #39A900 !important;
     box-shadow: 0 0 15px rgba(57, 169, 0, 0.3);
+}
+
+/* La etiqueta flotante activa usa #256a00 (pensado para fondo claro). Sobre
+   el input oscuro eso seria casi invisible, asi que en modo oscuro se
+   mantiene el verde claro que ya usa el resto del sistema en modo oscuro
+   (var(--primary-color) = #4cd137 aqui): 6.78:1 sobre el input enfocado. */
+[data-theme="dark"] .floating-group input:focus ~ label,
+[data-theme="dark"] .floating-group input:not(:placeholder-shown) ~ label,
+[data-theme="dark"] .floating-group select:focus ~ label,
+[data-theme="dark"] .floating-group select:not([value=""]) ~ label,
+[data-theme="dark"] .floating-group textarea:focus ~ label,
+[data-theme="dark"] .floating-group textarea:not(:placeholder-shown) ~ label {
+    color: var(--primary-color) !important;
 }
