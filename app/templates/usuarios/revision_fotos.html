@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Revisión de fotos{% endblock %}
+
+{% block content %}
+<style>
+    /* Sin .glass-btn: esa clase impone el verde del SENA con !important y
+       dejaba "Rechazar" idéntico a "Aprobar". */
+    /* Las tarjetas se estiran a la altura de la más alta de su fila, y el
+       bloque de datos crece: así los botones quedan siempre abajo y alineados
+       entre tarjetas, tenga esa persona ficha y programa o no. */
+    .rejilla-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+                     gap: 1.25rem; align-items: stretch; }
+    .tarjeta-foto { display: flex; flex-direction: column; gap: 0.9rem; height: 100%; }
+    /* La foto NO se encoge: siendo un elemento flex, el navegador la aplastaba
+       para hacer caber la tarjeta más corta, y las dos fotos quedaban de
+       tamaños distintos. El espacio sobrante lo absorbe el bloque de datos. */
+    .foto-persona { flex: 0 0 auto; width: 100%; aspect-ratio: 1;
+                    object-fit: cover; border-radius: 12px;
+                    background: rgba(0,0,0,0.05); }
+    .datos-persona { flex: 1 1 auto; }
+    .acciones-foto { display: flex; gap: 0.55rem; margin-top: auto; }
+
+    .btn-revision {
+        flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center;
+        gap: 6px; padding: 0 0.8rem; height: 44px; box-sizing: border-box;
+        border: none; border-radius: 10px; white-space: nowrap;
+        font-weight: 700; font-size: 0.9rem; cursor: pointer; color: #fff;
+        transition: filter .2s, transform .1s;
+    }
+    /* Ancho completo y misma altura que los de arriba, en todas las tarjetas. */
+    .btn-mensaje { width: 100%; flex: none; }
+    .btn-revision:hover { filter: brightness(1.08); }
+    .btn-revision:active { transform: translateY(1px); }
+    .btn-revision:focus-visible { outline: 3px solid #1565C0; outline-offset: 2px; }
+    .btn-revision:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-aprobar  { background: #2E7D32; }
+    .btn-rechazar { background: #C62828; }
+    .btn-mensaje  { background: #1565C0; }
+</style>
+<div class="glass-card animate-on-scroll" style="padding: 1.75rem; border-radius: 16px; margin-bottom: 1.5rem;">
+    <h1 class="text-3d" style="margin: 0 0 0.5rem 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-user-check" style="color: #39A900;" aria-hidden="true"></i>
+        Revisión de fotos de perfil
+    </h1>
+    <p style="margin: 0; color: var(--text-muted); font-size: 0.92rem; line-height: 1.6;">
+        El sistema ya comprobó que estas fotos son utilizables: un solo rostro, nítidas
+        y con luz suficiente. Lo que ningún análisis puede confirmar es que la persona
+        de la foto sea quien dice ser — eso lo decides tú aquí.
+        <strong>Hasta que apruebes la foto, esa persona no tiene carnet digital activo.</strong>
+    </p>
+</div>
+
+<div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+    {% for clave, etiqueta in [('pendiente', 'Pendientes'), ('aprobada', 'Aprobadas'),
+                               ('rechazada', 'Rechazadas'), ('todos', 'Todas')] %}
+    {# Sin la clase .glass-btn a propósito: usa !important en ancho y relleno,
+       y estos filtros deben ser fichas pequeñas en línea, no botones de bloque. #}
+    <a href="{{ url_for('usuarios.revision_fotos', estado=clave) }}"
+       style="display: inline-flex; align-items: center; flex: 0 0 auto;
+              padding: 0.45rem 1rem; font-size: 0.87rem; font-weight: 600;
+              border-radius: 999px; text-decoration: none;
+              border: 1px solid {% if filtro == clave %}#39A900{% else %}var(--glass-border, rgba(0,0,0,.14)){% endif %};
+              background: {% if filtro == clave %}#39A900{% else %}transparent{% endif %};
+              color: {% if filtro == clave %}#fff{% else %}var(--text-main){% endif %};">
+        {{ etiqueta }}{% if clave == 'pendiente' %}&nbsp;<span id="contador-pendientes">{% if pendientes %}({{ pendientes }}){% endif %}</span>{% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+{% if not usuarios %}
+<div class="glass-card" style="padding: 3rem 2rem; text-align: center; border-radius: 16px;">
+    <i class="fas fa-check-circle" style="font-size: 3rem; color: #39A900; opacity: 0.5;" aria-hidden="true"></i>
+    <h2 style="margin: 1.25rem 0 0.5rem 0; font-size: 1.15rem;">No hay fotos en esta lista</h2>
+    <p style="color: var(--text-muted); margin: 0;">
+        {% if filtro == 'pendiente' %}Todas las fotos han sido revisadas.{% else %}Nada que mostrar con este filtro.{% endif %}
+    </p>
+</div>
+{% else %}
+<div class="rejilla-fotos">
+    {% for usuario in usuarios %}
+    <div class="glass-card tarjeta-foto" id="tarjeta-{{ usuario.id }}"
+         style="padding: 1.25rem; border-radius: 16px;">
+
+        <img src="{{ url_for('static', filename=usuario.ruta_foto) }}"
+             alt="Foto de perfil de {{ usuario.nombre }}"
+             class="foto-persona" loading="lazy" decoding="async" width="260" height="260"
+             data-respaldo="{{ url_for('static', filename=usuario.avatar_cargo) }}">
+
+        <div class="datos-persona">
+            <p style="margin: 0; font-weight: 700; font-size: 1rem;">{{ usuario.nombre }}</p>
+            <p style="margin: 0.2rem 0 0 0; font-size: 0.84rem; color: var(--text-muted);">
+                {{ usuario.cargo or 'Sin cargo' }} · Doc. {{ usuario.documento or 'N/A' }}
+            </p>
+            {% if usuario.ficha %}
+            <p style="margin: 0.15rem 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                Ficha {{ usuario.ficha }}{% if usuario.programa %} · {{ usuario.programa }}{% endif %}
+            </p>
+            {% endif %}
+            <p style="margin: 0.15rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); word-break: break-all;">
+                {{ usuario.correo }}
+            </p>
+        </div>
+
+        {% if usuario.foto_estado == 'pendiente' %}
+        <div class="acciones-foto">
+            <button type="button" class="btn-revision btn-aprobar" data-id="{{ usuario.id }}">
+                <i class="fas fa-check" aria-hidden="true"></i> Aprobar
+            </button>
+            <button type="button" class="btn-revision btn-rechazar" data-id="{{ usuario.id }}"
+                    data-nombre="{{ usuario.nombre }}">
+                <i class="fas fa-xmark" aria-hidden="true"></i> Rechazar
+            </button>
+        </div>
+        {# A veces no es aprobar ni rechazar: la persona necesita que le
+           expliquen algo antes de volver a intentarlo. #}
+        <a href="{{ url_for('usuarios.admin_hilo', id=usuario.id) }}"
+           class="btn-revision btn-mensaje" style="text-decoration: none;">
+            <i class="fas fa-comment-dots" aria-hidden="true"></i> Escribirle
+        </a>
+        {% else %}
+        <div style="font-size: 0.84rem; padding: 0.6rem 0.8rem; border-radius: 9px;
+                    background: {% if usuario.foto_estado == 'aprobada' %}rgba(57,169,0,0.1){% else %}rgba(231,76,60,0.1){% endif %};">
+            <strong>{{ usuario.etiqueta_estado_foto }}</strong>
+            {% if usuario.foto_fecha_revision %}
+            <span style="color: var(--text-muted);"> · {{ usuario.foto_fecha_revision.strftime('%d/%m/%Y %I:%M %p') }}</span>
+            {% endif %}
+            {% if usuario.foto_motivo %}
+            <p style="margin: 0.4rem 0 0 0; color: var(--text-muted);">{{ usuario.foto_motivo }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Diálogo de rechazo: exige un motivo, porque sin él la persona no sabe qué corregir -->
+<div id="modal-rechazo" class="confirm-modal-overlay" style="display: none;" role="dialog"
+     aria-modal="true" aria-labelledby="titulo-rechazo">
+    <div class="confirm-modal-card glass-card" style="max-width: 520px;">
+        <div class="confirm-modal-header">
+            <h3 id="titulo-rechazo" class="text-3d">Rechazar la foto</h3>
+        </div>
+        <div class="confirm-modal-body" style="text-align: left;">
+            <p id="rechazo-persona" style="margin: 0 0 1rem 0; color: var(--text-muted);"></p>
+            <label for="motivo-rechazo" style="display: block; font-size: 0.86rem; font-weight: 600; margin-bottom: 0.4rem;">
+                Motivo (se le enviará por correo)
+            </label>
+            <select id="motivos-frecuentes" style="width: 100%; padding: 0.6rem; margin-bottom: 0.6rem; border-radius: 8px;">
+                <option value="">— Motivos frecuentes —</option>
+                {% for motivo in motivos %}<option value="{{ motivo }}">{{ motivo }}</option>{% endfor %}
+            </select>
+            <textarea id="motivo-rechazo" rows="3" required
+                      style="width: 100%; padding: 0.6rem; border-radius: 8px; resize: vertical;"
+                      placeholder="Explica qué debe corregir"></textarea>
+        </div>
+        <div class="confirm-modal-actions">
+            <button type="button" id="rechazo-cancelar" class="glass-btn btn-cancel">Cancelar</button>
+            <button type="button" id="rechazo-confirmar" class="glass-btn btn-danger-action">
+                Rechazar y avisar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/revision-fotos.js') }}"
+        data-csrf="{{ csrf_token() }}"></script>
+{% endblock %}
