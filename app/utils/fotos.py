@@ -46,6 +46,11 @@ def _mover_las_antiguas(destino):
     global _migracion_hecha
     if _migracion_hecha:
         return
+    # Nunca durante las pruebas: mueve archivos de verdad, y con una carpeta
+    # de destino temporal se llevaria por delante las fotos reales de la
+    # maquina de desarrollo. Ya paso una vez.
+    if current_app.config.get('TESTING'):
+        return
     _migracion_hecha = True
 
     origen = os.path.join(current_app.root_path, *_CARPETA_ANTIGUA)

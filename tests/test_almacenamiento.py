@@ -390,8 +390,36 @@ class TestRespaldoMensual:
             filas = list(wb['Historial Accesos'].iter_rows(min_row=2, values_only=True))
             assert len(filas) == 1, 'solo el acceso del usuario va en esa hoja'
 
-            # Todo lo archivado se purga: no debe quedar nada del mes anterior.
-            assert Acceso.query.filter(Acceso.fecha < get_colombia_time().replace(day=1)).count() == 0
+            # Por defecto se archiva SIN borrar: no hay forma de restaurar un
+            # .xlsx a la base, y el historial alimenta los calculos de
+            # asistencia con los que se decide sobre personas.
+            assert Acceso.query.filter(
+                Acceso.fecha < get_colombia_time().replace(day=1)).count() == 2, (
+                'el respaldo no debe borrar datos salvo que se pida a proposito')
+
+    def test_solo_borra_si_se_pide_a_proposito(self, app, db, crear_usuario,
+                                               tmp_path, monkeypatch):
+        from datetime import timedelta
+
+        from app.utils import get_colombia_time, respaldos
+
+        usuario = crear_usuario(correo='beto@sena.edu.co', documento='543210')
+        mes_pasado = get_colombia_time().replace(day=1) - timedelta(days=5)
+        db.session.add(Acceso(punto_id=1, referencia_id=usuario.id,
+                              tipo_referencia='Usuario', tipo='Entrada',
+                              fecha=mes_pasado))
+        db.session.commit()
+
+        ultimo_dia = get_colombia_time().replace(day=1) - timedelta(days=1)
+        ruta = os.path.join(app.root_path, 'respaldos_mensuales',
+                            f"Respaldo_Sistema_{ultimo_dia.strftime('%Y-%m')}.xlsx")
+
+        monkeypatch.setattr(respaldos, 'PURGAR_TRAS_RESPALDO', True)
+        with proteger_archivo_real(ruta, tmp_path):
+            respaldos.ejecutar_respaldo_mensual()
+            assert os.path.isfile(ruta)
+            assert Acceso.query.filter(
+                Acceso.fecha < get_colombia_time().replace(day=1)).count() == 0
 
 
 @pytest.mark.skipif(not HAY_OPENCV, reason="opencv no está instalado")
