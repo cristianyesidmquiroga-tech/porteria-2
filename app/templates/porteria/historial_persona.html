@@ -114,9 +114,22 @@
     </p>
     {% endif %}
 
+    {% if truncado %}
+    <p style="max-width:980px; margin:1.5rem auto 0; color: var(--accent); text-align:center;">
+        <i class="fas fa-triangle-exclamation"></i>
+        La consulta superó el volumen que se puede procesar de una vez.
+        {{ omitidas|length }} persona{{ 's' if omitidas|length != 1 }} quedaron sin analizar
+        ({{ omitidas|map(attribute='nombre')|join(', ') }}). Acorta el periodo o filtra por menos gente.
+    </p>
+    {% endif %}
+
     <p style="max-width:980px; margin:1.5rem auto .5rem; color: var(--glass-subtext); text-align:center;">
         Periodo consultado: <strong>{{ filtros.fecha_inicio }}</strong> a <strong>{{ filtros.fecha_fin }}</strong>
         — {{ datos|length }} persona{{ 's' if datos|length != 1 }}.
+        {% if filtros.rango_recortado %}
+        <br><i class="fas fa-triangle-exclamation"></i>
+        El rango se limitó a {{ maximo_dias_rango }} días para no tumbar el servidor; consulta por tramos si necesitas más.
+        {% endif %}
     </p>
 
     {% for bloque in datos %}
@@ -150,12 +163,28 @@
                 <small style="color: var(--glass-subtext);">Días sin registro (de {{ r.total_dias_esperados }})</small>
             </div>
             <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
-                <div style="font-size:1.6rem; font-weight:700; color:var(--secondary);">{{ r.porcentaje_asistencia }}%</div>
-                <small style="color: var(--glass-subtext);">Asistencia</small>
+                <div style="font-size:1.6rem; font-weight:700; color:var(--secondary);">
+                    {%- if r.porcentaje_asistencia is none -%}—{%- else -%}{{ r.porcentaje_asistencia }}%{%- endif -%}
+                </div>
+                <small style="color: var(--glass-subtext);">
+                    {% if r.porcentaje_asistencia is none %}Sin días exigibles en el periodo{% else %}Asistencia{% endif %}
+                </small>
             </div>
             <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
                 <div style="font-size:1.6rem; font-weight:700;">{{ r.dia_mas_faltado or '—' }}</div>
-                <small style="color: var(--glass-subtext);">Día que más falta</small>
+                <small style="color: var(--glass-subtext);">
+                    {% if r.dia_mas_faltado %}
+                    Día que más falta
+                    ({{ r.detalle_dias_semana[r.dia_mas_faltado].faltas }} de
+                    {{ r.detalle_dias_semana[r.dia_mas_faltado].oportunidades }})
+                    {% elif r.motivo_sin_dia_mas_faltado == 'empate' %}
+                    Sin día destacado: empatan {{ r.dias_mas_faltados_empatados|join(', ') }}
+                    {% elif r.motivo_sin_dia_mas_faltado == 'sin_faltas' %}
+                    Sin faltas en el periodo evaluado
+                    {% else %}
+                    Periodo demasiado corto para afirmar un patrón
+                    {% endif %}
+                </small>
             </div>
             <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
                 <div style="font-size:1.6rem; font-weight:700;">{{ permanencia(r.promedio_permanencia_minutos) }}</div>
@@ -163,10 +192,40 @@
             </div>
         </div>
 
+        <!-- Por que el periodo evaluado puede no ser el que se pidio: nadie
+             falta antes de estar vinculado ni despues de terminar su ficha. -->
+        <p style="color: var(--glass-subtext); margin-bottom:1rem;">
+            <i class="fas fa-calendar-day"></i>
+            {% if r.periodo_evaluado_inicio %}
+            Periodo evaluado para esta persona:
+            <strong>{{ r.periodo_evaluado_inicio.strftime('%d/%m/%Y') }}</strong> a
+            <strong>{{ r.periodo_evaluado_fin.strftime('%d/%m/%Y') }}</strong>.
+            {% else %}
+            No hay días exigibles para esta persona dentro del rango consultado.
+            {% endif %}
+            {% if 'vinculacion' in r.motivos_ventana %}
+            Empieza en su primer ingreso registrado: antes de esa fecha no se le cuentan faltas.
+            {% endif %}
+            {% if 'fin_de_ficha' in r.motivos_ventana %}
+            Termina con la fecha de finalización de su ficha.
+            {% endif %}
+            {% if 'sin_referencia_de_vinculacion' in r.motivos_ventana %}
+            Sin ningún ingreso registrado: no se pudo acotar a su fecha de vinculación real.
+            {% endif %}
+        </p>
+
+        {% if r.total_dias_fuera_de_computo %}
+        <p style="color: var(--glass-subtext); margin-bottom:1rem;">
+            <i class="fas fa-calendar-plus"></i>
+            Asistió además {{ r.total_dias_fuera_de_computo }} día{{ 's' if r.total_dias_fuera_de_computo != 1 }}
+            fuera del calendario evaluado (por ejemplo fin de semana). No entran en el porcentaje.
+        </p>
+        {% endif %}
+
         {% if r.faltas_por_dia_semana %}
         <p style="color: var(--glass-subtext); margin-bottom:1rem;">
             <i class="fas fa-calendar-xmark"></i> Faltas por día:
-            {% for dia, total in r.faltas_por_dia_semana.items() %}{{ dia }} ({{ total }}){% if not loop.last %} · {% endif %}{% endfor %}
+            {% for dia, detalle in r.detalle_dias_semana.items() if detalle.faltas %}{{ dia }} ({{ detalle.faltas }} de {{ detalle.oportunidades }}){% if not loop.last %} · {% endif %}{% endfor %}
         </p>
         {% endif %}
 
@@ -174,6 +233,13 @@
         <p style="color: var(--accent); margin-bottom:1rem;">
             <i class="fas fa-circle-exclamation"></i>
             {{ r.sin_salida }} movimiento{{ 's' if r.sin_salida != 1 }} sin salida registrada.
+        </p>
+        {% endif %}
+
+        {% if r.abiertos %}
+        <p style="color: var(--glass-subtext); margin-bottom:1rem;">
+            <i class="fas fa-door-open"></i>
+            {{ r.abiertos }} ingreso{{ 's' if r.abiertos != 1 }} todavía abierto{{ 's' if r.abiertos != 1 }}: la persona figura dentro de la sede.
         </p>
         {% endif %}
 
@@ -196,12 +262,24 @@
                 <tbody>
                     {% for m in bloque.movimientos_listados|reverse %}
                     <tr>
-                        <td>{{ m.fecha.strftime('%d/%m/%Y') }}</td>
-                        <td class="text-entrada">{{ hora(m.entrada) }}</td>
+                        <td>
+                            {{ m.dias[0].strftime('%d/%m/%Y') }}
+                            {% if m.dias|length > 1 %}
+                            <br><small style="opacity:.75;">al {{ m.dias[-1].strftime('%d/%m/%Y') }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-entrada">
+                            {{ hora(m.entrada) }}
+                            {% if m.entrada_fuera_de_ventana %}
+                            <br><small style="opacity:.75;">entrada anterior al periodo</small>
+                            {% endif %}
+                        </td>
                         <td class="text-salida">
                             {{ hora(m.salida) }}
                             {% if m.cierre_automatico %}
                             <br><small style="opacity:.75;">cierre automático</small>
+                            {% elif m.abierto %}
+                            <br><small style="opacity:.75;">todavía adentro</small>
                             {% elif not m.salida %}
                             <br><small style="opacity:.75;">sin salida</small>
                             {% endif %}
