@@ -113,3 +113,72 @@ html[data-theme="dark"] .glass-footer-link:hover {
 .glass-footer-link:active {
     color: var(--primary-color) !important;
 }
+
+/* ==========================================================================
+   Correcciones de contraste y de acciones destructivas
+   ========================================================================== */
+
+/* La clase .glass-btn impone el verde del SENA con !important, y en los modales
+   de confirmacion dejaba "Si, Eliminar" IDENTICO a "No, Cancelar". Borrar un
+   usuario es irreversible: los dos botones tienen que distinguirse a simple
+   vista. Se gana con mayor especificidad ademas de !important, porque
+   botones.css tambien usa !important. */
+.confirm-modal-actions .btn-danger-action,
+.confirm-modal-actions .glass-btn.btn-danger-action {
+    background: #C62828 !important;
+    color: #ffffff !important;
+}
+
+.confirm-modal-actions .btn-danger-action:hover,
+.confirm-modal-actions .glass-btn.btn-danger-action:hover {
+    background: #B71C1C !important;
+}
+
+.confirm-modal-actions .btn-cancel,
+.confirm-modal-actions .glass-btn.btn-cancel {
+    background: transparent !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.18)) !important;
+}
+
+.confirm-modal-actions .btn-cancel:hover,
+.confirm-modal-actions .glass-btn.btn-cancel:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.confirm-modal-actions .btn-danger-action:focus-visible,
+.confirm-modal-actions .btn-cancel:focus-visible {
+    outline: 3px solid #1565C0 !important;
+    outline-offset: 2px;
+}
+
+/* Las clases .badge* se usan en la tabla de gestion de perfiles pero no tenian
+   ninguna regla en todo el proyecto: "Verificado", "Pendiente" y "Bloqueado" se
+   veian como texto plano identico. Un admin revisando decenas de cuentas no
+   podia distinguir el estado de un vistazo. Todos los colores usados aqui
+   superan 4.5:1 sobre texto blanco (WCAG AA). */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+    color: #ffffff;
+    background: #546E7A;
+}
+
+.badge-success { background: #2E7D32; }   /* 5.13:1 */
+.badge-warning { background: #B45309; }   /* 4.79:1 - ambar oscuro, el claro no llega */
+.badge-danger  { background: #C62828; }   /* 5.87:1 */
+.badge-info    { background: #1565C0; }   /* 5.78:1 */
+.badge-primary { background: #00695C; }   /* 5.62:1 */
+
+/* En tema oscuro se aclaran un punto para no perder contraste contra el fondo
+   de la fila, manteniendo el texto oscuro encima. */
+[data-theme="dark"] .badge-success { background: #66BB6A; color: #10240f; }
+[data-theme="dark"] .badge-warning { background: #FFB74D; color: #2b1a00; }
+[data-theme="dark"] .badge-danger  { background: #EF5350; color: #2a0a0a; }
+[data-theme="dark"] .badge-info    { background: #64B5F6; color: #06203a; }
+[data-theme="dark"] .badge-primary { background: #4DB6AC; color: #06231f; }

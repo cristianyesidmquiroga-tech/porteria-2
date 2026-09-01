@@ -318,23 +318,44 @@ window.customConfirm = function(title, message, confirmText = 'Si, Eliminar') {
         modal.style.display = 'flex';
         modal.classList.add('active');
 
-        // Cerrar si se presiona Escape
-        const escHandler = (e) => {
-            if (e.key === 'Escape') cancelHandler();
-        };
-        window.addEventListener('keydown', escHandler);
+        // El modal tapa toda la pantalla, pero el foco del teclado se iba a los
+        // botones de detrás: quien navega con Tab podía activar algo que no ve.
+        // Se recuerda quién lo abrió para devolverle el foco al cerrar.
+        const focoPrevio = document.activeElement;
+        const focoables = [cancelBtn, okBtn];
+        cancelBtn.focus();  // arranca en la opción segura, no en la destructiva
 
-        const cancelHandler = () => {
-            window.removeEventListener('keydown', escHandler);
+        const teclaHandler = (e) => {
+            if (e.key === 'Escape') {
+                cancelHandler();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            // Ciclar solo entre los botones del modal, en los dos sentidos.
+            e.preventDefault();
+            const actual = focoables.indexOf(document.activeElement);
+            const salto = e.shiftKey ? -1 : 1;
+            const siguiente = (actual + salto + focoables.length) % focoables.length;
+            focoables[siguiente].focus();
+        };
+        window.addEventListener('keydown', teclaHandler);
+
+        const cerrar = () => {
+            window.removeEventListener('keydown', teclaHandler);
             modal.style.display = 'none';
             modal.classList.remove('active');
+            if (focoPrevio && typeof focoPrevio.focus === 'function') {
+                focoPrevio.focus();
+            }
+        };
+
+        const cancelHandler = () => {
+            cerrar();
             resolve(false);
         };
 
         const okHandler = () => {
-            window.removeEventListener('keydown', escHandler);
-            modal.style.display = 'none';
-            modal.classList.remove('active');
+            cerrar();
             resolve(true);
         };
 
@@ -342,3 +363,73 @@ window.customConfirm = function(title, message, confirmText = 'Si, Eliminar') {
         cancelBtn.onclick = cancelHandler;
     });
 };
+
+// 11. Respaldo de imagenes que no cargan (antes onerror inline).
+// La CSP ya no permite manejadores inline, asi que la foto de respaldo viaja
+// en data-respaldo y se engancha aqui. Este archivo se carga al final del
+// body, o sea que algunas imagenes pueden haber fallado ya: por eso ademas
+// del listener se revisa complete && !naturalWidth, que es como el navegador
+// delata una imagen que termino de intentarlo y quedo sin pixeles.
+function aplicarRespaldo(img) {
+    const respaldo = img.dataset.respaldo;
+    if (!respaldo) return;
+    // El corte del bucle compara contra la ruta de respaldo en vez de usar
+    // una bandera de un solo uso: la foto del escaner cambia en cada
+    // escaneo, y una bandera se gastaria en el primer fallo (el <img> nace
+    // con src vacio, que ya dispara error) dejando sin respaldo al resto.
+    if (img.getAttribute('src') === respaldo) return;
+    img.src = respaldo;
+}
+
+window.engancharRespaldoImagenes = function (raiz = document) {
+    raiz.querySelectorAll('img[data-respaldo]').forEach(img => {
+        if (img.dataset.respaldoEnganchado) return;
+        img.dataset.respaldoEnganchado = '1';
+        img.addEventListener('error', () => aplicarRespaldo(img));
+        if (img.complete && !img.naturalWidth) aplicarRespaldo(img);
+    });
+};
+
+engancharRespaldoImagenes();
+document.addEventListener('DOMContentLoaded', () => engancharRespaldoImagenes());
+
+// 12. Bfcache: al volver con el boton "Atras" despues de cerrar sesion el
+// navegador restauraria la pagina cacheada, con datos de una sesion ya muerta.
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) window.location.reload();
+});
+
+// 13. Comportamientos genericos que antes vivian como atributos inline.
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Campos que solo aceptan digitos (codigo de verificacion).
+    document.querySelectorAll('[data-solo-digitos]').forEach(campo => {
+        campo.addEventListener('input', () => {
+            campo.value = campo.value.replace(/[^0-9]/g, '');
+        });
+    });
+
+    // Menus desplegables del sidebar: el boton abre/cierra su contenedor.
+    document.querySelectorAll('[data-desplegable]').forEach(boton => {
+        boton.addEventListener('click', () => {
+            boton.parentElement.classList.toggle('open');
+        });
+    });
+
+    // Mostrar/ocultar contrasena. El id del campo viaja en el data-*.
+    document.querySelectorAll('[data-ver-clave]').forEach(boton => {
+        const campo = document.getElementById(boton.dataset.verClave);
+        if (!campo) return;
+        boton.addEventListener('click', () => {
+            const oculto = campo.type === 'password';
+            campo.type = oculto ? 'text' : 'password';
+            boton.classList.toggle('active', oculto);
+            boton.setAttribute('aria-label', oculto ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            const icono = boton.querySelector('i');
+            if (icono) {
+                icono.classList.toggle('fa-eye', !oculto);
+                icono.classList.toggle('fa-eye-slash', oculto);
+            }
+        });
+    });
+});

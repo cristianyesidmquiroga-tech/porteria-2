@@ -56,28 +56,46 @@
 @media (max-width: 1024px) {
     .menu-toggle { display: block; }
     .sidebar-close { display: block; }
-    .sidebar { 
-        left: -320px; 
-        background: rgba(15, 23, 42, 0.95) !important; 
+
+    /* Panel superpuesto en móvil/tablet: el fondo debe ser OPACO y seguir
+       el tema activo. Antes este bloque fijaba un navy oscuro
+       (rgba(15,23,42,.95)) sin condicionar por tema, y la corrección para
+       claro dependía del selector [data-theme="light"] — pero el switch de
+       tema (app/static/js/global.js) NUNCA escribe ese atributo: solo agrega
+       data-theme="dark" o lo quita por completo para volver a claro. Por
+       eso [data-theme="light"] jamás coincidía y el menú salía oscuro
+       también en modo claro por defecto (texto gris --text-muted sobre
+       fondo casi negro = contraste ilegible). Se usa var(--sidebar-bg),
+       que sí reacciona correctamente a [data-theme="dark"] (definida en
+       compartido/variables.css: #FFFFFF en claro, #1e272e en oscuro). */
+    .sidebar {
+        left: -320px;
+        background: var(--sidebar-bg) !important;
         backdrop-filter: blur(15px);
         width: 280px;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        box-shadow: 10px 0 30px rgba(0,0,0,0.25);
         top: 0;
         bottom: 0;
         border-radius: 0;
+        border-right: 1px solid rgba(0,0,0,0.1);
     }
     .sidebar.active { left: 0 !important; }
     .main-wrapper { margin-left: 0; padding: 20px; }
-    
-    [data-theme="light"] .sidebar {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border-right: 1px solid rgba(0,0,0,0.1);
+
+    /* En oscuro, sombra más marcada y borde claro sutil en vez del borde
+       oscuro pensado para el fondo blanco de arriba. */
+    [data-theme="dark"] .sidebar {
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        border-right: 1px solid rgba(255,255,255,0.08);
     }
-    
-    [data-theme="light"] .sidebar-close,
-    [data-theme="light"] .nav-link {
-        color: #444;
-    }
+
+    /* .sidebar-close usa var(--glass-text) por defecto (global.css), que ya
+       es reactiva al tema (#1e293b en claro, blanco en oscuro) — no hace
+       falta fijarla aquí. La regla [data-theme="light"] .nav-link se quitó
+       porque .nav-link no existe dentro del sidebar (los enlaces usan
+       .stagger-item, ver partials/_sidebar.html) y el selector nunca hacía
+       nada aparte de nunca coincidir.
+    */
 }
 
 /* Auth Responsive */
