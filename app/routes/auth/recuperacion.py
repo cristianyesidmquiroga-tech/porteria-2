@@ -3,6 +3,7 @@ from ... import db
 from ...models.usuarios import Usuario
 from ...utils import get_colombia_time
 from ...utils.security import comparar_codigo, validar_contrasena
+from ...utils.captcha import validar_formulario
 from . import bp
 from datetime import timedelta
 import logging
@@ -26,6 +27,17 @@ def recuperar_solicitar():
         return render_template('auth/recuperar_paso1.html')
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # Desafio anti-bot: este endpoint dispara un correo saliente por peticion,
+    # asi que es el otro candidato natural (junto al registro) a ser usado como
+    # maquina de spam contra buzones ajenos.
+    captcha_ok, error_captcha = validar_formulario()
+    if not captcha_ok:
+        if is_ajax:
+            return {"status": "error", "message": error_captcha}, 400
+        flash(error_captcha, 'danger')
+        return redirect(url_for('auth.recuperar_solicitar'))
+
     email = request.form.get('email', '').strip().lower()
     usuario = Usuario.query.filter_by(correo=email).first()
 

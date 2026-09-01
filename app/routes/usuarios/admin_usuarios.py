@@ -1,12 +1,16 @@
 from flask import render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
 from ...models.usuarios import Usuario, Rol, TurnoCelador
+from ...models.fichas import Ficha
 from ... import db
 from . import bp
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash
 import pandas as pd
 import io
+import secrets
+
+from app.models.usuarios import CARGOS_VALIDOS, ROLES_IMPORTABLES
 
 # Decorador o chequeo simple para asegurar admin
 def check_admin():
@@ -93,7 +97,11 @@ def api_crear_usuario():
             debe_cambiar_contrasena=es_usuario_normal
         )
         nuevo_usuario.set_password(data['contraseña'])
-        
+        # Si esa ficha ya esta registrada, el aprendiz hereda de una vez su
+        # programa y su fecha de finalizacion en lugar de quedarse con el
+        # numero suelto.
+        Ficha.enlazar_por_numero(nuevo_usuario, data.get('ficha'))
+
         db.session.add(nuevo_usuario)
         db.session.flush() # Para obtener el ID
 
@@ -204,7 +212,9 @@ def api_editar_usuario(id):
             usuario.documento = nuevo_documento
         if 'cargo' in data: usuario.cargo = data['cargo']
         if 'rol_id' in data: usuario.rol_id = int(data['rol_id'])
-        if 'ficha' in data: usuario.ficha = data['ficha']
+        if 'ficha' in data:
+            usuario.ficha = data['ficha']
+            Ficha.enlazar_por_numero(usuario, data['ficha'])
         if 'programa' in data: usuario.programa = data['programa']
         if 'horario' in data: usuario.horario = data['horario']
         
@@ -357,12 +367,31 @@ def api_importar_usuarios_excel():
             nombre = str(row.get('Nombre', '')).strip()
             correo = str(row.get('Correo', '')).strip().lower()
             documento = str(row.get('Documento', '')).strip() if pd.notnull(row.get('Documento')) else None
-            cargo = str(row.get('Cargo', '')).strip() if pd.notnull(row.get('Cargo')) else 'Aprendiz'
-            rol_nombre = str(row.get('Rol', '')).strip().lower() if pd.notnull(row.get('Rol')) else 'usuario'
+            # El cargo gobierna permisos (porteria, asesoria, asistencia) y el
+            # rol da acceso total. Tomarlos tal cual del Excel significa que quien
+            # PREPARA la hoja decide quien es administrador, sin que el admin que
+            # la sube se entere. Ambos pasan por lista blanca.
+            cargo_hoja = str(row.get('Cargo', '')).strip() if pd.notnull(row.get('Cargo')) else ''
+            cargo = cargo_hoja if cargo_hoja in CARGOS_VALIDOS else 'Aprendiz'
+            if cargo_hoja and cargo_hoja not in CARGOS_VALIDOS:
+                errores.append(f"Fila {index + 2}: cargo '{cargo_hoja}' no valido, "
+                               f"se asigno Aprendiz.")
+
+            rol_hoja = str(row.get('Rol', '')).strip().lower() if pd.notnull(row.get('Rol')) else ''
+            # 'Admin' NUNCA se concede desde una importacion masiva.
+            rol_nombre = rol_hoja if rol_hoja in ROLES_IMPORTABLES else 'usuario'
+            if rol_hoja and rol_hoja not in ROLES_IMPORTABLES:
+                errores.append(f"Fila {index + 2}: rol '{rol_hoja}' no permitido en "
+                               f"importacion, se asigno Usuario.")
             ficha = str(row.get('Ficha', '')).strip() if pd.notnull(row.get('Ficha')) else None
             programa = str(row.get('Programa', '')).strip() if pd.notnull(row.get('Programa')) else None
             horario = str(row.get('Horario', '')).strip() if pd.notnull(row.get('Horario')) else None
-            password = str(row.get('Contraseña', 'Sena2024*')).strip()
+            # Una contrasena por defecto escrita en el codigo permite entrar a
+            # cualquier cuenta importada antes de que su dueno la use por primera
+            # vez. Cada fila recibe una temporal aleatoria distinta.
+            password_hoja = (str(row.get('Contraseña')).strip()
+                             if pd.notnull(row.get('Contraseña')) else '')
+            password = password_hoja or secrets.token_urlsafe(12)
 
             if not nombre or not correo:
                 usuarios_omitidos += 1
@@ -392,6 +421,7 @@ def api_importar_usuarios_excel():
                     debe_cambiar_contrasena=True
                 )
                 nuevo_usuario.set_password(password)
+                Ficha.enlazar_por_numero(nuevo_usuario, ficha)
                 db.session.add(nuevo_usuario)
                 db.session.flush() # Para obtener ID si es necesario
 
@@ -447,8 +477,22 @@ def api_importar_usuarios_excel():
             except Exception as e:
                 errores.append(f"Fila {index+2}: {str(e)}")
 
+        # El alta individual sí se auditaba; la masiva no dejaba ningún rastro,
+        # justo donde se asignan roles y cargos a mucha gente de una vez.
+        from app.models.accesos import Auditoria
+        db.session.add(Auditoria(
+            usuario_id=current_user.id,
+            nombre_usuario=current_user.nombre,
+            tabla_afectada='usuarios',
+            registro_id=0,
+            accion='Importación masiva de usuarios',
+            autorizado_por=current_user.nombre,
+            motivo='Carga de usuarios desde archivo Excel',
+            detalles=(f"Archivo: {file.filename}. Creados: {usuarios_creados}, "
+                      f"omitidos: {usuarios_omitidos}, avisos: {len(errores)}."),
+        ))
         db.session.commit()
-        
+
         msg = f"Importación finalizada. Creados: {usuarios_creados}, Omitidos: {usuarios_omitidos}."
         if errores:
             msg += f" Errores: {len(errores)}"

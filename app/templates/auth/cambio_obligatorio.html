@@ -14,14 +14,26 @@
         <form method="POST" action="{{ url_for('auth.cambiar_password_obligatorio') }}" class="floating-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
+            {# Se pide la actual a propósito: sin esto, quien conociera la
+               contraseña temporal podía apropiarse de la cuenta antes de que su
+               dueño entrara por primera vez. #}
             <div class="floating-group">
-                <input type="password" id="nueva_contrasena" name="nueva_contrasena" required placeholder=" " minlength="6">
+                <input type="password" id="contrasena_actual" name="contrasena_actual"
+                       required placeholder=" " autocomplete="current-password">
+                <label for="contrasena_actual"><i class="fas fa-lock"></i> Contraseña Actual (la temporal)</label>
+                <div class="floating-border"></div>
+            </div>
+
+            <div class="floating-group">
+                <input type="password" id="nueva_contrasena" name="nueva_contrasena" required placeholder=" "
+                       minlength="8" autocomplete="new-password">
                 <label for="nueva_contrasena"><i class="fas fa-key"></i> Nueva Contraseña</label>
                 <div class="floating-border"></div>
             </div>
 
             <div class="floating-group" style="margin-top: 1.5rem;">
-                <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" required placeholder=" " minlength="6">
+                <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" required placeholder=" "
+                       minlength="8" autocomplete="new-password">
                 <label for="confirmar_contrasena"><i class="fas fa-check-double"></i> Confirmar Contraseña</label>
                 <div class="floating-border"></div>
             </div>
@@ -46,7 +58,7 @@
             <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid var(--secondary-color);">
                 <h4 style="margin: 0 0 5px 0;"><i class="fas fa-id-card"></i> 1. Completar tu Perfil (¡Obligatorio!)</h4>
                 <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
-                    Una vez cambies tu contraseña, irás al menú <strong>Mi Perfil</strong>. Debes rellenar todos tus datos (Foto, Tipo de Sangre, Documento, etc.). Solo así se generará tu <strong>Código QR</strong> personal que usarás en portería.
+                    Una vez cambies tu contraseña, irás al menú <strong>Mi Perfil</strong>. Debes rellenar todos tus datos (Foto, Tipo de Sangre, Documento, etc.). Solo así se generará tu <strong>Código de barras</strong> personal que usarás en portería.
                 </p>
             </div>
 
@@ -65,7 +77,7 @@
                 </p>
                 <ul style="font-size: 0.8rem; color: var(--text-muted); margin: 5px 0 0 0; padding-left: 20px;">
                     {% if current_user.puede_operar_porteria %}
-                    <li><strong>Escaner Portería:</strong> Para leer los QR de las personas y equipos al ingresar o salir.</li>
+                    <li><strong>Escaner Portería:</strong> Para leer los códigos de barras de las personas y equipos al ingresar o salir.</li>
                     {% endif %}
                     {% if current_user.puede_gestionar_asistencia %}
                     <li><strong>Asistencia:</strong> Para gestionar o revisar las asistencias dentro de la institución.</li>

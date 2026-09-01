@@ -7,6 +7,8 @@ import string
 import re
 from datetime import datetime, timedelta
 from ...utils.security import sanitize_html, validar_contrasena, correo_permitido
+from ...utils.captcha import validar_formulario
+from ...utils.documentos import validar_documento
 from ...utils import get_colombia_time
 from flask import current_app
 import logging
@@ -31,7 +33,14 @@ def register():
         
         correo = (sanitize_html(request.form.get('correo')) or '').lower().strip()
         documento_raw = (sanitize_html(request.form.get('documento')) or '').strip()
-        documento = documento_raw if documento_raw else None
+        tipo_documento = (request.form.get('tipo_documento') or 'CC').upper()
+        documento = None
+        if documento_raw:
+            documento, error_documento = validar_documento(tipo_documento, documento_raw)
+            if error_documento:
+                if is_ajax: return {"status": "error", "message": error_documento}, 400
+                flash(error_documento, 'danger')
+                return redirect(url_for('auth.register'))
         contraseña = request.form.get('password')
         # 2. Selección de Cargo (Solo Admin elige, público es Aprendiz)
         if current_user.is_authenticated and current_user.es_admin:
@@ -63,6 +72,14 @@ def register():
                    'para poder registrarte.')
             if is_ajax: return {"status": "error", "message": msg}, 400
             flash(msg, 'danger')
+            return redirect(url_for('auth.register'))
+
+        # 5a-bis. Desafio anti-bot. Va antes de tocar la base de datos y antes
+        # de enviar ningun correo: es el endpoint publico que crea cuentas.
+        captcha_ok, error_captcha = validar_formulario()
+        if not captcha_ok:
+            if is_ajax: return {"status": "error", "message": error_captcha}, 400
+            flash(error_captcha, 'danger')
             return redirect(url_for('auth.register'))
 
         # 5b. Datos minimos
@@ -121,6 +138,7 @@ def register():
             new_user = Usuario(
                 nombre=nombre,
                 documento=documento,
+                tipo_documento=tipo_documento,
                 correo=correo,
                 rol_id=rol_usuario.id, # Siempre Rol Usuario
                 ficha=ficha,
@@ -136,13 +154,14 @@ def register():
             db.session.add(new_user)
             db.session.commit()
 
-            asunto = "Código de verificación - Sistema de Acceso SENA"
+            _g = current_app.config['GENERALIDADES']
+            asunto = f"Código de verificación - Sistema de Acceso {_g['entidad']}"
             link_verificacion = url_for('auth.verificar_correo', _external=True)
             cuerpo_html = f"""
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 640px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
                 <div style="background-color: #39A900; padding: 24px; text-align: center;">
-                    <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
-                    <p style="color: white; margin: 6px 0 0 0;">Centro de Gestión Agroempresarial del Oriente - Vélez</p>
+                    <h2 style="color: white; margin: 0;">{_g['entidad']} - {_g['regional']}</h2>
+                    <p style="color: white; margin: 6px 0 0 0;">{_g['centro']} - {_g['municipio']}</p>
                 </div>
                 <div style="padding: 24px;">
                     <h3>Hola, {nombre}</h3>
