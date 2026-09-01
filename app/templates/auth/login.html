@@ -43,7 +43,7 @@
                     <div class="floating-group">
                         <input type="password" id="password" name="password" required placeholder=" " style="padding-right: 40px;">
                         <label for="password">Contraseña</label>
-                        <button type="button" id="togglePasswordBtn" class="password-toggle-btn" aria-label="Mostrar contraseña" onclick="togglePasswordVisibility('password', 'togglePasswordBtn')">
+                        <button type="button" id="togglePasswordBtn" class="password-toggle-btn" aria-label="Mostrar contraseña" data-ver-clave="password">
                             <i class="far fa-eye"></i>
                         </button>
                         <div class="floating-border"></div>
@@ -71,7 +71,7 @@
                     <div class="auth-footer" style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
                         <p style="color: var(--text-muted); font-size: 0.9rem;">
                             ¿No tienes una cuenta? 
-                            <a href="{{ url_for('auth.register') }}" style="color: #39A900; font-weight: 600; text-decoration: none; margin-left: 5px; border-bottom: 2px solid transparent; transition: all 0.3s ease;" onmouseover="this.style.borderBottom='2px solid #39A900'" onmouseout="this.style.borderBottom='2px solid transparent'">Regístrate aquí</a>
+                            <a href="{{ url_for('auth.register') }}" style="color: #39A900; font-weight: 600; text-decoration: none; margin-left: 5px; border-bottom: 2px solid transparent; transition: all 0.3s ease;" class="enlace-subrayado">Regístrate aquí</a>
                         </p>
                     </div>
                 </form>
@@ -81,23 +81,4 @@
     </div>
 </div>
 
-<script>
-function togglePasswordVisibility(inputId, btnId) {
-    const passwordInput = document.getElementById(inputId);
-    const toggleBtn = document.getElementById(btnId);
-    const icon = toggleBtn.querySelector('i');
-    
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-        toggleBtn.classList.add('active');
-    } else {
-        passwordInput.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-        toggleBtn.classList.remove('active');
-    }
-}
-</script>
 {% endblock %}

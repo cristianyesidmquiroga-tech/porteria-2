@@ -49,12 +49,29 @@
                             <div class="floating-border"></div>
                         </div>
 
+                        {# El tipo condiciona cuántos dígitos se esperan: una tarjeta
+                           de identidad de menor y una cédula no se validan igual. #}
+                        <label for="tipo_documento" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">
+                            Tipo de documento
+                        </label>
+                        <select id="tipo_documento" name="tipo_documento" required
+                                style="width: 100%; padding: 0.7rem; border-radius: 10px; margin-bottom: 1rem;">
+                            {% for clave, datos in tipos_documento.items() %}
+                            <option value="{{ clave }}" data-formato="{{ formatos_documento[clave] }}">{{ datos[0] }}</option>
+                            {% endfor %}
+                        </select>
+
                         <div class="floating-group">
-                            <input type="text" id="documento" name="documento" required placeholder=" " 
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                            <label for="documento">Documento de Identidad (Sin puntos)</label>
+                            {# El pasaporte admite letras, así que no se filtran los
+                               caracteres en el cliente: valida el servidor. #}
+                            <input type="text" id="documento" name="documento" required placeholder=" "
+                                   maxlength="15" aria-describedby="ayuda-doc-registro">
+                            <label for="documento">Número de Documento (sin puntos)</label>
                             <div class="floating-border"></div>
                         </div>
+                        <p id="ayuda-doc-registro" style="font-size: 0.8rem; color: var(--text-muted); margin: -0.5rem 0 1rem 0;">
+                            Sin puntos ni espacios. <span id="formato-doc-registro"></span>
+                        </p>
 
                         <div class="floating-group">
                             <input type="password" id="password" name="password" required
@@ -116,7 +133,7 @@
                         <input type="checkbox" id="acepta_datos" name="acepta_datos" value="si" required
                                style="width: 20px; height: 20px; margin-top: 2px; accent-color: #39A900; flex-shrink: 0; cursor: pointer;">
                         <label for="acepta_datos" style="font-size: 0.88rem; line-height: 1.5; cursor: pointer; color: var(--text-main);">
-                            Autorizo al SENA — Centro de Gestión Agroempresarial del Oriente a tratar
+                            Autorizo al {{ generalidades.entidad }} — {{ generalidades.centro }} a tratar
                             mis datos personales (incluidos mi fotografía y, si lo suministro, mi tipo
                             de sangre) con la finalidad exclusiva de controlar el acceso a la sede,
                             conforme a la
@@ -126,6 +143,8 @@
                             Conozco mi derecho a conocer, actualizar, rectificar y suprimir mis datos.
                         </label>
                     </div>
+
+                    {% include 'partials/_captcha.html' %}
 
                      <button type="submit" class="glass-btn btn-glow" style="margin-top: 1rem; margin-bottom: 1.5rem;">
                         <i class="fas fa-paper-plane"></i> Finalizar Registro y Enviar Código
@@ -145,11 +164,6 @@
 </div>
 
 
-<script>
-// El registro público ahora es exclusivamente para Aprendices
-// Las funciones de toggle quedan inactivas para el usuario final
-</script>
-
 <style>
 .dynamic-fields-group {
     animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -160,4 +174,8 @@
     to { opacity: 1; transform: translateY(0); }
 }
 </style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/registro.js') }}"></script>
 {% endblock %}
