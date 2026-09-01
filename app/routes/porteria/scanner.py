@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from . import porteria_bp as bp
-from ...models.usuarios import Usuario
+from ...models.usuarios import Usuario, avatar_de_cargo
 from ...models.entidades import Visitante, Vehiculo, ObjetoExterno, Equipo
 from ...models.accesos import Acceso, Auditoria
 from ... import db
@@ -36,7 +36,14 @@ def api_verify(doc):
             data = {
                 "found": True, "id": u.id, "nombre": u.nombre, "documento": u.documento, "cargo": u.cargo, "rol": u.rol.nombre if u.rol else 'N/A',
                 "tipo": "Usuario", "status": is_inside.tipo if is_inside else 'Afuera',
-                "foto": url_for('static', filename='uploads/profiles/' + u.foto) if u.foto else None,
+                # Siempre una URL valida: la foto real si existe, o el
+                # avatar del cargo. Antes se devolvia None y el cliente caia a
+                # ui-avatars.com, enviando el nombre real a un tercero.
+                "foto": url_for('static', filename=u.ruta_foto),
+                # El celador tiene que saber si esa foto ya fue verificada por
+                # un administrador: una foto sin aprobar no sirve para
+                # confirmar la identidad de quien esta en la puerta.
+                "foto_aprobada": bool(u.foto_aprobada),
                 "equipos": equipos_list
             }
     elif entity_type == "Visitante":
@@ -67,6 +74,7 @@ def api_verify(doc):
                         
             data = {
                 "found": True, "id": v.id, "nombre": v.nombre, "documento": v.documento, "tipo": "Visitante", "status": status,
+                "foto": url_for('static', filename=avatar_de_cargo('visitante')),
                 "cargo": "Visitante", "rol": "Externo", "tiempo_transcurrido": tiempo_transcurrido, "tiempo_excedido": tiempo_excedido
             }
     elif entity_type.startswith("Vehiculo"):
@@ -75,6 +83,7 @@ def api_verify(doc):
             is_inside = Acceso.query.filter_by(referencia_id=veh.id, tipo_referencia='Vehiculo').order_by(Acceso.fecha.desc()).first()
             data = {
                 "found": True, "id": veh.id, "nombre": f"Vehículo {veh.placa}", "documento": veh.placa, "tipo": "Vehiculo",
+                "foto": url_for('static', filename=avatar_de_cargo('vehiculo')),
                 "status": is_inside.tipo if is_inside else 'Afuera', "cargo": veh.tipo, "rol": "Logística"
             }
     elif entity_type == "ObjetoExterno":
@@ -83,6 +92,7 @@ def api_verify(doc):
             is_inside = Acceso.query.filter_by(referencia_id=obj.id, tipo_referencia='ObjetoExterno').order_by(Acceso.fecha.desc()).first()
             data = {
                 "found": True, "id": obj.id, "nombre": obj.descripcion, "documento": obj.serial, "tipo": "ObjetoExterno",
+                "foto": url_for('static', filename=avatar_de_cargo('objetoexterno')),
                 "status": is_inside.tipo if is_inside else 'Afuera', "cargo": obj.propietario or "Externo", "rol": "Equipo de Tercero"
             }
     
