@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Fichas de Formación - {{ generalidades.entidad }}{% endblock %}
+
+{% block content %}
+<div class="header-actions animate-on-scroll" data-animation="fade-in-down">
+    <div class="header-title">
+        <h1>Fichas de Formación</h1>
+        <p class="subtitle">
+            El programa y la fecha de finalización se registran aquí una sola vez.
+            Cada aprendiz los hereda al elegir su ficha, así que todos los carnets
+            de una misma ficha salen con los mismos datos.
+        </p>
+    </div>
+</div>
+
+<div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="margin-top: 2rem;">
+    <h2 style="margin: 0 0 1.25rem 0; font-size: 1.25rem; color: var(--glass-text);">
+        <i class="fas fa-plus-circle" style="color: var(--primary);"></i> Registrar una ficha nueva
+    </h2>
+    <form method="POST" action="{{ url_for('usuarios.crear_ficha') }}" class="formulario-ficha">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="campos-ficha">
+            <div>
+                <label for="numero">Número de ficha</label>
+                <input type="text" id="numero" name="numero" inputmode="numeric"
+                       pattern="\d{4,12}" maxlength="12" required
+                       placeholder="2847513" aria-describedby="ayuda-numero">
+                <small id="ayuda-numero">Solo dígitos, entre 4 y 12.</small>
+            </div>
+            <div>
+                <label for="programa">Programa de formación</label>
+                <input type="text" id="programa" name="programa" maxlength="150" required
+                       placeholder="Tecnólogo en Análisis y Desarrollo de Software">
+            </div>
+            <div>
+                <label for="fecha_finalizacion">Fecha de finalización</label>
+                <input type="date" id="fecha_finalizacion" name="fecha_finalizacion">
+                <small>Se imprime en el carnet de todos sus aprendices.</small>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary boton-ficha">
+            <i class="fas fa-save"></i> Crear ficha
+        </button>
+    </form>
+</div>
+
+<div class="glass-card animate-on-scroll" data-animation="fade-in-up" style="margin-top: 2rem;">
+    <h2 style="margin: 0 0 1.25rem 0; font-size: 1.25rem; color: var(--glass-text);">
+        <i class="fas fa-list" style="color: var(--primary);"></i> Fichas registradas
+        <span style="font-size: 0.9rem; font-weight: 400; color: var(--glass-subtext);">({{ fichas|length }})</span>
+    </h2>
+
+    {% if fichas %}
+    <div class="table-responsive" style="border-radius: 10px; border: 1px solid var(--glass-border); overflow-x: auto;">
+        <table class="glass-table" style="margin: 0; border: none; min-width: 720px;">
+            <thead>
+                <tr>
+                    <th style="padding: 1rem;">Ficha</th>
+                    <th style="padding: 1rem;">Programa</th>
+                    <th style="padding: 1rem;">Finaliza</th>
+                    <th style="padding: 1rem;">Aprendices</th>
+                    <th style="padding: 1rem;">Estado</th>
+                    <th style="padding: 1rem; text-align: right;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ficha in fichas %}
+                <tr style="border-bottom: 1px solid rgba(128,128,128,0.15);"
+                    {% if not ficha.activa %}style="opacity: 0.6;"{% endif %}>
+                    <td style="padding: 1rem;"><strong>{{ ficha.numero }}</strong></td>
+                    <td style="padding: 1rem;">{{ ficha.programa }}</td>
+                    <td style="padding: 1rem;">{{ ficha.fecha_finalizacion_texto or '—' }}</td>
+                    <td style="padding: 1rem;">{{ conteo.get(ficha.id, 0) }}</td>
+                    <td style="padding: 1rem;">
+                        {% if ficha.activa %}
+                        <span class="badge badge-success" style="background: rgba(39,174,96,0.12); color: #27ae60;">Activa</span>
+                        {% else %}
+                        <span class="badge" style="background: rgba(128,128,128,0.15); color: var(--glass-subtext);">Archivada</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; text-align: right; white-space: nowrap;">
+                        <button type="button" class="btn-editar-ficha boton-ficha-mini"
+                                data-id="{{ ficha.id }}"
+                                data-numero="{{ ficha.numero }}"
+                                data-programa="{{ ficha.programa }}"
+                                data-fecha="{{ ficha.fecha_finalizacion.isoformat() if ficha.fecha_finalizacion else '' }}">
+                            <i class="fas fa-pen"></i> Editar
+                        </button>
+                        <form method="POST" style="display: inline;"
+                              action="{{ url_for('usuarios.archivar_ficha', ficha_id=ficha.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="boton-ficha-mini">
+                                <i class="fas fa-box-archive"></i>
+                                {{ 'Reactivar' if not ficha.activa else 'Archivar' }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="padding: 3rem 1rem; text-align: center; border: 1px dashed var(--glass-border); border-radius: 12px;">
+        <i class="fas fa-folder-open" style="font-size: 1.8rem; color: var(--glass-subtext); opacity: 0.7;"></i>
+        <p style="margin-top: 1rem; color: var(--glass-subtext);">
+            Todavía no hay fichas registradas. Crea la primera con el formulario de arriba.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Formulario de edición: aparece al pulsar "Editar" en una fila -->
+<div id="modal-editar-ficha" class="modal-ficha" style="display: none;" aria-hidden="true">
+    <div class="glass-card modal-ficha-caja" role="dialog" aria-modal="true"
+         aria-labelledby="titulo-editar-ficha">
+        <h2 id="titulo-editar-ficha" style="margin: 0 0 1.25rem 0; font-size: 1.2rem;">Editar ficha</h2>
+        <p style="color: var(--glass-subtext); font-size: 0.88rem; margin-bottom: 1.25rem;">
+            El cambio se refleja de inmediato en el carnet de todos los aprendices de esta ficha.
+        </p>
+        <form method="POST" id="form-editar-ficha" class="formulario-ficha">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+                <label for="editar-numero">Número de ficha</label>
+                <input type="text" id="editar-numero" name="numero" pattern="\d{4,12}"
+                       inputmode="numeric" maxlength="12" required>
+            </div>
+            <div style="margin-top: 1rem;">
+                <label for="editar-programa">Programa de formación</label>
+                <input type="text" id="editar-programa" name="programa" maxlength="150" required>
+            </div>
+            <div style="margin-top: 1rem;">
+                <label for="editar-fecha">Fecha de finalización</label>
+                <input type="date" id="editar-fecha" name="fecha_finalizacion">
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
+                <button type="button" id="cancelar-editar-ficha" class="boton-ficha-mini">Cancelar</button>
+                <button type="submit" class="btn-primary boton-ficha" style="margin: 0;">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/fichas.js') }}"></script>
+{% endblock %}
