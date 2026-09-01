@@ -41,6 +41,3 @@ Thumbs.db
 tests/fixtures/*
 !tests/fixtures/README.md
 
-# Configuracion local del entorno de desarrollo (rutas de Windows, servidor de
-# pruebas). No aplica a otras maquinas ni al despliegue.
-.claude/
