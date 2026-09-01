@@ -6,10 +6,13 @@ from .. import db
 class MovimientoVisitante(db.Model):
     __tablename__ = 'movimientos_visitantes'
     id = db.Column(db.Integer, primary_key=True)
+    # index=True: PostgreSQL no indexa las claves ajenas por si solo, y estas
+    # se consultan al listar y borrar los movimientos de una entidad.
     visitante_id = db.Column(
         db.Integer,
         db.ForeignKey('visitantes.id'),
-        nullable=False)
+        nullable=False,
+        index=True)
     punto_id = db.Column(
         db.Integer,
         db.ForeignKey('puntos_acceso.id'),
@@ -21,10 +24,13 @@ class MovimientoVisitante(db.Model):
 class MovimientoVehiculo(db.Model):
     __tablename__ = 'movimientos_vehiculos'
     id = db.Column(db.Integer, primary_key=True)
+    # index=True: PostgreSQL no indexa las claves ajenas por si solo, y estas
+    # se consultan al listar y borrar los movimientos de una entidad.
     vehiculo_id = db.Column(
         db.Integer,
         db.ForeignKey('vehiculos.id'),
-        nullable=False)
+        nullable=False,
+        index=True)
     punto_id = db.Column(
         db.Integer,
         db.ForeignKey('puntos_acceso.id'),
@@ -36,10 +42,13 @@ class MovimientoVehiculo(db.Model):
 class MovimientoEquipo(db.Model):
     __tablename__ = 'movimientos_equipos'
     id = db.Column(db.Integer, primary_key=True)
+    # index=True: PostgreSQL no indexa las claves ajenas por si solo, y estas
+    # se consultan al listar y borrar los movimientos de una entidad.
     equipo_id = db.Column(
         db.Integer,
         db.ForeignKey('equipos.id'),
-        nullable=False)
+        nullable=False,
+        index=True)
     punto_id = db.Column(
         db.Integer,
         db.ForeignKey('puntos_acceso.id'),
@@ -51,10 +60,13 @@ class MovimientoEquipo(db.Model):
 class MovimientoObjeto(db.Model):
     __tablename__ = 'movimientos_objetos'
     id = db.Column(db.Integer, primary_key=True)
+    # index=True: PostgreSQL no indexa las claves ajenas por si solo, y estas
+    # se consultan al listar y borrar los movimientos de una entidad.
     objeto_id = db.Column(
         db.Integer,
         db.ForeignKey('objetos_externos.id'),
-        nullable=False)
+        nullable=False,
+        index=True)
     punto_id = db.Column(
         db.Integer,
         db.ForeignKey('puntos_acceso.id'),

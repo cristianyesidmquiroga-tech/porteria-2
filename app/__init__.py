@@ -61,19 +61,22 @@ def _registrar_cabeceras_seguridad(app):
         # no abren la puerta a ejecucion de codigo.
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' https://cdn.jsdelivr.net "
-            # unpkg.com se quito: la unica libreria que venia de ahi era el
-            # lector html5-qrcode, que ahora se sirve desde /static con la
-            # version fijada en el nombre del archivo.
-            "https://cdnjs.cloudflare.com; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
-            "https://cdnjs.cloudflare.com; "
-            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            # unpkg.com y cdnjs.cloudflare.com se quitaron: el lector de
+            # codigos, Font Awesome, vanilla-tilt, particles.js y html2canvas
+            # ya se sirven desde /static con la version fijada en el nombre
+            # del archivo. cdn.jsdelivr.net se deja, pero restringido a la
+            # ruta exacta de Chart.js (todavia sin version fijada en los
+            # templates que lo cargan, fuera del alcance de este cambio):
+            # un allowlist del dominio completo permite cargar CUALQUIER
+            # paquete publicado en jsDelivr, no solo Chart.js.
+            "script-src 'self' https://cdn.jsdelivr.net/npm/chart.js; "
+            "style-src 'self' 'unsafe-inline'; "
+            "font-src 'self'; "
             # ui-avatars.com se elimino: recibia el nombre real de cada
             # usuario en la URL, es decir datos personales enviados a un
-            # tercero en cada carga de pagina. Ahora los avatares son SVG
-            # locales servidos desde 'self'.
-            "img-src 'self' data: blob: https://upload.wikimedia.org; "
+            # tercero en cada carga de pagina. upload.wikimedia.org tambien:
+            # el logo del SENA ahora es un SVG local servido desde 'self'.
+            "img-src 'self' data: blob:; "
             "connect-src 'self'; "
             "frame-ancestors 'none'; "
             "base-uri 'self'; "
@@ -165,6 +168,103 @@ def _migrar_columnas():
     except Exception:
         db.session.rollback()
         registro.exception("Fallo la migracion de columnas")
+
+
+# Indices que db.create_all() no puede anadir a tablas que ya existen. Sin
+# esto, los indices declarados en los modelos solo aparecen en bases nuevas: la
+# de produccion se queda sin ellos y el trabajo parece hecho sin estarlo.
+#
+# El primero es el mas importante: es el patron exacto que ejecuta el escaner
+# en cada persona que entra. Sin indice, cada escaneo recorre entera la tabla
+# mas grande del sistema.
+INDICES_PENDIENTES = [
+    ("ix_accesos_referencia_tipo_fecha",
+     "CREATE INDEX IF NOT EXISTS ix_accesos_referencia_tipo_fecha "
+     "ON accesos (referencia_id, tipo_referencia, fecha)"),
+    ("ix_accesos_fecha",
+     "CREATE INDEX IF NOT EXISTS ix_accesos_fecha ON accesos (fecha)"),
+    ("ix_accesos_operador_id",
+     "CREATE INDEX IF NOT EXISTS ix_accesos_operador_id ON accesos (operador_id)"),
+    ("ix_auditoria_fecha",
+     "CREATE INDEX IF NOT EXISTS ix_auditoria_fecha ON auditoria (fecha)"),
+    ("ix_equipos_usuario_id",
+     "CREATE INDEX IF NOT EXISTS ix_equipos_usuario_id ON equipos (usuario_id)"),
+    ("ix_asistencia_clases_aprendiz_id",
+     "CREATE INDEX IF NOT EXISTS ix_asistencia_clases_aprendiz_id "
+     "ON asistencia_clases (aprendiz_id)"),
+]
+
+
+# Columnas que dejaron de ser obligatorias en los modelos. Al borrar a una
+# persona, el ORM pone en nulo estas referencias para conservar el registro sin
+# ella (una auditoria o una clase valen aunque el autor ya no exista). En una
+# base creada antes del cambio siguen siendo NOT NULL, asi que ese UPDATE falla
+# y borrar un usuario devuelve error 500. Solo PostgreSQL: SQLite no admite
+# alterar la nulabilidad de una columna, y en desarrollo la base se recrea.
+COLUMNAS_OPCIONALES = [
+    ('auditoria', 'usuario_id'),
+    ('asistencia_clases', 'instructor_id'),
+    ('mensajes', 'autor_id'),
+]
+
+
+def _soltar_obligatoriedad():
+    """Permite el nulo en las columnas que el modelo ya declara opcionales."""
+    from sqlalchemy import text, inspect
+
+    registro = logging.getLogger(__name__)
+    if db.engine.dialect.name != 'postgresql':
+        return
+    try:
+        inspector = inspect(db.engine)
+        tablas = set(inspector.get_table_names())
+    except Exception:
+        registro.exception("No se pudo inspeccionar la base")
+        return
+
+    for tabla, columna in COLUMNAS_OPCIONALES:
+        if tabla not in tablas:
+            continue
+        try:
+            obligatorias = {c['name'] for c in inspector.get_columns(tabla)
+                            if not c.get('nullable', True)}
+            if columna not in obligatorias:
+                continue
+            db.session.execute(text(
+                f"ALTER TABLE {tabla} ALTER COLUMN {columna} DROP NOT NULL"))
+            db.session.commit()
+            registro.info("Migracion %s.%s: ahora admite nulo", tabla, columna)
+        except Exception:
+            db.session.rollback()
+            registro.exception("No se pudo soltar NOT NULL en %s.%s", tabla, columna)
+
+
+def _crear_indices_faltantes():
+    """Crea los indices que falten en una base creada por una version previa.
+
+    Cada sentencia va en su propia transaccion: si una falla (por ejemplo
+    porque la tabla todavia no existe en una base a medio migrar), las demas
+    se siguen creando en vez de perderse todas.
+    """
+    from sqlalchemy import text, inspect
+
+    registro = logging.getLogger(__name__)
+    try:
+        tablas = set(inspect(db.engine).get_table_names())
+    except Exception:
+        registro.exception("No se pudo inspeccionar la base para crear indices")
+        return
+
+    for nombre, sentencia in INDICES_PENDIENTES:
+        tabla = sentencia.split(' ON ')[1].split(' ')[0]
+        if tabla not in tablas:
+            continue
+        try:
+            db.session.execute(text(sentencia))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            registro.exception("No se pudo crear el indice %s", nombre)
 
 
 def _con_contexto(app, funcion):
@@ -313,6 +413,8 @@ def create_app(iniciar_tareas=True):
 
         db.create_all()
         _migrar_columnas()
+        _crear_indices_faltantes()
+        _soltar_obligatoriedad()
         if iniciar_tareas:
             _registrar_tareas(app)
 

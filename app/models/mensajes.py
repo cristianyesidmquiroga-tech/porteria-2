@@ -26,7 +26,12 @@ class Mensaje(db.Model):
 
     # Quién escribió este mensaje en concreto (puede ser la misma persona o
     # cualquier administrador).
-    autor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    # Nullable a proposito: el mensaje puede sobrevivir a la cuenta de quien
+    # lo escribio (el nombre queda en autor_nombre); al borrar al autor esta
+    # referencia pasa a NULL en lugar de impedir el borrado.
+    autor_id = db.Column(db.Integer,
+                         db.ForeignKey('usuarios.id', ondelete='SET NULL'),
+                         nullable=True)
 
     # Se guarda en el mensaje para que el historial siga siendo legible aunque
     # la cuenta del autor se elimine después.
@@ -43,9 +48,15 @@ class Mensaje(db.Model):
     # una foto), para distinguirlos de lo que escribe una persona.
     automatico = db.Column(db.Boolean, default=False, nullable=False)
 
+    # El hilo es personal, no institucional: si la persona se borra, sus
+    # mensajes se van con ella (cascade). Antes esto reventaba el borrado de
+    # cualquiera con una foto rechazada, porque el rechazo genera un mensaje.
     usuario = db.relationship('Usuario', foreign_keys=[usuario_id],
-                              backref=db.backref('mensajes', lazy='dynamic'))
-    autor = db.relationship('Usuario', foreign_keys=[autor_id])
+                              backref=db.backref('mensajes', lazy='dynamic',
+                                                 cascade='all, delete-orphan'))
+    # El backref existe para que el ORM anule autor_id al borrar al autor.
+    autor = db.relationship('Usuario', foreign_keys=[autor_id],
+                            backref=db.backref('mensajes_escritos', lazy=True))
 
 
 def registrar_mensaje(usuario_id, autor, texto, automatico=False):

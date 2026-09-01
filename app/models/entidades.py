@@ -14,6 +14,13 @@ class Visitante(db.Model):
         db.DateTime,
         default=get_colombia_time)
 
+    # Un movimiento no significa nada sin su entidad: se borra con ella.
+    # Sin esta cascada, borrar a alguien que ya cruzo la porteria reventaba
+    # con error de clave ajena.
+    movimientos = db.relationship(
+        'MovimientoVisitante', backref='visitante',
+        cascade='all, delete-orphan', lazy=True)
+
 
 class Vehiculo(db.Model):
     __tablename__ = 'vehiculos'
@@ -24,6 +31,10 @@ class Vehiculo(db.Model):
     motivo = db.Column(db.Text, nullable=True)  # Why is this vehicle here?
     qr_code = db.Column(db.String(255), unique=True, nullable=True)
     activo = db.Column(db.Boolean, default=True)
+
+    movimientos = db.relationship(
+        'MovimientoVehiculo', backref='vehiculo',
+        cascade='all, delete-orphan', lazy=True)
 
 
 class Equipo(db.Model):
@@ -36,10 +47,19 @@ class Equipo(db.Model):
     estado = db.Column(
         db.String(20),
         default='Afuera')  # 'Adentro' or 'Afuera'
+    # index=True: el perfil y el escaner listan los equipos de una persona
+    # por esta clave ajena, y PostgreSQL no la indexa por si solo.
     usuario_id = db.Column(
         db.Integer,
         db.ForeignKey('usuarios.id'),
-        nullable=True)
+        nullable=True,
+        index=True)
+
+    # Al borrar el equipo (desde el perfil o el panel) sus cruces por la
+    # porteria se van con el; antes solo el panel los limpiaba a mano.
+    movimientos = db.relationship(
+        'MovimientoEquipo', backref='equipo',
+        cascade='all, delete-orphan', lazy=True)
 
 
 class ObjetoExterno(db.Model):
@@ -52,4 +72,8 @@ class ObjetoExterno(db.Model):
     activo = db.Column(db.Boolean, default=True)
     qr_code = db.Column(db.String(255), unique=True, nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=get_colombia_time)
+
+    movimientos = db.relationship(
+        'MovimientoObjeto', backref='objeto',
+        cascade='all, delete-orphan', lazy=True)
 

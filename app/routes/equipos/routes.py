@@ -74,6 +74,9 @@ def delete_device(id):
         return _responder(False, 'No tienes permiso para eliminar este dispositivo.',
                           'danger')
 
+    # Los movimientos del equipo por la porteria se borran en cascada
+    # (declarado en el modelo Equipo); antes esta ruta fallaba si el equipo
+    # ya habia cruzado la puerta, porque quedaban claves ajenas colgando.
     db.session.delete(equipo)
     db.session.commit()
     return _responder(True, 'Dispositivo eliminado.', 'info')
