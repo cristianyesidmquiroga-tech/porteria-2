@@ -7,4 +7,5 @@ from . import dashboard
 from . import scanner
 from . import pases
 from . import reportes
+from . import historial_persona
 

@@ -1,10 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}Pases Manuales/QR{% endblock %}
+{% block title %}Pases Manuales{% endblock %}
 
-{% block head %}
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
-{% endblock %}
 
 {% block content %}
 <div class="dashboard-header animate-on-scroll" data-animation="dust-reveal" style="margin-bottom: 2.5rem;">
@@ -13,9 +10,9 @@
 </div>
 
 <div class="top-tabs stagger-item">
-    <button id="btn-tab-visitantes" class="tab-btn active magnetic-btn" onclick="switchPaseTab('visitantes')">Personas (Visitantes)</button>
-    <button id="btn-tab-vehiculos" class="tab-btn magnetic-btn" onclick="switchPaseTab('vehiculos')">Vehículos (Logística)</button>
-    <button id="btn-tab-objetos" class="tab-btn magnetic-btn" onclick="switchPaseTab('objetos')">Objetos Externos</button>
+    <button id="btn-tab-visitantes" class="tab-btn active magnetic-btn" data-pestana="visitantes">Personas (Visitantes)</button>
+    <button id="btn-tab-vehiculos" class="tab-btn magnetic-btn" data-pestana="vehiculos">Vehículos (Logística)</button>
+    <button id="btn-tab-objetos" class="tab-btn magnetic-btn" data-pestana="objetos">Objetos Externos</button>
 </div>
 
 <!-- VISITANTES TAB -->
@@ -38,7 +35,7 @@
                     <input type="text" name="entidad" placeholder="Ej: Coca Cola, Contratista, etc.">
                 </div>
                 <button type="submit" class="btn-primary magnetic-btn stagger-item" style="width: 100%; height: 50px; margin-top: 1rem;">
-                    <i class="fas fa-plus"></i> Generar Pase QR
+                    <i class="fas fa-plus"></i> Generar pase
                 </button>
             </form>
         </div>
@@ -64,9 +61,10 @@
                             </td>
                             <td style="padding: 1rem; color: var(--text-muted);">{{ v.motivo or 'N/A' }}</td>
                             <td style="padding: 1rem;">
-                                <button onclick="showQR('{{ v.qr_code }}', '{{ v.nombre }}')" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color);">
-                                    <i class="fas fa-qrcode"></i> Ver QR
+                                <button type="button" class="btn-primary boton-ver-barras" data-objetivo="barras-visit-{{ v.id }}" data-titulo="{{ v.nombre }}" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color);">
+                                    <i class="fas fa-barcode"></i> Ver código
                                 </button>
+                                <div id="barras-visit-{{ v.id }}" hidden>{{ v.qr_code | codigo_barras }}</div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -109,7 +107,7 @@
                     <div class="floating-border"></div>
                 </div>
                 <button type="submit" class="btn-primary magnetic-btn stagger-item" style="width: 100%; height: 50px; margin-top: 1rem;">
-                    <i class="fas fa-plus"></i> Registrar y Generar QR
+                    <i class="fas fa-plus"></i> Registrar y generar pase
                 </button>
             </form>
         </div>
@@ -140,9 +138,10 @@
                                 <small style="color: var(--text-muted);">{{ veh.motivo or '-' }}</small>
                             </td>
                             <td style="padding: 1rem;">
-                                <button onclick="showQR('{{ veh.qr_code }}', 'Vehículo {{ veh.placa }}')" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color);">
-                                    <i class="fas fa-qrcode"></i> Ver QR
+                                <button type="button" class="btn-primary boton-ver-barras" data-objetivo="barras-veh-{{ veh.id }}" data-titulo="Vehículo {{ veh.placa }}" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color);">
+                                    <i class="fas fa-barcode"></i> Ver código
                                 </button>
+                                <div id="barras-veh-{{ veh.id }}" hidden>{{ veh.qr_code | codigo_barras }}</div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -181,7 +180,7 @@
                     <div class="floating-border"></div>
                 </div>
                 <button type="submit" class="btn-primary magnetic-btn stagger-item" style="width: 100%; height: 50px; margin-top: 1rem;">
-                    <i class="fas fa-plus"></i> Registrar y Generar QR
+                    <i class="fas fa-plus"></i> Registrar y generar pase
                 </button>
             </form>
         </div>
@@ -212,9 +211,10 @@
                                 <small style="color: var(--text-muted);">{{ obj.motivo or '-' }}</small>
                             </td>
                             <td style="padding: 1rem;">
-                                <button onclick="showQR('{{ obj.qr_code }}', '{{ obj.descripcion }}')" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color); margin-right: 5px;">
-                                    <i class="fas fa-qrcode"></i> Ver QR
+                                <button type="button" class="btn-primary boton-ver-barras" data-objetivo="barras-obj-{{ obj.id }}" data-titulo="{{ obj.descripcion }}" style="padding: 5px 10px; font-size: 0.8rem; background: var(--secondary-color); margin-right: 5px;">
+                                    <i class="fas fa-barcode"></i> Ver código
                                 </button>
+                                <div id="barras-obj-{{ obj.id }}" hidden>{{ obj.qr_code | codigo_barras }}</div>
                                 <a href="{{ url_for('porteria.editar_objeto', obj_id=obj.id) }}" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; background: var(--primary-color); margin-right: 5px;">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
@@ -240,54 +240,29 @@
     </div>
 </div>
 
-<!-- MODAL QR -->
-<div id="qrModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-    <div class="card" style="max-width: 500px; text-align: center; position: relative; animation: slideUp 0.3s ease;">
-        <button onclick="closeModal()" style="position: absolute; top: 10px; right: 10px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-        <h3 id="modalTitle">Pase QR</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1rem;">Toma una foto o imprime este código para el visitante.</p>
-        <div id="qrcode-container" style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: inline-block;">
-            <canvas id="canvas"></canvas>
-        </div>
+<!-- MODAL DEL CÓDIGO DE BARRAS -->
+{# El código ya viene dibujado desde el servidor (filtro `codigo_barras`), así
+   que el navegador solo lo muestra. Antes se generaba aquí con una librería de
+   QR traída de un CDN: una dependencia externa menos. #}
+<div id="modal-barras" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);"
+     aria-hidden="true">
+    <div class="card" style="max-width: 560px; width: 92%; text-align: center; position: relative; animation: slideUp 0.3s ease;"
+         role="dialog" aria-modal="true" aria-labelledby="titulo-barras">
+        <button type="button" id="cerrar-barras" aria-label="Cerrar"
+                style="position: absolute; top: 10px; right: 10px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <h3 id="titulo-barras">Pase de acceso</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            Toma una foto o imprime este código. El escáner de portería lo lee directamente.
+        </p>
+        {# Fondo blanco y sin filtros también en modo oscuro: un código de
+           barras sobre fondo oscuro no lo lee ningún escáner. #}
+        <div id="caja-barras" style="background: #ffffff; padding: 1.25rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);"></div>
         <div style="margin-top: 1.5rem;">
-            <button onclick="window.print()" class="btn-primary" style="background: var(--primary-color);">Imprimir Pase</button>
+            <button type="button" id="imprimir-barras" class="btn-primary" style="background: var(--primary-color);">Imprimir pase</button>
         </div>
     </div>
 </div>
 
-<script>
-    function switchPaseTab(view) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-tab-' + view).classList.add('active');
-        document.getElementById('view-visitantes').style.display = (view === 'visitantes' ? 'block' : 'none');
-        document.getElementById('view-vehiculos').style.display = (view === 'vehiculos' ? 'block' : 'none');
-        document.getElementById('view-objetos').style.display = (view === 'objetos' ? 'block' : 'none');
-    }
-
-    function showQR(text, title) {
-        const modal = document.getElementById('qrModal');
-        const canvas = document.getElementById('canvas');
-        document.getElementById('modalTitle').innerText = title;
-        
-        QRCode.toCanvas(canvas, text, {
-            width: 350,
-            margin: 2,
-            color: {
-                dark: '#1A4314',
-                light: '#ffffff'
-            }
-        }, function (error) {
-            if (error) console.error(error);
-            modal.style.display = 'flex';
-        });
-    }
-
-    function closeModal() {
-        document.getElementById('qrModal').style.display = 'none';
-    }
-
-    // Cerrar con Escape
-    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-</script>
+<script src="{{ url_for('static', filename='js/pases.js') }}"></script>
 
 {% endblock %}

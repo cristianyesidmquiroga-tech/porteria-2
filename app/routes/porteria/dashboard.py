@@ -1,10 +1,11 @@
-from flask import render_template, request, redirect, url_for, flash, Response
+from flask import render_template, request, redirect, url_for, flash, Response, current_app
+import os
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 import csv
 import io
 from . import porteria_bp as bp
-from ...models.usuarios import Usuario, Rol
+from ...models.usuarios import Usuario, Rol, avatar_de_cargo, ruta_foto_o_avatar
 from ...models.accesos import Acceso
 from ... import db
 from ...utils import get_colombia_time, parsear_fecha_bd
@@ -115,6 +116,7 @@ def dashboard():
     historial = []
 
     for acc in accesos_db:
+        carpeta_fotos = os.path.join(current_app.root_path, 'static', 'uploads', 'profiles')
         nombre = "N/A"
         documento = "N/A"
         rol_or_tipo = acc.tipo_referencia
@@ -174,8 +176,19 @@ def dashboard():
             if not u or u.ficha != ficha_filter:
                 continue
 
+        # Se resuelven aqui, no en la plantilla: asi la vista no tiene que
+        # saber donde viven las fotos ni que hacer si falta una.
+        if acc.tipo_referencia == 'Usuario':
+            ruta_img = ruta_foto_o_avatar(foto, cargo_or_clase, carpeta_fotos)
+            avatar_img = avatar_de_cargo(cargo_or_clase)
+        else:
+            avatar_img = avatar_de_cargo(acc.tipo_referencia)
+            ruta_img = avatar_img
+
         historial.append({
             "acceso": acc,
+            "ruta_foto": ruta_img,
+            "avatar": avatar_img,
             "nombre": nombre,
             "documento": documento,
             "rol_or_tipo": rol_or_tipo,

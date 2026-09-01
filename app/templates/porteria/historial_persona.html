@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de ingresos{% endblock %}
+
+{% macro hora(momento) %}{{ momento.strftime('%I:%M %p') if momento else '—' }}{% endmacro %}
+
+{% macro permanencia(minutos) %}
+    {%- if minutos is none -%}—
+    {%- else -%}{{ minutos // 60 }} h {{ '%02d'|format(minutos % 60) }} m
+    {%- endif -%}
+{% endmacro %}
+
+{% block content %}
+<div class="profile-container animate-on-scroll" data-animation="fade-in-up">
+
+    <div class="welcome-section" style="text-align: center; margin-bottom: 2rem;">
+        <h1 class="text-3d">Historial de ingresos</h1>
+        <p>
+            {% if puede_consultar_terceros %}
+            Entradas, salidas, equipos y ausencias de una persona o de un grupo completo.
+            {% else %}
+            Tus entradas, salidas y equipos registrados en portería.
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="glass-card" style="max-width: 980px; margin: 0 auto;">
+        <form action="{{ url_for('porteria.historial_persona') }}" method="GET" data-no-ajax>
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                {% if puede_consultar_terceros %}
+                <div style="flex: 2; min-width: 220px;">
+                    <label for="busqueda" style="display:block; margin-bottom:.35rem; font-weight:600;">
+                        <i class="fas fa-user"></i> Nombre o documento
+                    </label>
+                    <input type="text" id="busqueda" name="busqueda" value="{{ filtros.busqueda }}"
+                        placeholder="Ej: Ana Rodriguez o 1098765432"
+                        style="width:100%; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--glass-text);">
+                </div>
+                <div style="flex: 1; min-width: 140px;">
+                    <label for="ficha" style="display:block; margin-bottom:.35rem; font-weight:600;">
+                        <i class="fas fa-hashtag"></i> Ficha
+                    </label>
+                    <input type="text" id="ficha" name="ficha" value="{{ filtros.ficha }}"
+                        placeholder="Toda la ficha"
+                        style="width:100%; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--glass-text);">
+                </div>
+                <div style="flex: 1; min-width: 160px;">
+                    <label for="cargo" style="display:block; margin-bottom:.35rem; font-weight:600;">
+                        <i class="fas fa-id-badge"></i> Cargo
+                    </label>
+                    <select id="cargo" name="cargo"
+                        style="width:100%; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--glass-text);">
+                        <option value="">Cualquiera</option>
+                        {% for c in cargos %}
+                        <option value="{{ c }}" {% if filtros.cargo==c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" name="usuario_id" value="{{ current_user.id }}">
+                {% endif %}
+
+                <div style="flex: 1; min-width: 150px;">
+                    <label for="fecha_inicio" style="display:block; margin-bottom:.35rem; font-weight:600;">
+                        <i class="fas fa-calendar-day"></i> Desde
+                    </label>
+                    <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ filtros.fecha_inicio }}"
+                        style="width:100%; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--glass-text);">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label for="fecha_fin" style="display:block; margin-bottom:.35rem; font-weight:600;">
+                        <i class="fas fa-calendar-check"></i> Hasta
+                    </label>
+                    <input type="date" id="fecha_fin" name="fecha_fin" value="{{ filtros.fecha_fin }}"
+                        style="width:100%; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--glass-text);">
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:flex-end; gap:1rem; flex-wrap:wrap; margin-top:1rem;">
+                <div style="flex:1; min-width:260px;">
+                    <label for="solo_habiles" style="display:block; margin-bottom:.35rem; font-weight:600;">
+                        <i class="fas fa-calendar-xmark"></i> Días en los que se cuenta la falta
+                    </label>
+                    <select id="solo_habiles" name="solo_habiles"
+                        style="width:100%; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--glass-border); background:var(--glass); color:var(--glass-text);">
+                        <option value="1" {% if filtros.solo_habiles %}selected{% endif %}>Solo de lunes a viernes</option>
+                        <option value="0" {% if not filtros.solo_habiles %}selected{% endif %}>Todos los días de la semana</option>
+                    </select>
+                </div>
+                <button type="submit" class="glass-btn btn-glow" style="margin-left:auto;">
+                    <span>Consultar</span> <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if not hubo_busqueda %}
+    <div class="glass-card" style="max-width: 980px; margin: 2rem auto; text-align:center; color: var(--glass-subtext);">
+        <i class="fas fa-clipboard-list" style="font-size:2rem; opacity:.5;"></i>
+        <p style="margin-top:1rem;">Escribe un nombre, un documento, una ficha o un cargo para ver el historial.</p>
+    </div>
+    {% elif not datos %}
+    <div class="glass-card" style="max-width: 980px; margin: 2rem auto; text-align:center; color: var(--glass-subtext);">
+        <i class="fas fa-user-slash" style="font-size:2rem; opacity:.5;"></i>
+        <p style="margin-top:1rem;">Ninguna persona coincide con esos filtros.</p>
+    </div>
+    {% else %}
+
+    {% if datos|length >= maximo_personas %}
+    <p style="max-width:980px; margin:1.5rem auto 0; color: var(--glass-subtext); text-align:center;">
+        <i class="fas fa-triangle-exclamation"></i>
+        Se muestran las primeras {{ maximo_personas }} personas. Afina los filtros para ver el resto.
+    </p>
+    {% endif %}
+
+    <p style="max-width:980px; margin:1.5rem auto .5rem; color: var(--glass-subtext); text-align:center;">
+        Periodo consultado: <strong>{{ filtros.fecha_inicio }}</strong> a <strong>{{ filtros.fecha_fin }}</strong>
+        — {{ datos|length }} persona{{ 's' if datos|length != 1 }}.
+    </p>
+
+    {% for bloque in datos %}
+    {% set p = bloque.persona %}
+    {% set r = bloque.resumen %}
+    <div class="glass-card stagger-item" style="max-width: 980px; margin: 1.5rem auto;">
+
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem; margin-bottom:1.25rem;">
+            <img src="{{ url_for('static', filename=p.ruta_foto) }}" alt="Foto de {{ p.nombre }}"
+                width="56" height="56"
+                style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
+            <div>
+                <h2 style="margin:0;">{{ p.nombre }}</h2>
+                <small style="color: var(--glass-subtext);">
+                    {{ p.cargo or 'Sin cargo' }}
+                    {%- if p.documento %} · Doc. {{ p.documento }}{% endif %}
+                    {%- if p.ficha %} · Ficha {{ p.ficha }}{% endif %}
+                    {%- if p.programa %} · {{ p.programa }}{% endif %}
+                </small>
+            </div>
+        </div>
+
+        <!-- Resumen de asistencia -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+            <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
+                <div style="font-size:1.6rem; font-weight:700; color:var(--primary);">{{ r.total_dias_asistidos }}</div>
+                <small style="color: var(--glass-subtext);">Días asistidos</small>
+            </div>
+            <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
+                <div style="font-size:1.6rem; font-weight:700; color:var(--danger);">{{ r.total_dias_faltados }}</div>
+                <small style="color: var(--glass-subtext);">Días sin registro (de {{ r.total_dias_esperados }})</small>
+            </div>
+            <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
+                <div style="font-size:1.6rem; font-weight:700; color:var(--secondary);">{{ r.porcentaje_asistencia }}%</div>
+                <small style="color: var(--glass-subtext);">Asistencia</small>
+            </div>
+            <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
+                <div style="font-size:1.6rem; font-weight:700;">{{ r.dia_mas_faltado or '—' }}</div>
+                <small style="color: var(--glass-subtext);">Día que más falta</small>
+            </div>
+            <div style="padding:1rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border);">
+                <div style="font-size:1.6rem; font-weight:700;">{{ permanencia(r.promedio_permanencia_minutos) }}</div>
+                <small style="color: var(--glass-subtext);">Permanencia promedio</small>
+            </div>
+        </div>
+
+        {% if r.faltas_por_dia_semana %}
+        <p style="color: var(--glass-subtext); margin-bottom:1rem;">
+            <i class="fas fa-calendar-xmark"></i> Faltas por día:
+            {% for dia, total in r.faltas_por_dia_semana.items() %}{{ dia }} ({{ total }}){% if not loop.last %} · {% endif %}{% endfor %}
+        </p>
+        {% endif %}
+
+        {% if r.sin_salida %}
+        <p style="color: var(--accent); margin-bottom:1rem;">
+            <i class="fas fa-circle-exclamation"></i>
+            {{ r.sin_salida }} movimiento{{ 's' if r.sin_salida != 1 }} sin salida registrada.
+        </p>
+        {% endif %}
+
+        <!-- Movimientos -->
+        {% if bloque.movimientos_listados %}
+        <div class="table-responsive">
+            <table class="modern-table" style="width:100%;">
+                <caption style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;">
+                    Movimientos de {{ p.nombre }} en el periodo consultado
+                </caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Entrada</th>
+                        <th scope="col">Salida</th>
+                        <th scope="col">Permanencia</th>
+                        <th scope="col">Equipos ingresados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in bloque.movimientos_listados|reverse %}
+                    <tr>
+                        <td>{{ m.fecha.strftime('%d/%m/%Y') }}</td>
+                        <td class="text-entrada">{{ hora(m.entrada) }}</td>
+                        <td class="text-salida">
+                            {{ hora(m.salida) }}
+                            {% if m.cierre_automatico %}
+                            <br><small style="opacity:.75;">cierre automático</small>
+                            {% elif not m.salida %}
+                            <br><small style="opacity:.75;">sin salida</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ permanencia(m.permanencia_minutos) }}</td>
+                        <td>
+                            {% if m.equipos %}
+                            {% for equipo in m.equipos %}
+                            <span
+                                style="display:inline-block; margin:2px; padding:4px 10px; border-radius:20px; font-size:.75rem; font-weight:600; background:var(--glass); border:1px solid var(--glass-border); color:var(--glass-text);">{{ equipo }}</span>
+                            {% endfor %}
+                            {% else %}
+                            <span style="color: var(--glass-subtext);">Ninguno</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--glass-subtext); text-align:center; padding:1.5rem 0;">
+            Sin movimientos registrados en este periodo.
+        </p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
