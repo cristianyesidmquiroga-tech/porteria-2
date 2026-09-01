@@ -16,7 +16,7 @@
 
     <div class="carnet-of-cabecera">
         <img class="carnet-of-logo"
-             src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg"
+             src="{{ url_for('static', filename='img/sena-logo.svg') }}"
              alt="{{ generalidades.entidad }}" width="64" height="64">
         <div class="carnet-of-foto">
             <img src="{{ usuario.url_foto }}"

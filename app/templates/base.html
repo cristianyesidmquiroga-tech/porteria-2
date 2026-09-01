@@ -5,19 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ generalidades.entidad }} - {{ generalidades.centro }}</title>
-    <link rel="icon" type="image/svg+xml" href="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/sena-logo.svg') }}">
     <!-- Modern Global CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/componentes.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/control.css') }}">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-    <!-- Third Party Scripts -->
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    {# Tipografia Outfit y Font Awesome 5.15.4 autoalojados en /static: antes
+       se cargaban desde fonts.googleapis.com/cdnjs.cloudflare.com en cada
+       pagina, lo que avisaba a esos terceros (con la IP del usuario) de cada
+       carga y dejaba el sistema dependiendo de que sigan disponibles. #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/outfit.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-5.15.4.min.css') }}">
+
+    {# particles.js 2.0.0 y vanilla-tilt 1.8.0 (fondo animado y efecto de
+       inclinacion de tarjetas, puramente decorativos): autoalojados con
+       version fijada en el nombre del archivo, igual que el lector de
+       codigos, en vez de depender de cdn.jsdelivr.net/cdnjs.cloudflare.com. #}
+    <script src="{{ url_for('static', filename='js/particles-2.0.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vanilla-tilt-1.8.0.min.js') }}"></script>
 
     <!-- Theme Switcher & JS Ready State -->
     <script src="{{ url_for('static', filename='js/tema-inicial.js') }}"></script>
@@ -33,7 +40,7 @@
     <div id="global-loader">
         <div class="loader-content">
             <div class="loader-spinner"></div>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="Cargando SENA" style="width: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="Cargando SENA" style="width: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
         </div>
     </div>
 

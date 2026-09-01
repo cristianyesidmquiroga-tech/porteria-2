@@ -59,7 +59,7 @@
             <!-- Formulario Actualización / Update Form -->
             <div id="update-info-section" class="glass-card stagger-item" style="display: none;">
                 <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                    <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="SENA"
                         style="height: 25px;">
                     Actualizar Datos
                 </h2>
@@ -217,7 +217,7 @@
             <!-- Lista de Equipos / Devices List -->
             <div id="devices-section" class="glass-card stagger-item" style="display: none;">
                 <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                    <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="SENA"
                         style="height: 25px;">
                     Equipos Vinculados
                 </h2>
@@ -250,7 +250,7 @@
             <!-- Añadir Equipo / Add Device Form -->
             <div id="add-device-section" class="glass-card stagger-item" style="display: none;">
                 <h2 class="text-3d" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 10px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Sena_Colombia_logo.svg" alt="SENA"
+                    <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="SENA"
                         style="height: 25px;">
                     Vincular Nuevo Equipo
                 </h2>
@@ -286,8 +286,14 @@
 
 </div>
 
-<!-- html2canvas CDN para captura del carnet -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+{# html2canvas 1.4.1 autoalojado (antes cdnjs.cloudflare.com). Ademas de
+   quitar la dependencia externa, esto evita que el logo del SENA (que antes
+   viajaba desde upload.wikimedia.org, otro dominio) contamine el lienzo de
+   captura: html2canvas marca como "tainted" un canvas que dibujo una imagen
+   cross-origin sin CORS habilitado, y eso rompe la descarga del carnet con
+   un error generico. Con el logo servido desde el propio dominio, ya no
+   ocurre. Licencia MIT. #}
+<script src="{{ url_for('static', filename='js/html2canvas-1.4.1.min.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/perfil.js') }}"
         data-nombre-archivo-carnet="carnet_sena_{{ current_user.nombre | replace(' ', '_') }}.png"
