@@ -77,6 +77,24 @@ def descargar_respaldo(filename):
     respaldos_dir = os.path.join(current_app.root_path, 'respaldos_mensuales')
     return send_from_directory(respaldos_dir, filename, as_attachment=True)
 
+@bp.route('/api/admin/correos_fallidos')
+@login_required
+def api_correos_fallidos():
+    """Ultimos fallos de entrega de correo que ya se dieron por perdidos.
+
+    enviar_correo() devuelve True en cuanto encola el mensaje, no cuando el
+    servidor SMTP confirma la entrega: la peticion web no puede esperar a
+    eso. El resultado real (entregado, reintentado o descartado) quedaba solo
+    en el log del hilo enviador, que nadie revisa. Esta ruta le da al
+    administrador una forma de ver, sin entrar al servidor, a quien no le
+    llego un correo y por que.
+    """
+    if not check_admin():
+        return jsonify({"status": "error", "message": "No autorizado"}), 403
+    from app.utils.email import fallos_recientes
+    return jsonify({"status": "success", "fallos": fallos_recientes()})
+
+
 @bp.route('/admin/respaldos')
 @login_required
 def admin_respaldos():

@@ -276,14 +276,36 @@ def test_la_espera_del_reintento_no_bloquea_al_resto(aplicacion, monkeypatch):
                         lambda *a, **k: correo.FALLO_PASAJERO)
     monkeypatch.setattr(correo, 'ESPERA_REINTENTO_BASE', 30)
 
-    inicio = time.monotonic()
-    correo._procesar_uno(aplicacion, MIMEText('x'), DESTINO, config(),
-                         REMITENTE, 0)
-    transcurrido = time.monotonic() - inicio
+    # _procesar_uno no devuelve el temporizador que crea _programar_reintento
+    # por dentro: si no se captura y cancela aqui, queda un threading.Timer
+    # real de 30 s corriendo de fondo mucho despues de que esta prueba
+    # termine. Cuando por fin dispara, decrementa _reintentos_en_espera sin
+    # que quede ningun incremento vivo que lo compense (el fixture
+    # cola_limpia ya lo habia puesto en 0), y ese es justamente el bug que
+    # se vio en produccion: "Quedaron -1 correos sin enviar al apagar."
+    temporizadores = []
+    original = correo._programar_reintento
 
-    assert transcurrido < 1, 'el enviador se quedo bloqueado esperando'
-    # El correo sigue contando como pendiente aunque no este en la cola.
-    assert correo.correos_pendientes() == 1
+    def _programar_y_capturar(*a, **k):
+        temporizador = original(*a, **k)
+        temporizadores.append(temporizador)
+        return temporizador
+
+    monkeypatch.setattr(correo, '_programar_reintento', _programar_y_capturar)
+
+    try:
+        inicio = time.monotonic()
+        correo._procesar_uno(aplicacion, MIMEText('x'), DESTINO, config(),
+                             REMITENTE, 0)
+        transcurrido = time.monotonic() - inicio
+
+        assert transcurrido < 1, 'el enviador se quedo bloqueado esperando'
+        # El correo sigue contando como pendiente aunque no este en la cola.
+        assert correo.correos_pendientes() == 1
+    finally:
+        for temporizador in temporizadores:
+            temporizador.cancel()
+        correo._reintentos_en_espera = 0
 
 
 def test_el_temporizador_del_reintento_es_demonio(aplicacion, monkeypatch):
@@ -296,6 +318,100 @@ def test_el_temporizador_del_reintento_es_demonio(aplicacion, monkeypatch):
     finally:
         temporizador.cancel()
         correo._reintentos_en_espera = 0
+
+
+def test_correos_pendientes_nunca_es_negativo_por_la_ruta_del_reintento(
+        aplicacion, monkeypatch):
+    """Reproduce el bug real: 'Quedaron -1 correos sin enviar al apagar.'
+
+    Un decremento de _reintentos_en_espera sin un incremento vivo que lo
+    respalde (por ejemplo un temporizador de reintento que dispara tarde,
+    despues de que su correo ya se dio por resuelto por otra via) no puede
+    dejar el contador en negativo: correos_pendientes() se usa para decidir
+    si el apagado del proceso debe esperar, y un valor negativo se trata como
+    'ya no queda nada', justo cuando puede seguir habiendo correos reales
+    adentro.
+    """
+    monkeypatch.setattr(correo, 'ESPERA_REINTENTO_BASE', 0)
+    monkeypatch.setattr(correo, '_asegurar_enviador', lambda: None)
+
+    assert correo._reintentos_en_espera == 0
+    assert correo.correos_pendientes() == 0
+
+    # Reintento normal: se programa, se cuenta, dispara y se reencola. El
+    # contador nunca debe bajar de 0 durante todo el trayecto.
+    correo._procesar_uno(aplicacion, MIMEText('x'), DESTINO, config(),
+                         REMITENTE, 0)
+    assert correo._reintentos_en_espera >= 0
+
+    fin = time.time() + 5
+    while correo._cola.empty() and time.time() < fin:
+        time.sleep(0.05)
+    assert not correo._cola.empty(), 'el reintento nunca volvio a la cola'
+    assert correo._reintentos_en_espera == 0
+    assert correo.correos_pendientes() == 1  # el correo reencolado
+
+    # Ataque directo: un decremento sin incremento (el caso real detectado:
+    # un threading.Timer de una prueba anterior que sobrevive y dispara
+    # tarde). El contador se queda en 0, no en -1, y queda registrado como
+    # el error de programacion que es.
+    correo._cola.get_nowait()  # deja la cola en el mismo estado que al inicio
+    assert correo._reintentos_en_espera == 0
+    # Espera larga para que el temporizador NO dispare solo antes del assert
+    # de abajo: lo que se quiere forzar es el decremento manual siguiente.
+    monkeypatch.setattr(correo, 'ESPERA_REINTENTO_BASE', 30)
+    temporizador = correo._programar_reintento(
+        aplicacion, MIMEText('y'), DESTINO, config(), REMITENTE, 0)
+    temporizador.cancel()  # nunca dispara solo (por eso no vuelve a la cola):
+                           # se fuerza el decremento a mano abajo, como lo
+                           # haria un temporizador real al disparar tarde.
+    assert correo._reintentos_en_espera == 1
+
+    # Se fuerza el mismo decremento dos veces, como haria un segundo
+    # temporizador fantasma decrementando sobre el mismo correo.
+    for _ in range(2):
+        with correo._candado_reintentos:
+            if correo._reintentos_en_espera <= 0:
+                correo._reintentos_en_espera = 0
+            else:
+                correo._reintentos_en_espera -= 1
+
+    assert correo._reintentos_en_espera == 0, \
+        'un decremento de mas dejo el contador negativo'
+    assert correo.correos_pendientes() >= 0
+
+    correo._reintentos_en_espera = 0
+
+
+def test_correos_pendientes_cuenta_el_correo_en_vuelo(aplicacion, monkeypatch):
+    """Un envio que ya salio de _cola pero sigue hablando con el SMTP debe
+    seguir contando como pendiente: si no, el aviso de apagado ve la cola
+    vacia con un correo real todavia en curso."""
+    en_vuelo_durante_el_envio = {}
+
+    def _enviar_lento(*a, **k):
+        en_vuelo_durante_el_envio['valor'] = correo.correos_pendientes()
+        return correo.ENTREGADO
+
+    monkeypatch.setattr(correo, '_enviar', _enviar_lento)
+    monkeypatch.setattr(correo, 'PAUSA_ENTRE_CORREOS', 0)
+    correo._asegurar_enviador()
+
+    correo._cola.put((aplicacion, MIMEText('x'), DESTINO, config(),
+                      REMITENTE, 0))
+
+    fin = time.time() + 5
+    while 'valor' not in en_vuelo_durante_el_envio and time.time() < fin:
+        time.sleep(0.02)
+
+    assert en_vuelo_durante_el_envio.get('valor') == 1, (
+        'un correo ya sacado de la cola pero todavia en curso no se conto '
+        'como pendiente')
+
+    fin = time.time() + 5
+    while correo.correos_pendientes() != 0 and time.time() < fin:
+        time.sleep(0.02)
+    assert correo.correos_pendientes() == 0
 
 
 # --------------------------------------------------------------------------

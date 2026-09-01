@@ -231,7 +231,7 @@ class TestAltaDesdeAdministracion:
         client.post('/usuarios/api/admin/crear_usuario', json={
             'nombre': 'Nueva Aprendiz', 'correo': 'nueva@sena.edu.co',
             'contraseña': 'ClaveLarga2026', 'rol_id': rol_usuario.id,
-            'cargo': 'Aprendiz', 'documento': '4040', 'ficha': '2847513',
+            'cargo': 'Aprendiz', 'documento': '404040', 'ficha': '2847513',
         })
         from app.models.usuarios import Usuario
         nueva = Usuario.query.filter_by(correo='nueva@sena.edu.co').first()

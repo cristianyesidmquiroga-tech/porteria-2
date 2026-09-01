@@ -12,6 +12,7 @@ rechazados, porque una IP nueva no tiene reputación y muchos proveedores
 bloquean el puerto 25 de salida.
 """
 import atexit
+import collections
 import logging
 import os
 import queue
@@ -65,6 +66,24 @@ _candado = threading.Lock()
 # proceso los daria por salidos y se perderian.
 _reintentos_en_espera = 0
 _candado_reintentos = threading.Lock()
+
+# Correo que el hilo enviador ya saco de _cola (con .get()) pero todavia no
+# termino de procesar. queue.Queue.qsize() deja de contarlo en el instante en
+# que sale de la cola, aunque la conexion SMTP siga abierta y el envio en
+# curso: sin este contador, correos_pendientes() podia dar 0 con un correo
+# real todavia en vuelo, y el aviso de apagado (_vaciar_cola_al_salir) se iba
+# tranquilo creyendo que no quedaba nada.
+_en_vuelo = 0
+_candado_en_vuelo = threading.Lock()
+
+# Ultimos fallos de entrega DEFINITIVOS (o agotados tras los reintentos). Hoy
+# la unica traza de un fallo real es el log del hilo enviador, que nadie
+# revisa: aqui queda una copia pequena y en memoria para que un administrador
+# pueda consultarla (ver api_correos_fallidos en admin_usuarios.py) sin tener
+# que entrar al servidor a leer logs.
+MAX_FALLOS_RECORDADOS = 50
+_fallos_recientes = collections.deque(maxlen=MAX_FALLOS_RECORDADOS)
+_candado_fallos = threading.Lock()
 
 
 def _modo_cifrado(puerto, configurado):
@@ -381,11 +400,19 @@ def _procesar_cola():
             logger.exception("Fallo sacando un correo de la cola")
             time.sleep(1)
             continue
+        # A partir de aqui el correo ya no esta en _cola (qsize() no lo ve),
+        # pero sigue pendiente de verdad: se cuenta aparte para que
+        # correos_pendientes() no diga 0 con un envio todavia en curso.
+        global _en_vuelo
+        with _candado_en_vuelo:
+            _en_vuelo += 1
         try:
             _procesar_uno(aplicacion, mensaje, destino, cfg, remitente, intentos)
         except Exception:
             logger.exception("Fallo inesperado enviando un correo de la cola")
         finally:
+            with _candado_en_vuelo:
+                _en_vuelo -= 1
             _cola.task_done()
         time.sleep(PAUSA_ENTRE_CORREOS)
 
@@ -402,6 +429,7 @@ def _procesar_uno(aplicacion, mensaje, destino, cfg, remitente, intentos):
     if resultado == FALLO_DEFINITIVO:
         logger.error("Correo a %s descartado sin reintentos: el fallo no se "
                      "arregla insistiendo.", _ofuscar(destino))
+        _registrar_fallo(destino, mensaje, 'Descartado sin reintentos.')
         return resultado
     if resultado == FALLO_PASAJERO and intentos < MAX_REINTENTOS:
         _programar_reintento(aplicacion, mensaje, destino, cfg, remitente,
@@ -409,7 +437,41 @@ def _procesar_uno(aplicacion, mensaje, destino, cfg, remitente, intentos):
     elif resultado == FALLO_PASAJERO:
         logger.error("Correo a %s abandonado tras %s intentos.",
                      _ofuscar(destino), MAX_REINTENTOS + 1)
+        _registrar_fallo(destino, mensaje,
+                         f'Abandonado tras {MAX_REINTENTOS + 1} intentos.')
     return resultado
+
+
+def _registrar_fallo(destino, mensaje, motivo):
+    """Guarda un fallo de entrega definitivo para que un admin pueda verlo.
+
+    enviar_correo() devuelve True en cuanto encola, no cuando entrega de
+    verdad: la peticion web no puede quedarse esperando al servidor SMTP. Eso
+    deja el fallo real visible solo en el log de este hilo, que nadie mira. Un
+    fallo pasajero que todavia se va a reintentar NO se registra aqui: solo lo
+    que ya se dio por perdido, para no llenar la lista de ruido.
+    """
+    try:
+        asunto = mensaje.get('Subject', '') if hasattr(mensaje, 'get') else ''
+    except Exception:
+        asunto = ''
+    with _candado_fallos:
+        _fallos_recientes.appendleft({
+            'destinatario': _ofuscar(destino),
+            'asunto': asunto,
+            'motivo': motivo,
+            'momento': time.strftime('%Y-%m-%d %H:%M:%S'),
+        })
+
+
+def fallos_recientes():
+    """Copia de los ultimos fallos de entrega definitivos, mas recientes primero.
+
+    Pensada para exponerse por una ruta de administracion (ver
+    api_correos_fallidos en admin_usuarios.py) en vez de obligar a leer logs.
+    """
+    with _candado_fallos:
+        return list(_fallos_recientes)
 
 
 def _programar_reintento(aplicacion, mensaje, destino, cfg, remitente, intentos):
@@ -435,7 +497,21 @@ def _programar_reintento(aplicacion, mensaje, destino, cfg, remitente, intentos)
             _cola.put((aplicacion, mensaje, destino, cfg, remitente, intentos + 1))
         finally:
             with _candado_reintentos:
-                _reintentos_en_espera -= 1
+                if _reintentos_en_espera <= 0:
+                    # No deberia poder pasar: cada decremento tiene que tener
+                    # un incremento suyo mas arriba en esta misma funcion. Si
+                    # pasa de todos modos (p. ej. un temporizador de una
+                    # prueba que sobrevivio a su prueba y decrementa tarde),
+                    # dejarlo bajar de 0 volveria negativo el conteo de
+                    # correos_pendientes() y el aviso de apagado se creeria
+                    # vacia una cola que en realidad tiene correos dentro.
+                    logger.error("_reintentos_en_espera iba a quedar negativo "
+                                 "al reencolar el correo a %s; se deja en 0. "
+                                 "Esto es un bug: revisar quien decrementa sin "
+                                 "haber incrementado antes.", _ofuscar(destino))
+                    _reintentos_en_espera = 0
+                else:
+                    _reintentos_en_espera -= 1
 
     # Demonio: un reintento pendiente no debe impedir que el proceso se apague.
     temporizador = threading.Timer(espera, _reencolar)
@@ -447,10 +523,13 @@ def _programar_reintento(aplicacion, mensaje, destino, cfg, remitente, intentos)
 def correos_pendientes():
     """Cuantos correos quedan por salir. Util para diagnosticar.
 
-    Incluye los reintentos que estan esperando su turno: durante la espera no
-    estan en la cola, pero siguen sin entregarse.
+    Incluye los reintentos que estan esperando su turno (durante la espera no
+    estan en _cola, pero siguen sin entregarse) y el correo que el hilo
+    enviador ya saco de _cola y tiene abierto ahora mismo con el servidor SMTP
+    (_en_vuelo): sin ese ultimo, esta funcion podia devolver 0 con un envio
+    todavia en curso, justo cuando el apagado del proceso decide si esperar.
     """
-    return _cola.qsize() + _reintentos_en_espera
+    return _cola.qsize() + _reintentos_en_espera + _en_vuelo
 
 
 @atexit.register
@@ -460,6 +539,17 @@ def _vaciar_cola_al_salir():
     Sin esto, un reinicio del contenedor en mitad de una importacion perderia
     los correos que aun no habian salido, y esas personas se quedarian sin sus
     credenciales sin que nadie se entere.
+
+    Limite conocido: `atexit` solo se dispara en un apagado NORMAL del
+    interprete (fin del programa, `sys.exit()`, una senal que el proceso
+    llega a manejar y termina por su cuenta). Si el contenedor recibe SIGKILL,
+    o Docker manda SIGTERM y el proceso no llega a terminar dentro del tiempo
+    de gracia (`docker stop` por defecto da 10 s), este manejador NO se
+    ejecuta: lo que hubiera en `_cola`, en reintento o `_en_vuelo` en ese
+    instante se pierde sin ningun aviso. No hay forma de garantizar esto desde
+    aqui; si hace falta esa garantia, hay que sacar la cola de correo a un
+    proceso o servicio aparte (o persistirla) en vez de mantenerla solo en
+    memoria de este proceso.
     """
     if not correos_pendientes():
         return
