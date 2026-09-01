@@ -1,434 +1,163 @@
-# Manual de Usuario - Gestión de Usuarios (Administrador)
+# Manual de Usuario — Gestión de Usuarios (solo rol Admin)
 
-## Tabla de Contenidos
-1. [Introducción](#introducción)
-2. [Acceso al Módulo de Gestión](#acceso-al-módulo-de-gestión)
-3. [Ver Lista de Usuarios](#ver-lista-de-usuarios)
-4. [Crear Nuevo Usuario](#crear-nuevo-usuario)
-5. [Editar Usuario Existente](#editar-usuario-existente)
-6. [Eliminar Usuario](#eliminar-usuario)
-7. [Importar Usuarios desde Excel](#importar-usuarios-desde-excel)
-8. [Gestión de Roles y Permisos](#gestión-de-roles-y-permisos)
-9. [Historial de Usuarios](#historial-de-usuarios)
-10. [Preguntas Frecuentes](#preguntas-frecuentes)
+Para administradores del sistema (rol **Admin**). Cubre la pantalla "Gestión
+Perfiles": crear, editar, eliminar e importar usuarios, y las pantallas de
+auditoría y respaldos.
 
----
-
-## Introducción
-
-El módulo de gestión de usuarios permite a los administradores del sistema crear, editar, eliminar y gestionar las cuentas de usuario del sistema de acceso del SENA. Este módulo es fundamental para mantener actualizada la base de datos de usuarios y controlar el acceso al sistema.
-
-### Objetivos del Módulo
-- Crear nuevas cuentas de usuario
-- Editar información de usuarios existentes
-- Eliminar usuarios que ya no requieren acceso
-- Importar usuarios masivamente desde Excel
-- Gestionar roles y permisos de usuario
-- Mantener el historial de cambios
-
-### Usuarios Autorizados
-- Administradores de Sistema
-- Personal autorizado por administración
+## Índice
+1. [Roles y cargos](#roles-y-cargos)
+2. [Crear un usuario](#crear-un-usuario)
+3. [Editar un usuario](#editar-un-usuario)
+4. [Eliminar un usuario](#eliminar-un-usuario)
+5. [Importar usuarios desde Excel](#importar-usuarios-desde-excel)
+6. [Historial de Cambios (auditoría)](#historial-de-cambios-auditoría)
+7. [Respaldos del Sistema](#respaldos-del-sistema)
+8. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ---
 
-## Acceso al Módulo de Gestión
+## Roles y cargos
 
-### Paso 1: Iniciar Sesión
-1. Acceda al sistema mediante la URL proporcionada por el SENA
-2. Ingrese su correo institucional y contraseña de administrador
-3. Haga clic en "Iniciar Sesión"
+Al crear o editar un usuario se asignan **dos cosas distintas**:
 
-### Paso 2: Navegar a Gestión de Usuarios
-1. Una vez iniciada la sesión, haga clic en el menú lateral
-2. Seleccione la opción "Gestión de Perfiles" o "Usuarios"
-3. Se mostrará la lista de usuarios del sistema
+- **Rol** (nivel de acceso): **Admin**, **Usuario** o **Trabajador**.
+  "Celador" e "Instructor" **no son roles**.
+- **Cargo** (qué es la persona): Aprendiz, Instructor, Administrativo,
+  Celador o Administrador.
 
-### Opciones Disponibles
-- **Nuevo Perfil**: Crear un nuevo usuario
-- **Importar Excel**: Importar usuarios masivamente
-- **Editar**: Modificar información de usuario existente
-- **Eliminar**: Eliminar usuario del sistema
-- **Historial**: Ver historial de cambios
+Los permisos reales salen de la combinación — la referencia completa está en
+`matriz_permisos.md`. Ejemplos: portería la opera rol Usuario con cargo
+Celador o Administrador; la asistencia la pasa quien tenga cargo Instructor.
+
+**El cargo gobierna permisos**: cambiárselo a alguien puede darle o quitarle
+acceso a portería, asistencia o asesoría.
 
 ---
 
-## Ver Lista de Usuarios
+## Crear un usuario
 
-### Visualización de la Lista
-Al acceder al módulo de gestión, verá una tabla con todos los usuarios del sistema.
+Gestión Perfiles → **"Nuevo Perfil"**.
 
-### Información Mostrada
-Para cada usuario se muestra:
-- **Nombre**: Nombre completo del usuario
-- **Documento**: Número de documento de identidad
-- **Correo**: Correo electrónico institucional
-- **Cargo**: Cargo o dependencia (Aprendiz, Instructor, etc.)
-- **Rol**: Rol en el sistema (Admin, Usuario, etc.)
-- **Estado**: Estado de la cuenta (Verificado, Pendiente, Bloqueado)
-- **Acciones**: Botones para editar o eliminar
+- Obligatorios: **nombre, correo, contraseña temporal y rol**.
+- El **documento** se valida y normaliza igual que en el perfil (tipo +
+  número); si es inválido o está repetido, la creación se rechaza con el
+  motivo.
+- Si la **ficha** escrita ya está registrada en "Fichas de Formación", el
+  aprendiz hereda automáticamente su programa y fecha de finalización.
+- A las cuentas con rol **Usuario** se les envía un **correo de bienvenida
+  con las credenciales temporales**, se les obliga a cambiar la contraseña en
+  el primer ingreso y a completar su perfil. Las cuentas de gestión (Admin,
+  Trabajador) se crean con el perfil marcado completo y sin ese correo.
+- Crear una cuenta con cargo **Celador** abre además su turno.
+- Todo queda en la auditoría (con "autorizado por" y "motivo" si se
+  diligencian).
 
-### Estados de Usuario
-- **Verificado**: Usuario con correo verificado y acceso completo
-- **Pendiente**: Usuario que aún no ha verificado su correo
-- **Bloqueado**: Usuario con bloqueo temporal o permanente
+## Editar un usuario
 
-### Filtros y Búsqueda
-- **Búsqueda**: Puede buscar por nombre, documento o correo
-- **Filtro por estado**: Filtrar usuarios por estado (verificado, pendiente, bloqueado)
-- **Filtro por rol**: Filtrar usuarios por rol
-- **Filtro por cargo**: Filtrar usuarios por cargo
+- Editables: nombre, correo, tipo y número de documento (validados y con
+  chequeo de duplicados), cargo, rol, ficha (con herencia de programa/fecha),
+  programa, horario, verificación de correo, desbloqueo de cuenta y
+  contraseña.
+- **Cambiar rol o contraseña expulsa las sesiones activas** de esa persona.
+- Cambiar el cargo recalcula si el perfil sigue estando completo (a un
+  aprendiz se le exige ficha).
+- Desbloquear: pone a cero los intentos fallidos y levanta el bloqueo de
+  login.
+- La edición exige registrar **quién autoriza** y **motivo**; queda en la
+  auditoría.
 
----
+## Eliminar un usuario
 
-## Crear Nuevo Usuario
-
-### Paso 1: Abrir el Formulario de Creación
-1. En la página de gestión de usuarios, haga clic en "Nuevo Perfil"
-2. Se abrirá el formulario de creación de usuario
-
-### Paso 2: Completar Información Básica
-
-#### Campo 1: Nombre Completo
-- **Descripción**: Nombre completo del usuario
-- **Formato**: Nombre y apellidos completos
-- **Ejemplo**: "Juan Pérez García"
-
-#### Campo 2: Documento
-- **Descripción**: Número de documento de identidad
-- **Formato**: Según tipo de documento (CC, TI, CE, etc.)
-- **Ejemplo**: "123456789"
-
-#### Campo 3: Correo Electrónico
-- **Descripción**: Correo institucional del usuario
-- **Formato**: usuario@sena.edu.co
-- **Importancia**: Se usará para inicio de sesión y verificación
-
-#### Campo 4: Contraseña Temporal
-- **Descripción**: Contraseña inicial para el usuario
-- **Requisitos**: Mínimo 8 caracteres
-- **Nota**: El usuario deberá cambiarla en el primer inicio
-
-### Paso 3: Configurar Rol y Cargo
-
-#### Campo 5: Rol de Sistema
-Seleccione el rol apropiado:
-- **Admin**: Administrador del sistema (acceso completo)
-- **Usuario**: Usuario estándar (acceso limitado)
-- **Celador**: Personal de portería
-- Otros roles configurados en el sistema
-
-#### Campo 6: Cargo / Dependencia
-Seleccione el cargo del usuario:
-- **Aprendiz**: Estudiante del SENA
-- **Instructor**: Docente del SENA
-- **Administrativo**: Personal administrativo
-- **Celador**: Personal de seguridad
-- **Administrador de Sistema**: Administrador técnico
-
-### Paso 4: Información Adicional (Según Cargo)
-
-#### Para Aprendices:
-- **Ficha**: Número de ficha de formación
-- **Programa**: Programa de formación
-- **Horario**: Mañana, Tarde o Noche
-
-#### Para Instructores:
-- **Especialidad/Área**: Área de especialización
-
-### Paso 5: Guardar Usuario
-1. Verifique que toda la información sea correcta
-2. Haga clic en "Guardar Usuario"
-3. El sistema creará la cuenta de usuario
-4. Se mostrará un mensaje de confirmación
-
-### Validaciones
-- **Correo único**: El correo no debe existir en el sistema
-- **Documento único**: El documento no debe existir en el sistema
-- **Campos obligatorios**: Todos los campos marcados son requeridos
-- **Formato de correo**: Debe ser un correo válido
+- **Permanente y sin recuperación.** Borra también sus turnos, sus equipos
+  con sus movimientos, su carnet y sus registros de acceso.
+- Restricciones: no puede eliminarse a sí mismo, y las cuentas con rol
+  **Admin no se pueden eliminar** (solo editar).
+- La eliminación queda registrada en la auditoría con autorizador y motivo.
+- Si solo quiere impedir el acceso, considere cambiar la contraseña o
+  mantener la cuenta bloqueada en lugar de eliminarla.
 
 ---
 
-## Editar Usuario Existente
+## Importar usuarios desde Excel
 
-### Paso 1: Seleccionar el Usuario
-1. En la lista de usuarios, encuentre el usuario que desea editar
-2. Haga clic en el botón "Editar" (icono de lápiz)
-3. Se abrirá el formulario de edición
+Gestión Perfiles → **"Importar Excel"**. El archivo debe ser `.xlsx` con la
+primera fila de encabezados. **Los nombres de columna van con mayúscula
+inicial, exactamente así:**
 
-### Paso 2: Modificar Información
+| Columna | ¿Obligatoria? | Notas |
+|---|---|---|
+| `Nombre` | **Sí** | Fila sin nombre o sin correo → se omite |
+| `Correo` | **Sí** | Correo ya registrado → la fila se omite |
+| `Documento` | No | Se valida; si es inválido o repetido, la persona se importa **sin documento** y queda el aviso |
+| `Tipo Documento` | No | CC, TI, CE, PPT o PA; si falta se deduce del número |
+| `Cargo` | No | Solo Aprendiz, Instructor, Administrativo, Celador o Administrador; otro valor → se asigna **Aprendiz** con aviso |
+| `Rol` | No | Solo `usuario` o `trabajador`. **`Admin` nunca se asigna por importación**; otro valor → Usuario con aviso |
+| `Ficha` | No | Si la ficha existe en el sistema, hereda programa y fecha |
+| `Programa`, `Horario` | No | Texto |
+| `Contraseña` | No | Si falta, se genera una **aleatoria distinta por fila** |
 
-#### Información Editable
-- **Nombre completo**: Puede modificar el nombre
-- **Documento**: Puede actualizar el documento
-- **Correo**: Puede cambiar el correo (con precaución)
-- **Rol**: Puede cambiar el rol del usuario
-- **Cargo**: Puede cambiar el cargo
-- **Ficha/Programa**: Puede actualizar información académica
-- **Horario**: Puede modificar el horario
+**Solo `Nombre` y `Correo` son obligatorias.** Cualquier manual o plantilla
+que exija documento, contraseña, cargo o rol como obligatorios está
+desactualizado.
 
-#### Información de Verificación
-- **Estado de verificación**: Puede marcar correo como verificado
-- **Estado de bloqueo**: Puede bloquear o desbloquear usuario
+Comportamiento:
 
-### Paso 3: Cambiar Contraseña (Opcional)
-1. Puede establecer una nueva contraseña temporal
-2. Deje el campo vacío para no cambiar la contraseña actual
-3. El usuario deberá cambiarla en el próximo inicio
-
-### Paso 4: Auditoría de Cambios
-El sistema requiere registrar:
-- **Quién autoriza el cambio**: Nombre del administrador que autoriza
-- **Motivo**: Razón del cambio
-
-### Paso 5: Guardar Cambios
-1. Complete los campos de auditoría
-2. Haga clic en "Guardar Cambios"
-3. El sistema actualizará la información del usuario
-4. Se mostrará un mensaje de confirmación
-
-### Precauciones
-- **Cambiar correo**: Puede afectar el acceso del usuario
-- **Cambiar rol**: Modifica los permisos del usuario
-- **Cambiar documento**: Puede afectar el código QR
-- **Bloquear usuario**: Revoca el acceso inmediatamente
+- Cada persona importada recibe el **correo de bienvenida** con sus
+  credenciales temporales y debe cambiar la contraseña al entrar.
+- Una fila con error **no tumba el lote**: se anota el aviso y se sigue.
+- Al final se muestra el resumen (creados, omitidos y avisos fila por fila) y
+  la importación completa queda en la auditoría.
+- Los documentos se leen como **texto**: no importa si Excel los muestra con
+  formato numérico.
 
 ---
 
-## Eliminar Usuario
+## Historial de Cambios (auditoría)
 
-### Paso 1: Seleccionar el Usuario
-1. En la lista de usuarios, encuentre el usuario que desea eliminar
-2. Haga clic en el botón "Eliminar" (icono de papelera)
-3. Se abrirá un modal de confirmación
+Menú → **"Historial de Cambios"**. Lista todos los eventos de auditoría, del
+más reciente al más antiguo: creación/edición/eliminación de usuarios,
+importaciones, revisiones de foto, inconsistencias de acceso, incidentes de
+portería, cierres nocturnos y resultado de los respaldos mensuales. Cada
+evento registra quién lo hizo, cuándo, el autorizador y el motivo si se
+diligenciaron. Es de **solo lectura**: no hay filtros por fecha ni
+exportación en esta pantalla.
 
-### Paso 2: Confirmar Eliminación
-1. El sistema mostrará el nombre del usuario a eliminar
-2. Lea el mensaje de advertencia
-3. Esta acción es irreversible
+## Respaldos del Sistema
 
-### Paso 3: Auditoría de Eliminación
-El sistema requiere registrar:
-- **Quién autoriza la eliminación**: Nombre del administrador
-- **Motivo**: Razón de la eliminación
+Menú → **"Respaldos del Sistema"**. Lista los archivos
+`Respaldo_Sistema_AAAA-MM.xlsx` generados el día 1 de cada mes y permite
+**descargarlos**.
 
-### Paso 4: Confirmar
-1. Complete los campos de auditoría
-2. Haga clic en "Si, Eliminar"
-3. El usuario será eliminado del sistema permanentemente
-4. Si hace clic en "No, Cancelar", la eliminación se cancelará
+> **Importante:** ese archivo es la **única copia** de los accesos y
+> asistencias del mes que exporta, porque el proceso **los borra de la base
+> de datos** después de verificar el archivo. No existe función de
+> restauración. Descargue y guarde copias fuera del servidor. Detalle
+> completo en `docs/DESPLIEGUE_Y_OPERACION.md`.
 
-### Restricciones
-- **No puede eliminarse a sí mismo**: Un administrador no puede eliminar su propia cuenta
-- **Usuarios con accesos activos**: Se recomienda verificar que no tenga accesos activos
-- **Historial**: El historial de accesos se mantiene en el sistema
+El panel muestra avisos al administrador 15 y 3 días antes de cada limpieza
+mensual.
 
 ---
 
-## Importar Usuarios desde Excel
+## Preguntas frecuentes
 
-### Paso 1: Acceder a Importación
-1. En la página de gestión de usuarios, haga clic en "Importar Excel"
-2. Se abrirá el modal de importación
+**¿Cómo restablezco la contraseña de alguien?** Edite el usuario y escriba
+una contraseña temporal (o pídale que use "¿Olvidaste tu contraseña?"). El
+cambio expulsa sus sesiones.
 
-### Paso 2: Preparar el Archivo Excel
+**¿Puedo recuperar un usuario eliminado?** No. Habría que crearlo de nuevo;
+su historial borrado no vuelve.
 
-#### Columnas Obligatorias
-- **Nombre**: Nombre completo del usuario
-- **Correo**: Correo institucional
+**¿Por qué una fila del Excel quedó sin documento?** El número no pasó la
+validación del tipo o ya estaba registrado. Corríjalo editando el usuario.
 
-#### Columnas Opcionales
-- **Documento**: Número de documento
-- **Cargo**: Cargo o dependencia
-- **Rol**: Rol en el sistema
-- **Ficha**: Número de ficha (para aprendices)
-- **Programa**: Programa de formación (para aprendices)
-- **Horario**: Horario (Mañana, Tarde, Noche)
-- **Contraseña**: Contraseña temporal (si no se especifica, se genera una)
+**¿Puedo dar rol Admin por Excel?** No, nunca. El rol Admin solo se asigna
+editando la cuenta una a una desde el panel.
 
-#### Formato del Archivo
-- **Tipo**: .xlsx o .xls
-- **Encoding**: UTF-8
-- **Primera fila**: Debe contener los nombres de las columnas
-
-### Paso 3: Cargar el Archivo
-1. Haga clic en "Seleccionar archivo"
-2. Seleccione el archivo Excel preparado
-3. El sistema mostrará el nombre del archivo seleccionado
-
-### Paso 4: Importar
-1. Haga clic en "Subir e Importar"
-2. El sistema procesará el archivo
-3. Se mostrará un indicador de progreso
-
-### Paso 5: Revisar Resultados
-El sistema mostrará:
-- **Total de usuarios procesados**
-- **Usuarios creados exitosamente**
-- **Errores encontrados** (si los hay)
-
-### Errores Comunes en Importación
-
-| Error | Causa | Solución |
-|-------|-------|----------|
-| "Correo duplicado" | El correo ya existe en el sistema | Verifique que el correo no esté duplicado |
-| "Formato inválido" | El archivo no tiene el formato correcto | Use el formato .xlsx con columnas correctas |
-| "Campo obligatorio faltante" | Falta nombre o correo | Asegúrese de incluir columnas obligatorias |
-| "Rol inválido" | El rol especificado no existe | Use roles válidos del sistema |
-
-### Plantilla de Excel
-Se recomienda usar la plantilla proporcionada por el sistema para asegurar el formato correcto.
+**¿Dónde configuro puntos de acceso?** No existe pantalla para eso: el
+sistema usa un único punto ("Portería Principal") creado automáticamente.
 
 ---
 
-## Gestión de Roles y Permisos
-
-### Roles del Sistema
-
-#### Administrador
-- **Permisos**: Acceso completo a todos los módulos
-- **Funciones**: Gestión de usuarios, configuración del sistema, reportes
-- **Restricciones**: No puede eliminarse a sí mismo
-
-#### Usuario Estándar
-- **Permisos**: Gestión de perfil, registro de equipos
-- **Funciones**: Actualizar datos personales, registrar equipos
-- **Restricciones**: No puede gestionar otros usuarios
-
-#### Celador
-- **Permisos**: Control de acceso, escaneo de QR
-- **Funciones**: Registrar entradas/salidas, verificar usuarios
-- **Restricciones**: No puede gestionar usuarios
-
-#### Otros Roles
-El sistema puede tener roles adicionales configurados según las necesidades de la institución.
-
-### Cambiar Rol de Usuario
-1. Edite el usuario
-2. Seleccione el nuevo rol
-3. Complete la auditoría de cambios
-4. Guarde los cambios
-
-### Impacto del Cambio de Rol
-- **Permisos**: Los permisos se actualizan inmediatamente
-- **Acceso**: El usuario puede perder o ganar acceso a módulos
-- **Sesión**: El usuario debe cerrar y volver a iniciar sesión
-
----
-
-## Historial de Usuarios
-
-### Paso 1: Acceder al Historial
-1. En el menú, seleccione "Historial"
-2. Se mostrará el historial de cambios de usuarios
-
-### Información del Historial
-Para cada cambio se registra:
-- **Fecha y hora** del cambio
-- **Usuario modificado**
-- **Tipo de cambio** (creación, edición, eliminación)
-- **Administrador** que realizó el cambio
-- **Motivo** del cambio
-- **Campos modificados**
-
-### Filtros del Historial
-- **Por usuario**: Filtrar cambios por usuario específico
-- **Por administrador**: Filtrar por quien realizó el cambio
-- **Por tipo de cambio**: Filtrar por tipo de acción
-- **Por rango de fechas**: Filtrar por periodo específico
-
-### Exportación del Historial
-1. Aplique los filtros deseados
-2. Haga clic en "Exportar"
-3. El sistema generará un archivo con el historial
-
----
-
-## Buenas Prácticas
-
-### Al Crear Usuarios
-1. **Verifique la información**: Asegúrese de que todos los datos sean correctos
-2. **Use correos institucionales**: Solo use correos oficiales del SENA
-3. **Asigne el rol correcto**: El rol debe corresponder a las funciones del usuario
-4. **Genere contraseñas seguras**: Use contraseuras temporales seguras
-
-### Al Editar Usuarios
-1. **Documente los cambios**: Complete siempre el motivo del cambio
-2. **Comuníquese con el usuario**: Informe al usuario sobre cambios importantes
-3. **Verifique el impacto**: Considere cómo el cambio afecta al usuario
-4. **Mantenga el historial**: Los cambios quedan registrados automáticamente
-
-### Al Eliminar Usuarios
-1. **Verifique la necesidad**: Asegúrese de que la eliminación sea necesaria
-2. **Confirme la identidad**: Verifique que es el usuario correcto
-3. **Considere alternativas**: Considere bloquear en lugar de eliminar
-4. **Documente el motivo**: Registre la razón de la eliminación
-
-### Seguridad
-1. **No comparta credenciales**: Mantenga su cuenta de administrador segura
-2. **Use contraseñas fuertes**: Cambie su contraseña regularmente
-3. **Revise accesos**: Monitoree usuarios con roles elevados
-4. **Reporte irregularidades**: Notifique cualquier actividad sospechosa
-
----
-
-## Preguntas Frecuentes
-
-### ¿Puedo crear usuarios sin correo institucional?
-No, el correo institucional es obligatorio y se usa para inicio de sesión y verificación.
-
-### ¿Qué hago si un usuario olvida su contraseña?
-Como administrador, puede editar el usuario y establecer una nueva contraseña temporal.
-
-### ¿Puedo recuperar un usuario eliminado?
-No, la eliminación es permanente. Si necesita recrear el usuario, debe crearlo nuevamente.
-
-### ¿Cómo sé qué rol asignar a un usuario?
-Asigne el rol según las funciones que realizará:
-- **Admin**: Para personal técnico que gestiona el sistema
-- **Celador**: Para personal de portería
-- **Usuario**: Para aprendices, instructores y administrativos
-
-### ¿Puedo importar usuarios con contraseñas ya establecidas?
-Sí, puede incluir la columna "Contraseña" en el archivo Excel. Si no se incluye, el sistema generará una automáticamente.
-
-### ¿Qué pasa si el archivo Excel tiene errores?
-El sistema mostrará los errores encontrados y no importará los usuarios con errores. Puede corregir el archivo y volver a importar.
-
-### ¿Puedo editar mi propio perfil?
-Sí, puede editar su propio perfil, pero no puede cambiar su propio rol ni eliminarse a sí mismo.
-
-### ¿Cómo manejo usuarios que ya no necesitan acceso?
-Recomendamos bloquear el usuario en lugar de eliminarlo. Esto mantiene el historial pero revoca el acceso.
-
-### ¿Puedo ver quién hizo cambios en un usuario específico?
-Sí, el historial muestra todos los cambios con el administrador que los realizó y el motivo.
-
-### ¿Hay límite en el número de usuarios que puedo importar?
-No hay límite establecido, pero archivos muy grandes pueden tardar más en procesarse.
-
-### ¿Puedo asignar múltiples roles a un usuario?
-No, cada usuario tiene un solo rol. Si necesita permisos adicionales, contacte al equipo técnico para configurar roles personalizados.
-
----
-
-## Soporte Técnico
-
-Para reportar problemas o solicitar ayuda adicional con la gestión de usuarios, contacte al equipo de soporte técnico del Centro de Gestión Agroempresarial del Oriente.
-
-### Información de Contacto
-- **Soporte Técnico**: [Correo de soporte]
-- **Horario**: [Horario de atención]
-- **Ubicación**: [Ubicación física del soporte]
-
-### Emergencias del Sistema
-Para emergencias del sistema fuera del horario de soporte:
-- Contacte al administrador de sistema on-call
-- Use los canales de emergencia establecidos
-
----
-
-**Versión:** 1.0  
-**Fecha:** Mayo 2026  
-**Institución:** SENA - Centro de Gestión Agroempresarial del Oriente
+**Institución:** SENA — Centro de Gestión Agroempresarial del Oriente
+**Última revisión contra el código:** septiembre de 2026

@@ -1,116 +1,77 @@
-# Manuales de Usuario - Sistema de Gestión de Acceso SENA
+# Manuales de Usuario — Sistema de Gestión de Acceso SENA
 
-## Descripción General
-Este sistema de gestión de acceso fue desarrollado para el Centro de Gestión Agroempresarial del Oriente del SENA. Permite el control de accesos, gestión de perfiles, registro de equipos y control de asistencia mediante códigos QR.
+Sistema de control de acceso del Centro de Gestión Agroempresarial del
+Oriente (SENA). Permite el control de entradas y salidas mediante **carnet
+digital con código de barras**, el registro de visitantes, vehículos y
+objetos, el registro de equipos personales y el control de asistencia.
 
-## Módulos del Sistema
+Todos los manuales de esta carpeta están verificados contra el código del
+repositorio (última revisión: septiembre de 2026). Si un manual y el sistema
+se contradicen, repórtelo: el manual se corrige contra el código, nunca al
+revés.
 
-### 1. Manual de Usuario - Gestión de Perfil
-Guía completa para que los usuarios gestionen su información personal, foto de perfil, datos de identificación y obtengan su carnet digital con código QR.
+## Empezar por aquí
 
-**Archivo:** `manual_gestion_perfil.md`
+- **`matriz_permisos.md`** — qué puede hacer cada combinación de rol y cargo.
+  Los **roles** del sistema son **Admin, Usuario y Trabajador**; "Celador",
+  "Instructor", "Aprendiz", "Administrativo" y "Administrador" son
+  **cargos**. Casi todas las dudas de "por qué no veo tal menú" se responden
+  ahí.
+- Para operación y despliegue (respaldos, tareas automáticas, correo,
+  variables): **`../DESPLIEGUE_Y_OPERACION.md`**.
 
-### 2. Manual de Usuario - Gestión de Equipos
-Guía para el registro y gestión de equipos (laptops, tablets) vinculados a los usuarios del sistema.
+## Manuales por módulo
 
-**Archivo:** `manual_gestion_equipos.md`
+| Manual | Contenido | Para quién |
+|---|---|---|
+| `manual_registro_cuenta.md` | Registro público, verificación de correo, inicio de sesión, recuperación de contraseña | Todos |
+| `manual_gestion_perfil.md` | Perfil, foto (validación + aprobación), carnet digital y código de barras | Todos |
+| `manual_gestion_equipos.md` | Registro de equipos propios (máx. 5) | Usuarios (salvo celadores y rol Trabajador) |
+| `manual_mensajes_y_ayuda.md` | Mensajería con asesores, centro de ayuda, tutorial | Todos / asesores |
+| `manual_historial_ingresos.md` | Historial de entradas/salidas y ausentismo, con rango de fechas | Todos (propio); portería e instructores (terceros) |
+| `manual_control_acceso.md` | Escáner, movimientos, pases manuales, incidentes, panel | Quien opera portería |
+| `manual_sistema_asistencia.md` | Asistencia por ficha (solo quienes entraron ese día) | Instructores y Admin |
+| `manual_gestion_usuarios.md` | Usuarios: crear, editar, eliminar, importar Excel; auditoría y respaldos | Solo rol Admin |
+| `manual_gestion_fichas.md` | Fichas de formación (programa y fecha heredados) | Solo rol Admin |
+| `manual_revision_fotos.md` | Cola de aprobación de fotos | Solo rol Admin |
 
-### 3. Manual de Usuario - Control de Acceso (Portería)
-Guía para celadores y personal de portería sobre el uso del sistema de escaneo de QR, registro de entradas/salidas y verificación de usuarios.
+## Manuales por rol/cargo
 
-**Archivo:** `manual_control_acceso.md`
+| Manual | Cubre |
+|---|---|
+| `manual_rol_administrador.md` | Rol **Admin** (todo el sistema) |
+| `manual_rol_celador.md` | Cargo **Celador** (portería) |
+| `manual_rol_instructor.md` | Cargo **Instructor** (asistencia) |
+| `manual_rol_aprendiz.md` | Cargo **Aprendiz** |
+| `manual_rol_administrativo.md` | Cargo **Administrativo** (asesor) |
+| `manual_rol_usuario_estandar.md` | Rol Usuario sin cargo especial y rol **Trabajador** |
 
-### 4. Manual de Usuario - Gestión de Usuarios (Administrador)
-Guía para administradores sobre la creación, edición y eliminación de usuarios, importación masiva desde Excel y gestión de roles.
+## Hechos del sistema que todos los manuales respetan
 
-**Archivo:** `manual_gestion_usuarios.md`
+- El carnet usa **código de barras (Code128)** derivado del documento. No
+  existen códigos QR, ni botones de "Imprimir QR"/"Descargar QR", ni
+  regeneración de códigos. El único botón del carnet es **"Descargar carnet"**.
+- **No existen "pases temporales"** con vigencia, revocación ni extensión:
+  se registran visitantes, vehículos y objetos, y el cierre automático de
+  medianoche los desactiva.
+- El carnet se activa solo con la **foto aprobada por un administrador**,
+  además del documento, el tipo de sangre y (aprendices) la ficha.
+- La lista de asistencia contiene **solo a quienes registraron entrada en
+  portería ese mismo día**; no hay fechas retroactivas ni observaciones.
+- **No hay** exportación de asistencia a Excel/PDF, edición de equipos,
+  pantalla de puntos de acceso, restauración de respaldos ni filtros de fecha
+  en el panel de portería (las consultas por fechas viven en "Historial de
+  Ingresos").
+- El día 1 de cada mes los accesos y asistencias del mes anterior **se
+  exportan a Excel y se borran de la base**; no hay forma de restaurarlos.
 
-### 5. Manual de Usuario - Sistema de Asistencia
-Guía para instructores y administrativos sobre el registro y control de asistencia de aprendices por ficha.
+## Requisitos
 
-**Archivo:** `manual_sistema_asistencia.md`
-
-## Manuales por Rol
-
-### Manual de Usuario - Rol Administrador
-Guía completa para administradores del sistema. Incluye gestión de usuarios, configuración, reportes y todas las funcionalidades administrativas.
-
-**Archivo:** `manual_rol_administrador.md`
-
-### Manual de Usuario - Rol Celador/Portería
-Guía para celadores y personal de portería. Incluye escaneo de QR, verificación de usuarios, registro de accesos, pases temporales y gestión de equipos externos.
-
-**Archivo:** `manual_rol_celador.md`
-
-### Manual de Usuario - Rol Instructor
-Guía para instructores. Incluye gestión de perfil, registro de equipos y sistema de asistencia por ficha.
-
-**Archivo:** `manual_rol_instructor.md`
-
-### Manual de Usuario - Rol Aprendiz
-Guía para aprendices. Incluye gestión de perfil, registro de equipos, carnet digital y verificación de asistencia.
-
-**Archivo:** `manual_rol_aprendiz.md`
-
-### Manual de Usuario - Rol Administrativo
-Guía para personal administrativo. Incluye gestión de perfil, registro de equipos, carnet digital y verificación de accesos.
-
-**Archivo:** `manual_rol_administrativo.md`
-
-### Manual de Usuario - Rol Usuario Estándar
-Guía para usuarios estándar. Incluye gestión de perfil, registro de equipos, carnet digital y verificación de accesos.
-
-**Archivo:** `manual_rol_usuario_estandar.md`
-
-## Roles del Sistema
-
-### Aprendiz
-- Acceso a gestión de perfil personal
-- Registro de equipos personales
-- Escaneo de QR para acceso
-
-### Instructor
-- Gestión de perfil personal
-- Registro de equipos personales
-- Control de asistencia de aprendices
-- Escaneo de QR para acceso
-
-### Administrativo
-- Gestión de perfil personal
-- Registro de equipos personales
-- Escaneo de QR para acceso
-
-### Celador
-- Control de acceso en portería
-- Escaneo y verificación de QR
-- Registro de entradas y salidas
-- Gestión de pases temporales
-
-### Administrador de Sistema
-- Gestión completa de usuarios
-- Importación masiva de usuarios
-- Gestión de roles y permisos
-- Acceso a todos los módulos del sistema
-
-## Requisitos del Sistema
-
-### Navegadores Soportados
-- Google Chrome (recomendado)
-- Mozilla Firefox
-- Microsoft Edge
-- Safari
-
-### Requisitos Mínimos
-- Conexión a internet
-- Cámara o escáner de QR (para módulo de portería)
-- Navegador actualizado
-
-## Soporte Técnico
-
-Para reportar problemas o solicitar ayuda, contacte al equipo de soporte técnico del Centro de Gestión Agroempresarial del Oriente.
+- Navegador actualizado (Chrome, Firefox, Edge o Safari) con conexión a
+  internet.
+- Para el escáner de portería: dispositivo con cámara (el lector funciona
+  desde el navegador) o, en su defecto, la búsqueda manual por documento.
 
 ---
 
-**Versión:** 1.0  
-**Fecha:** Mayo 2026  
-**Institución:** SENA - Centro de Gestión Agroempresarial del Oriente
+**Institución:** SENA — Centro de Gestión Agroempresarial del Oriente

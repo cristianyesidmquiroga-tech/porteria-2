@@ -1,204 +1,125 @@
-# Estructura del Proyecto - Sistema de Gestión de Acceso SENA
+# Estructura del Proyecto — Sistema de Gestión de Acceso SENA
 
-## Descripción General
-Este documento describe la estructura organizada del proyecto del Sistema de Gestión de Acceso del SENA - Centro de Gestión Agroempresarial del Oriente.
+Descripción de cómo está organizado el repositorio. Verificada contra el
+contenido real del repo. Para despliegue, variables de entorno y tareas
+programadas, ver `docs/DESPLIEGUE_Y_OPERACION.md`.
 
-## Estructura de Directorios
+## Árbol de directorios
 
 ```
 porteria-2/
-├── app/                          # Aplicación principal Flask
-│   ├── __init__.py              # Inicialización de la aplicación
-│   ├── models/                  # Modelos de base de datos
-│   ├── routes/                  # Rutas y blueprints
-│   ├── static/                  # Archivos estáticos (CSS, JS, imágenes)
-│   ├── templates/               # Plantillas HTML
-│   └── utils/                   # Utilidades y helpers
-├── config/                      # Archivos de configuración
-│   ├── .env                     # Variables de entorno (no en git)
-│   ├── .env.example             # Ejemplo de variables de entorno
-│   └── config.py                # Configuración de la aplicación
-├── scripts/                     # Scripts de utilidad
-│   └── create_admin.py          # Script para crear administrador
-├── docker/                      # Archivos Docker
-│   ├── Dockerfile               # Configuración de imagen Docker
-│   ├── docker-compose.yml       # Configuración de servicios Docker
-│   └── entrypoint.sh            # Script de entrada para contenedor
-├── docs/                        # Documentación
-│   └── manuales/                # Manuales de usuario
-│       ├── README.md            # Índice de manuales
-│       ├── manual_gestion_perfil.md
-│       ├── manual_gestion_equipos.md
-│       ├── manual_control_acceso.md
-│       ├── manual_gestion_usuarios.md
-│       └── manual_sistema_asistencia.md
-├── instance/                    # Datos de instancia (base de datos local)
-├── venv/                        # Entorno virtual Python (no en git)
-├── .gitattributes              # Atributos Git
-├── .gitignore                  # Archivos ignorados por Git
-├── requirements.txt            # Dependencias Python
-└── run.py                      # Punto de entrada de la aplicación
+├── app/                              # Aplicación Flask
+│   ├── __init__.py                   # create_app(): config, seguridad, blueprints, tareas
+│   ├── models/                       # Modelos SQLAlchemy
+│   │   ├── usuarios.py               # Usuario, Rol, Carnet, TurnoCelador, avatares
+│   │   ├── entidades.py              # Visitante, Vehiculo, Equipo, ObjetoExterno
+│   │   ├── accesos.py                # PuntoAcceso, Acceso, Auditoria
+│   │   ├── asistencia.py             # AsistenciaClase
+│   │   ├── fichas.py                 # Ficha de formación
+│   │   ├── mensajes.py               # Mensajería usuario <-> administradores
+│   │   └── movimientos.py            # Movimientos por tipo de entidad
+│   ├── routes/                       # Blueprints
+│   │   ├── auth/                     # login, registro, verificación, recuperación,
+│   │   │                             #   logout, desafío anti-bot
+│   │   ├── main/                     # raíz, /salud, política de privacidad
+│   │   ├── usuarios/                 # perfil, fotos, admin de usuarios, asistencia,
+│   │   │                             #   fichas, mensajes, ayuda, tutorial, revisión de fotos
+│   │   ├── porteria/                 # dashboard, escáner, pases, reportes,
+│   │   │                             #   historial por persona, historial de clases
+│   │   └── equipos/                  # registro/eliminación de equipos propios
+│   ├── static/
+│   │   ├── css/                      # dividido por módulo (compartido/, layout/, vistas/)
+│   │   ├── js/                       # un archivo por vista + librerías fijadas por versión
+│   │   ├── img/                      # avatares SVG por cargo, imágenes
+│   │   ├── modelos/                  # modelos ONNX (detección facial YuNet, segmentación)
+│   │   ├── fonts/, webfonts/
+│   │   └── uploads/                  # ubicación ANTIGUA de fotos (se migran al arrancar)
+│   ├── templates/                    # Jinja2: auth/, main/, usuarios/, porteria/,
+│   │                                 #   partials/ (_sidebar, _header, _captcha), errores/
+│   ├── utils/
+│   │   ├── barras.py                 # código de barras Code128 en SVG (sin dependencias)
+│   │   ├── captcha.py                # desafío anti-bot autoalojado (prueba de trabajo)
+│   │   ├── carnet.py                 # perfiles del carnet impreso, partición de nombre
+│   │   ├── documentos.py             # tipos de documento y validación por tipo
+│   │   ├── email.py                  # envío SMTP con cola, reintentos y modo directo
+│   │   ├── fotos.py                  # almacenamiento/servicio de fotos con permisos
+│   │   ├── imagenes.py               # procesado y validación facial de la foto
+│   │   ├── limitador.py              # catálogo completo de límites de peticiones
+│   │   ├── perfiles.py               # regla de "perfil completo"
+│   │   ├── respaldos.py              # respaldo mensual (exporta a Excel y BORRA)
+│   │   ├── security.py               # sesión única, validación de contraseña, sanitizado
+│   │   └── tareas.py                 # cierre automático de medianoche
+│   └── respaldos_mensuales/          # destino de los .xlsx mensuales (volumen en Docker)
+├── config/
+│   ├── .env                          # variables reales (NO se commitea)
+│   ├── .env.example                  # referencia comentada de TODAS las variables
+│   └── config.py                     # clase Config (exige SECRET_KEY y DATABASE_URL)
+├── docker/
+│   ├── Dockerfile                    # python:3.12-slim, usuario no root, TZ Bogotá
+│   ├── docker-compose.yml            # UN solo servicio (web); la BD es externa
+│   └── entrypoint.sh                 # create_admin.py + gunicorn con 1 worker
+├── docs/
+│   ├── DESPLIEGUE_Y_OPERACION.md     # operación: tareas, respaldos, correo, volúmenes
+│   ├── ESTRUCTURA_PROYECTO.md        # este archivo
+│   ├── ESTADO_AUDITORIA.md
+│   └── manuales/                     # manuales de usuario (ver su README.md)
+├── scripts/
+│   ├── create_admin.py               # corre en CADA despliegue (roles, punto, superadmin)
+│   ├── probar_correo.py              # prueba la configuración SMTP (--puerto-25)
+│   ├── limpiar_fotos_huerfanas.py    # borra fotos sin usuario asociado
+│   └── generar_pdfs_*.py             # convierten los manuales a PDF (3 variantes)
+├── tests/                            # pytest (SQLite en memoria, ver conftest.py)
+│   ├── conftest.py
+│   ├── fixtures/
+│   └── test_*.py                     # autenticación, portería, carnet, correo, fotos,
+│                                     #   fichas, mensajes, límites, importación Excel...
+├── instance/                         # datos de instancia local
+│   ├── fotos_perfil/                 # ubicación ACTUAL de las fotos de perfil
+│   └── local_dev.sqlite              # base local de desarrollo
+├── .venv/                            # entorno virtual local (no versionado)
+├── requirements.txt                  # dependencias de producción
+├── requirements-dev.txt              # dependencias de desarrollo/pruebas
+└── run.py                            # punto de entrada
 ```
 
-## Descripción de Directorios
+## Decisiones de estructura que conviene conocer
 
-### app/
-Contiene toda la aplicación Flask:
-- **models/**: Modelos SQLAlchemy para la base de datos
-- **routes/**: Blueprints y rutas de la aplicación (auth, usuarios, porteria, equipos, main)
-- **static/**: Archivos estáticos organizados por tipo (CSS, JS, imágenes)
-- **templates/**: Plantillas HTML organizadas por módulo
-- **utils/**: Funciones de utilidad (email, tareas, respaldos)
+- **Las fotos de perfil NO viven en `static/`.** Están en
+  `instance/fotos_perfil/` (o en `CARPETA_FOTOS` si se configura) y se sirven
+  por la vista `/foto/<id>`, que comprueba sesión y permiso. `static/uploads/`
+  es la ubicación antigua: lo que quede ahí se migra automáticamente al
+  arrancar.
+- **Los límites de peticiones están centralizados** en
+  `app/utils/limitador.py` (catálogo `LIMITES` + lista `EXENTOS`), no como
+  decoradores repartidos por las vistas.
+- **Los modelos de IA viajan en el repo** (`app/static/modelos/`) porque el
+  contenedor de producción no tiene internet garantizado en ejecución.
+- **Las librerías JS están fijadas por versión en el nombre del archivo**
+  (`html5-qrcode-2.3.8.min.js`, `chart-4.5.1.umd.min.js`...) y se sirven
+  desde `static/`, no desde CDN sin versión.
+- `docker-compose.yml` **no** define servicios `postgres` ni `backup`: la base
+  es externa (Coolify/VPS) y el "respaldo" es la tarea mensual interna
+  documentada en `docs/DESPLIEGUE_Y_OPERACION.md`.
 
-### config/
-Archivos de configuración del sistema:
-- **.env**: Variables de entorno reales (no versionado en Git)
-- **.env.example**: Plantilla de variables de entorno (versionado)
-- **config.py**: Clase Config con configuración de la aplicación
+## Dependencias principales
 
-### scripts/
-Scripts de utilidad y mantenimiento:
-- **create_admin.py**: Script para crear/actualizar el usuario administrador
+Ver `requirements.txt` (versiones fijadas). Núcleo: Flask 3, Flask-SQLAlchemy,
+Flask-Login, Flask-WTF (CSRF), Flask-Limiter, Flask-APScheduler, gunicorn,
+psycopg2, pandas + openpyxl (importación/respaldo Excel), Pillow +
+opencv-python-headless (procesado y validación facial de fotos), dnspython
+(modo directo de correo).
 
-### docker/
-Archivos para contenedorización:
-- **Dockerfile**: Definición de la imagen Docker
-- **docker-compose.yml**: Orquestación de servicios (web, postgres, backup)
-- **entrypoint.sh**: Script de inicialización del contenedor
+## Ejecución
 
-### docs/
-Documentación del proyecto:
-- **manuales/**: Manuales de usuario para cada módulo del sistema
-
-### Archivos en Raíz
-- **.gitignore**: Archivos ignorados por Git
-- **.gitattributes**: Configuración de atributos Git
-- **requirements.txt**: Dependencias Python del proyecto
-- **run.py**: Punto de entrada para ejecutar la aplicación localmente
-
-## Cambios Realizados
-
-### Reorganización de Archivos
-Los siguientes archivos fueron movidos para mejor organización:
-
-| Archivo Original | Nueva Ubicación | Razón |
-|-----------------|----------------|--------|
-| .env | config/.env | Archivos de configuración |
-| .env.example | config/.env.example | Archivos de configuración |
-| config.py | config/config.py | Archivos de configuración |
-| create_admin.py | scripts/create_admin.py | Scripts de utilidad |
-| Dockerfile | docker/Dockerfile | Archivos Docker |
-| docker-compose.yml | docker/docker-compose.yml | Archivos Docker |
-| entrypoint.sh | docker/entrypoint.sh | Archivos Docker |
-| manuales/ | docs/manuales/ | Documentación |
-
-### Actualizaciones de Referencias
-Se actualizaron las siguientes referencias en el código:
-
-1. **app/__init__.py**: 
-   - Cambiado: `app.config.from_object('config.Config')`
-   - A: `app.config.from_object('config.config.Config')`
-
-2. **docker/Dockerfile**:
-   - Actualizado: `RUN chmod +x docker/entrypoint.sh`
-   - Actualizado: `ENTRYPOINT ["./docker/entrypoint.sh"]`
-
-3. **docker/docker-compose.yml**:
-   - Actualizado: `build: context: .., dockerfile: docker/Dockerfile`
-   - Actualizado: `env_file: - ../config/.env` (todos los servicios)
-
-4. **docker/entrypoint.sh**:
-   - Actualizado: `python scripts/create_admin.py`
-
-5. **.gitignore**:
-   - Actualizado: `config/.env` (en lugar de `.env`)
-
-6. **scripts/create_admin.py**:
-   - Agregado: `sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))` para manejar la nueva ubicación
-
-## Ejecución del Proyecto
-
-### Desarrollo Local
-```bash
-# Activar entorno virtual
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Configurar variables de entorno
-cp config/.env.example config/.env
-# Editar config/.env con tus valores
-
-# Crear administrador
-python scripts/create_admin.py
-
-# Ejecutar aplicación
-python run.py
-```
-
-### Docker
-```bash
-# Desde el directorio docker/
-cd docker
-
-# Configurar variables de entorno
-cp ../config/.env.example ../config/.env
-# Editar ../config/.env con tus valores
-
-# Construir y ejecutar
-docker-compose up --build
-```
-
-## Variables de Entorno
-
-Las variables de entorno se configuran en `config/.env`:
-
-- **SECRET_KEY**: Llave secreta para seguridad
-- **DATABASE_URL**: URL de conexión a base de datos
-- **MAIL_SERVER**: Servidor SMTP para correos
-- **MAIL_PORT**: Puerto SMTP
-- **MAIL_USERNAME**: Usuario SMTP
-- **MAIL_PASSWORD**: Contraseña SMTP
-- **ADMIN_EMAIL**: Correo del administrador
-- **ADMIN_PASSWORD**: Contraseña del administrador
-
-## Mantenimiento
-
-### Crear Administrador
-```bash
-python scripts/create_admin.py
-```
-
-### Respaldos de Base de Datos
-Los respaldos se generan automáticamente el primer día de cada mes. Se almacenan en `app/respaldos_mensuales/`.
-
-### Actualizar Dependencias
-```bash
-pip freeze > requirements.txt
-```
+- **Desarrollo local:** ver `docs/DESPLIEGUE_Y_OPERACION.md` §7 (entorno
+  `.venv`, `config/.env`, `python run.py`, `python -m pytest tests/`).
+- **Producción:** contenedor Docker desplegado vía Coolify; la configuración
+  vive en las variables de entorno de la plataforma.
 
 ## Convenciones
 
-### Nomenclatura de Archivos
-- Python: `snake_case.py`
-- HTML: `kebab-case.html`
-- CSS: `kebab-case.css`
-- JavaScript: `kebab-case.js`
-
-### Estructura de Código
-- Blueprints para módulos separados
-- Modelos en carpeta `models/`
-- Rutas en carpeta `routes/`
-- Utilidades en carpeta `utils/`
-
-## Soporte
-
-Para reportar problemas o solicitar ayuda, contacte al equipo de soporte técnico del Centro de Gestión Agroempresarial del Oriente.
-
----
-
-**Versión:** 1.0  
-**Fecha:** Mayo 2026  
-**Institución:** SENA - Centro de Gestión Agroempresarial del Oriente
+- Código y comentarios en español; commits cortos `tipo: descripción`.
+- Python `snake_case.py`; CSS/JS divididos por módulo con nombre descriptivo.
+- Rutas de datos con prefijo `/api/`; páginas sin prefijo.
+- Ningún secreto, contraseña ni IP del servidor se escribe en el repositorio
+  (incluida esta carpeta `docs/`).
