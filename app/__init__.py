@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, logout_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_apscheduler import APScheduler
+from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import datetime, timedelta, timezone
 import logging
 import os
@@ -11,6 +12,10 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 scheduler = APScheduler()
+
+# El limitador se define en su propio modulo junto al catalogo de limites.
+from .utils.limitador import (  # noqa: E402
+    aplicar_limites, limiter, registrar_manejador_429)
 
 # Inactividad permitida para usuarios que no operan porteria.
 TIEMPO_INACTIVIDAD_SEGUNDOS = 10 * 60
@@ -29,6 +34,14 @@ def _registrar_cabeceras_seguridad(app):
         response.headers['Permissions-Policy'] = (
             'geolocation=(), microphone=(), payment=(), usb=(), camera=(self)'
         )
+        # Aisla la pestana de cualquier ventana que la haya abierto: sin esto,
+        # una pagina externa que abra el sistema conserva una referencia viva a
+        # la ventana (window.opener) y puede redirigirla a una copia falsa del
+        # login. No rompe nada aqui porque el sistema no usa ventanas emergentes.
+        response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+        # Impide que un Flash/PDF antiguo alojado en otro dominio se traiga
+        # datos de este. Cuesta una cabecera y cierra un vector heredado.
+        response.headers['X-Permitted-Cross-Domain-Policies'] = 'none'
 
         # HSTS solo cuando la peticion llego por HTTPS, para no romper el
         # desarrollo local en HTTP.
@@ -37,20 +50,29 @@ def _registrar_cabeceras_seguridad(app):
                 'max-age=31536000; includeSubDomains'
             )
 
-        # CSP. Las plantillas usan estilos y manejadores inline (48 onclick /
-        # onerror repartidos por las vistas, entre ellos todos los botones del
-        # escaner), asi que script-src necesita 'unsafe-inline' HOY. Quitarlo
-        # exige migrar antes esos manejadores a addEventListener; hacerlo ahora
-        # dejaria el escaner de porteria inutilizable.
+        # CSP. script-src ya no lleva 'unsafe-inline': los manejadores inline
+        # se migraron a addEventListener en archivos de /static/js, y los
+        # datos que antes se incrustaban en el HTML viajan en atributos
+        # data-*. Sin 'unsafe-inline' un XSS almacenado no llega a ejecutarse,
+        # que es la defensa que importa aqui (el sistema guarda cedulas,
+        # fotos de rostro y tipo de sangre).
+        # style-src si lo conserva: los estilos inline son muchisimos mas y
+        # no abren la puerta a ejecucion de codigo.
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
-            "https://cdnjs.cloudflare.com https://unpkg.com; "
+            "script-src 'self' https://cdn.jsdelivr.net "
+            # unpkg.com se quito: la unica libreria que venia de ahi era el
+            # lector html5-qrcode, que ahora se sirve desde /static con la
+            # version fijada en el nombre del archivo.
+            "https://cdnjs.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
             "https://cdnjs.cloudflare.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
-            "img-src 'self' data: blob: https://ui-avatars.com "
-            "https://upload.wikimedia.org; "
+            # ui-avatars.com se elimino: recibia el nombre real de cada
+            # usuario en la URL, es decir datos personales enviados a un
+            # tercero en cada carga de pagina. Ahora los avatares son SVG
+            # locales servidos desde 'self'.
+            "img-src 'self' data: blob: https://upload.wikimedia.org; "
             "connect-src 'self'; "
             "frame-ancestors 'none'; "
             "base-uri 'self'; "
@@ -98,6 +120,21 @@ COLUMNAS_PENDIENTES = {
     },
     'usuarios': {
         'intentos_codigo': 'INTEGER DEFAULT 0',
+        'foto_estado': "VARCHAR(20) DEFAULT 'sin_foto'",
+        'foto_motivo': 'TEXT',
+        'foto_revisada_por': 'INTEGER',
+        'foto_fecha_revision': 'TIMESTAMP',
+        'foto_fecha_subida': 'TIMESTAMP',
+        'tipo_documento': "VARCHAR(5) DEFAULT 'CC'",
+        'tutorial_visto': 'BOOLEAN DEFAULT FALSE',
+        # Nombres y apellidos por separado, que es como los pide el carnet
+        # oficial. No se rellenan partiendo `nombre`: quedan vacios hasta que
+        # la persona los declare (ver el comentario en el modelo).
+        'nombres': 'VARCHAR(100)',
+        'apellidos': 'VARCHAR(100)',
+        # Sin FOREIGN KEY en el ALTER: SQLite no la admite al anadir columna y
+        # la integridad ya la impone el modelo al insertar.
+        'ficha_id': 'INTEGER',
     },
     'accesos': {
         'operador_id': 'INTEGER',
@@ -163,8 +200,25 @@ def create_app():
         format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     )
 
+    # Detras de Coolify/Traefik la IP que ve Flask es la del proxy, no la del
+    # cliente: sin esto TODO el trafico compartiria un solo contador de limite
+    # y el primero en pasarse bloquearia al centro entero. PROXIES_CONFIABLES
+    # debe valer exactamente el numero de proxies propios que hay delante; con
+    # un valor mas alto que el real, cualquiera podria falsear su IP mandando
+    # una cabecera X-Forwarded-For a mano.
+    proxies = app.config['PROXIES_CONFIABLES']
+    if proxies:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxies, x_proto=proxies,
+                                x_host=proxies)
+
     db.init_app(app)
     login_manager.init_app(app)
+    # El limitador se inicializa ANTES que CSRF a proposito: los before_request
+    # corren en orden de registro, y si CSRF fuera primero, una avalancha de
+    # POST con token invalido se respondería con 400 sin gastar nunca el techo
+    # general, es decir sin llegar a frenarse. (Los limites por endpoint si se
+    # evaluan despues de CSRF, dentro de la vista.)
+    limiter.init_app(app)
     csrf.init_app(app)
     scheduler.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -208,7 +262,8 @@ def create_app():
         return None
 
     with app.app_context():
-        from .models import usuarios, accesos, movimientos, entidades, asistencia  # noqa: F401
+        from .models import (usuarios, accesos, movimientos, entidades,  # noqa: F401
+                             asistencia, mensajes, fichas)
 
         from .routes.main import bp as main_bp
         from .routes.auth import bp as auth_bp
@@ -222,6 +277,10 @@ def create_app():
         app.register_blueprint(porteria_bp)
         app.register_blueprint(equipos_bp)
 
+        # Debe ir despues de registrar los blueprints: el catalogo trabaja
+        # sobre las vistas ya registradas.
+        aplicar_limites(app)
+
         db.create_all()
         _migrar_columnas()
         _registrar_tareas(app)
@@ -233,6 +292,37 @@ def create_app():
 
     _registrar_cabeceras_seguridad(app)
     _registrar_manejadores_error(app)
+    registrar_manejador_429(app)
+
+    @app.context_processor
+    def _inyectar_captcha():
+        """Las plantillas solo pintan el desafio si esta activo."""
+        return {'captcha_activo': app.config['CAPTCHA_ACTIVO']}
+
+    @app.template_filter('codigo_barras')
+    def _filtro_codigo_barras(dato):
+        """Convierte un texto en el SVG de su codigo de barras Code128.
+
+        Se expone como filtro para que las plantillas que muestran pases
+        (visitantes, vehiculos, objetos) no tengan que pasar por la vista.
+        """
+        from markupsafe import Markup
+        from .utils.barras import codigo128_svg, DatoNoCodificable
+        if not dato:
+            return ''
+        try:
+            return Markup(codigo128_svg(str(dato), alto=90, mostrar_texto=True))
+        except DatoNoCodificable:
+            return ''
+
+    @app.context_processor
+    def inyectar_generalidades():
+        """Regional, centro y poliza disponibles en TODAS las plantillas.
+
+        Se inyectan aqui para que ninguna vista vuelva a escribirlos a mano:
+        cambiar de centro debe ser cambiar el .env, no editar plantillas.
+        """
+        return {'generalidades': app.config['GENERALIDADES']}
 
     @app.context_processor
     def inject_backup_warning():
