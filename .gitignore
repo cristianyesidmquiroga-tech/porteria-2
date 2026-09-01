@@ -6,11 +6,16 @@ config/.env
 instance/
 
 # Datos personales: fotos de perfil de usuarios reales (Ley 1581 de 2012).
-# Nunca deben viajar en el repositorio.
-app/static/uploads/
+# Nunca deben viajar en el repositorio. Se versiona solo el .gitkeep, para que
+# la carpeta exista tras un clone limpio: si no existe, Docker la crea al montar
+# el volumen y lo hace como root, dejando al usuario del contenedor sin permiso
+# de escritura.
+app/static/uploads/profiles/*
+!app/static/uploads/profiles/.gitkeep
 
-# Respaldos generados
-app/respaldos_mensuales/
+# Respaldos generados (mismo motivo que arriba para el .gitkeep)
+app/respaldos_mensuales/*
+!app/respaldos_mensuales/.gitkeep
 
 # Archivo de depuracion con codigos OTP (eliminado del codigo, se ignora por si acaso)
 CODIGOS_DESARROLLO.txt
@@ -30,3 +35,12 @@ ENV/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Fotos de referencia de las pruebas: son rostros de personas reales, no deben
+# viajar en el repositorio. Se versiona solo el README que explica como usarlas.
+tests/fixtures/*
+!tests/fixtures/README.md
+
+# Configuracion local del entorno de desarrollo (rutas de Windows, servidor de
+# pruebas). No aplica a otras maquinas ni al despliegue.
+.claude/
