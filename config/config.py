@@ -42,6 +42,15 @@ class Config:
 
     SCHEDULER_API_ENABLED = False
 
+    # Zona horaria del planificador, explicita y no heredada del sistema. Hoy
+    # el contenedor fija TZ en el Dockerfile y por eso "dia 1 a las 00:00"
+    # coincide con la medianoche colombiana, pero eso es una casualidad de la
+    # imagen: si TZ se pierde, APScheduler cae en UTC y esa misma expresion
+    # pasa a dispararse el ultimo dia del mes anterior a las 19:00 hora local,
+    # partiendo el mes en dos dentro del respaldo. Se fija aqui para que no
+    # dependa del entorno.
+    SCHEDULER_TIMEZONE = os.environ.get('ZONA_HORARIA', 'America/Bogota')
+
     # --- Cookies de sesion ---
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'

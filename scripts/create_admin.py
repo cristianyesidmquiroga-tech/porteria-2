@@ -5,7 +5,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from app import create_app, db
 from app.models.usuarios import Usuario, Rol
 
-app = create_app()
+# Sin planificador: este script corre en CADA despliegue (docker/entrypoint.sh)
+# y con create_app() a secas levantaba un segundo APScheduler en su propio
+# proceso, con los mismos dos trabajos programados.
+app = create_app(iniciar_tareas=False)
 
 with app.app_context():
     # Crear rol Admin si no existe

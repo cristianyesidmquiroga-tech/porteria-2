@@ -1,18 +1,104 @@
 import os
 import logging
 from datetime import datetime, timedelta, timezone
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from flask import current_app
 from .. import db
-from ..models.accesos import Acceso
+from ..models.accesos import Acceso, Auditoria
 from ..models.usuarios import Usuario, Rol
 from ..models.asistencia import AsistenciaClase
 from . import get_colombia_time
+from .email import enviar_correo
 
 logger = logging.getLogger(__name__)
 
+
+def _verificar_archivo(ruta):
+    """Comprueba que el respaldo quedo realmente escrito y se puede releer.
+
+    Devuelve None si esta bien, o el motivo del fallo. Se llama ANTES de
+    borrar: si el .xlsx quedo a medias (disco lleno, el proceso muere dentro de
+    wb.save) y las filas se borran igual, esos datos no existen ya en ningun
+    sitio y son irrecuperables.
+    """
+    if not os.path.exists(ruta):
+        return "el archivo no existe despues de guardarlo"
+    tamano = os.path.getsize(ruta)
+    if tamano == 0:
+        return "el archivo quedo vacio (0 bytes)"
+    try:
+        libro = load_workbook(ruta, read_only=True)
+        try:
+            hojas = list(libro.sheetnames)
+        finally:
+            libro.close()
+    except Exception as error:
+        return f"el archivo no se puede volver a abrir ({error})"
+    if not hojas:
+        return "el archivo se abre pero no tiene ninguna hoja"
+    return None
+
+
+def _anotar_en_auditoria(accion, detalles):
+    """Deja constancia del fallo en el registro de eventos del sistema.
+
+    Va en su propia transaccion, despues del rollback del respaldo, para que
+    quede escrito aunque la transaccion de datos se haya revertido entera.
+    """
+    try:
+        admin = Usuario.query.join(Usuario.rol).filter_by(nombre='Admin').first()
+        if not admin:
+            logger.error("Sin usuario Admin: no se pudo anotar en auditoria: %s",
+                         detalles)
+            return
+        db.session.add(Auditoria(
+            usuario_id=admin.id,
+            nombre_usuario="SISTEMA",
+            tabla_afectada="respaldos_mensuales",
+            registro_id=0,
+            accion=accion[:255],
+            detalles=detalles,
+            fecha=get_colombia_time(),
+        ))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        logger.exception("No se pudo anotar el fallo del respaldo en auditoria")
+
+
+def _avisar_fallo(mes, detalle):
+    """Avisa por correo al administrador de que el respaldo mensual fallo.
+
+    Un respaldo que falla en silencio todos los meses es indistinguible de uno
+    que funciona: nadie se entera hasta que hace falta el archivo y no esta.
+    """
+    destino = os.environ.get('ADMIN_EMAIL')
+    if not destino:
+        logger.error("ADMIN_EMAIL no configurado: no se pudo avisar del fallo "
+                     "del respaldo mensual.")
+        return
+    try:
+        enviar_correo(
+            destino,
+            f"[Sistema de Acceso] Fallo el respaldo mensual ({mes})",
+            "<h3>El respaldo mensual no se completo</h3>"
+            f"<p><b>Mes:</b> {mes}</p>"
+            f"<p><b>Motivo:</b> {detalle}</p>"
+            "<p>No se borro ningun dato de la base: la limpieza se aborta "
+            "cuando el respaldo no se puede verificar. Revisa el espacio en "
+            "disco del servidor y los registros de la aplicacion.</p>",
+        )
+    except Exception:
+        logger.exception("No se pudo enviar el aviso de fallo del respaldo")
+
+
 def ejecutar_respaldo_mensual():
-    """Exporta los datos del mes anterior a Excel y los elimina de la BD."""
+    """Exporta los datos del mes anterior a Excel y los elimina de la BD.
+
+    El contexto de aplicacion lo aporta el envoltorio _con_contexto() de
+    app/__init__.py, porque flask-apscheduler no lo empuja por su cuenta.
+    """
+    nombre_mes_anterior = '(desconocido)'
     try:
         # Fechas naive en hora de Colombia, igual que las columnas de la base.
         # Comparar aware contra naive desfasaba la ventana de borrado 5 horas
@@ -121,7 +207,23 @@ def ejecutar_respaldo_mensual():
         # Solo guardar el archivo en el servidor si realmente se encontraron datos
         if ids_accesos_borrar or ids_asistencias_borrar:
             wb.save(ruta_archivo)
-            
+
+            # Guardar -> VERIFICAR -> borrar -> confirmar. La verificacion no es
+            # decorativa: wb.save() no lanza excepcion si el archivo quedo
+            # truncado, y borrar sobre un respaldo invalido pierde los datos
+            # para siempre. Si algo no cuadra se aborta SIN borrar nada.
+            problema = _verificar_archivo(ruta_archivo)
+            if problema:
+                db.session.rollback()
+                detalle = (f"No se borro ningun dato. Archivo: {ruta_archivo}. "
+                           f"Problema: {problema}.")
+                logger.error("Respaldo mensual abortado. %s", detalle)
+                _anotar_en_auditoria(
+                    "Respaldo mensual ABORTADO: el archivo no supero la verificacion",
+                    detalle)
+                _avisar_fallo(nombre_mes_anterior, problema)
+                return
+
             # Borrar datos respaldados
             if ids_accesos_borrar:
                 Acceso.query.filter(Acceso.id.in_(ids_accesos_borrar)).delete(synchronize_session=False)
@@ -133,6 +235,10 @@ def ejecutar_respaldo_mensual():
         else:
             logger.info("No hay datos antiguos para respaldar este mes.")
             
-    except Exception as e:
+    except Exception as error:
         db.session.rollback()
         logger.exception("Error generando el respaldo mensual")
+        _anotar_en_auditoria(
+            "Respaldo mensual FALLIDO por error inesperado",
+            f"No se borro ningun dato. Error: {error!r}")
+        _avisar_fallo(nombre_mes_anterior, f"{type(error).__name__}: {error}")

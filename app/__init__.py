@@ -5,6 +5,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_apscheduler import APScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import datetime, timedelta, timezone
+import functools
 import logging
 import os
 
@@ -166,6 +167,27 @@ def _migrar_columnas():
         registro.exception("Fallo la migracion de columnas")
 
 
+def _con_contexto(app, funcion):
+    """Envuelve una tarea programada para que corra dentro del contexto de app.
+
+    NO QUITAR ESTE ENVOLTORIO. flask-apscheduler (1.13) NO empuja el contexto
+    de aplicacion al ejecutar un trabajo: cada trabajo corre en un hilo del
+    ejecutor, mientras que el contexto que empuja create_app() vive solo en el
+    hilo principal. Sin esto, la primera linea de cada tarea que toca
+    current_app o db lanza "RuntimeError: Working outside of application
+    context" y la tarea muere sin hacer absolutamente nada, en silencio.
+
+    Se captura el objeto de aplicacion real (`app`) en el cierre, no
+    current_app: desde el hilo del ejecutor current_app tampoco existe.
+    """
+    @functools.wraps(funcion)
+    def _tarea(*args, **kwargs):
+        with app.app_context():
+            return funcion(*args, **kwargs)
+
+    return _tarea
+
+
 def _registrar_tareas(app):
     from .utils.tareas import auto_exit_all
     from .utils.respaldos import ejecutar_respaldo_mensual
@@ -179,19 +201,27 @@ def _registrar_tareas(app):
         return
 
     scheduler.add_job(
-        id='auto_exit_midnight', func=auto_exit_all,
+        id='auto_exit_midnight', func=_con_contexto(app, auto_exit_all),
         trigger='cron', hour=0, minute=0, second=5,
         replace_existing=True, misfire_grace_time=3600,
     )
     scheduler.add_job(
-        id='respaldo_mensual_db', func=ejecutar_respaldo_mensual,
+        id='respaldo_mensual_db',
+        func=_con_contexto(app, ejecutar_respaldo_mensual),
         trigger='cron', day=1, hour=0, minute=0, second=10,
         replace_existing=True, misfire_grace_time=3600,
     )
     scheduler.start()
 
 
-def create_app():
+def create_app(iniciar_tareas=True):
+    """Construye la aplicacion.
+
+    `iniciar_tareas=False` la crea sin arrancar el planificador. Lo usan los
+    scripts de mantenimiento (scripts/create_admin.py corre en CADA despliegue
+    desde docker/entrypoint.sh): sin esto levantaban un segundo planificador en
+    su propio proceso, que ademas moria al terminar el script.
+    """
     app = Flask(__name__)
     app.config.from_object('config.config.Config')
 
@@ -283,7 +313,8 @@ def create_app():
 
         db.create_all()
         _migrar_columnas()
-        _registrar_tareas(app)
+        if iniciar_tareas:
+            _registrar_tareas(app)
 
     @login_manager.user_loader
     def load_user(user_id):
