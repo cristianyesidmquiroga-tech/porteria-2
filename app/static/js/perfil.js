@@ -38,6 +38,14 @@ const CFG = document.currentScript.dataset;
         btn.style.opacity = '0.7';
 
         try {
+            // Esperar a que la tipografia este cargada antes de capturar. Sin
+            // esto html2canvas mide el texto con la fuente de reserva y luego
+            // lo dibuja con la definitiva: los espacios se pierden y el pie
+            // sale como "RegionalSantander" en vez de "Regional Santander".
+            if (document.fonts && document.fonts.ready) {
+                await document.fonts.ready;
+            }
+
             const canvas = await html2canvas(carnet, {
                 scale: 2,
                 useCORS: true,
@@ -45,7 +53,20 @@ const CFG = document.currentScript.dataset;
                 // Fondo blanco explicito: el carnet se imprime y el codigo de
                 // barras necesita blanco puro detras para que el lector lo lea.
                 backgroundColor: '#ffffff',
-                logging: false
+                logging: false,
+                onclone: function (documentoClonado) {
+                    // html2canvas dibuja cada palabra por separado y calcula el
+                    // avance del espacio con la metrica de la fuente. Con pesos
+                    // y cursivas sintetizados ese avance sale en cero y las
+                    // palabras quedan pegadas. Fijar el espaciado a mano obliga
+                    // a que el hueco exista, sin alterar como se ve en pantalla.
+                    const copia = documentoClonado.getElementById('carnet-capture');
+                    if (!copia) { return; }
+                    copia.style.wordSpacing = '0.08em';
+                    copia.querySelectorAll('*').forEach(function (elemento) {
+                        elemento.style.wordSpacing = '0.08em';
+                    });
+                }
             });
 
             // Crear enlace de descarga

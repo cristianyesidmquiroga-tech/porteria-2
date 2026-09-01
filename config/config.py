@@ -65,6 +65,13 @@ class Config:
 
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 
+    # Donde se guardan las fotos de perfil. Tiene que apuntar a un directorio
+    # persistente del servidor: si queda dentro del contenedor, el siguiente
+    # redespliegue borra todas las fotos y no hay copia (el respaldo mensual
+    # solo exporta accesos y asistencias). Sin la variable cae en la carpeta de
+    # instancia, que sirve para desarrollo pero NO para produccion.
+    CARPETA_FOTOS = os.environ.get('CARPETA_FOTOS') or None
+
     # Solo para desarrollo: recarga las plantillas al editarlas. En produccion
     # se deja apagado, que es mas rapido, porque cada despliegue reconstruye
     # el contenedor de todas formas.
