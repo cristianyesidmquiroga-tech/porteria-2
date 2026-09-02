@@ -1,4 +1,6 @@
 services:
+  # La base de datos vive fuera de este despliegue. Se conecta mediante
+  # DATABASE_URL; este Compose solo construye y ejecuta la aplicación web.
   web:
     build:
       context: .

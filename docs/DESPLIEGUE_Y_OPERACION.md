@@ -17,7 +17,9 @@ citados son la fuente de verdad si algo cambia).
   dentro de un contenedor Docker (`docker/Dockerfile`, `docker/entrypoint.sh`).
 - Base de datos **PostgreSQL externa**, conectada por `DATABASE_URL`. El
   `docker-compose.yml` define **un solo servicio** (`web`); no levanta base de
-  datos ni ningún servicio de respaldo.
+  datos ni ningún servicio de respaldo. El valor de `DATABASE_URL` debe
+  corresponder a las credenciales vigentes del PostgreSQL externo; no hay
+  SQLite de respaldo ni base de datos local en el contenedor.
 - Zona horaria fija: `America/Bogota` (variable `TZ` en la imagen y
   `SCHEDULER_TIMEZONE` en `config/config.py`). Todas las fechas se guardan en
   hora de Colombia **sin** información de zona (`app/utils/get_colombia_time`).
