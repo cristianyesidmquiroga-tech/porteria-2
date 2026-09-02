@@ -37,7 +37,7 @@ TIEMPO_ESPERA = 20
 # por cada correo: una importacion de Excel de 300 aprendices abria 300
 # conexiones simultaneas contra Gmail, que lo interpreta como abuso y puede
 # suspender la cuenta. Con la cola sale uno detras de otro, a ritmo humano.
-PAUSA_ENTRE_CORREOS = float(os.environ.get('MAIL_PAUSA_SEGUNDOS', '1.2'))
+PAUSA_ENTRE_CORREOS = float(os.environ.get('MAIL_PAUSA_SEGUNDOS') or '1.2')
 
 # Reintentos ante fallos pasajeros (el servidor ocupado, un corte de red).
 MAX_REINTENTOS = 2
@@ -291,7 +291,7 @@ def _entregar_directo(msg, destinatario, remitente):
 
 def configuracion_smtp():
     """Lee la configuración SMTP del entorno. Devuelve un diccionario."""
-    puerto = int(os.environ.get('MAIL_PORT', 587))
+    puerto = int(os.environ.get('MAIL_PORT') or 587)
     usuario = os.environ.get('MAIL_USERNAME')
     return {
         'servidor': os.environ.get('MAIL_SERVER', ''),

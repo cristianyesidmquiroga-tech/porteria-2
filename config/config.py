@@ -49,7 +49,7 @@ class Config:
     # pasa a dispararse el ultimo dia del mes anterior a las 19:00 hora local,
     # partiendo el mes en dos dentro del respaldo. Se fija aqui para que no
     # dependa del entorno.
-    SCHEDULER_TIMEZONE = os.environ.get('ZONA_HORARIA', 'America/Bogota')
+    SCHEDULER_TIMEZONE = os.environ.get('ZONA_HORARIA') or 'America/Bogota'
 
     # --- Cookies de sesion ---
     SESSION_COOKIE_HTTPONLY = True
@@ -91,14 +91,14 @@ class Config:
     # (desarrollo local): con un valor mayor que el real, cualquiera puede
     # falsear su IP mandando una cabecera X-Forwarded-For a mano y saltarse
     # todos los limites por IP.
-    PROXIES_CONFIABLES = int(os.environ.get('PROXIES_CONFIABLES', '1'))
+    PROXIES_CONFIABLES = int(os.environ.get('PROXIES_CONFIABLES') or '1')
 
     # Donde se llevan los contadores. 'memory://' funciona porque el servidor
     # corre con UN solo worker de gunicorn (ver docker/entrypoint.sh), pero los
     # contadores se pierden en cada reinicio o redespliegue. Si algun dia hay
     # mas de un proceso, hay que apuntar esto a Redis (redis://host:6379/0) o
     # cada worker contara por su cuenta y el limite real sera el doble.
-    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI') or 'memory://'
 
     # Interruptor general. Se apaga solo para depurar o si un limite mal
     # calibrado estuviera bloqueando a gente real.
@@ -109,7 +109,7 @@ class Config:
     # cortar una inundacion. Los limites finos van por endpoint en
     # app/utils/limitador.py. Los archivos estaticos quedan fuera de la cuenta.
     RATELIMIT_DEFAULT = os.environ.get(
-        'LIMITE_GENERAL', '120 per minute;2000 per hour')
+        'LIMITE_GENERAL') or '120 per minute;2000 per hour'
 
     # Ventana deslizante en vez de ventana fija: con ventana fija se puede
     # gastar el cupo entero al final de un minuto y otro tanto al empezar el
@@ -129,7 +129,7 @@ class Config:
     # Tamano del espacio de busqueda de la prueba de trabajo. Mas alto = mas
     # caro para un bot, pero tambien mas espera en un celular viejo. 60000
     # ronda la decima de segundo en un telefono de gama baja.
-    CAPTCHA_DIFICULTAD = int(os.environ.get('CAPTCHA_DIFICULTAD', '60000'))
+    CAPTCHA_DIFICULTAD = int(os.environ.get('CAPTCHA_DIFICULTAD') or '60000')
 
     # --- Generalidades institucionales del carnet ---
     # Regional, centro, aseguradora, telefono y poliza NO pueden estar escritos
