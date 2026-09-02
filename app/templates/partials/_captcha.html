@@ -1,0 +1,19 @@
+{# Desafío anti-bot. Se pinta solo si está activo en la configuración, para no
+   pedirle al navegador un trabajo que el servidor no va a comprobar. #}
+{% if captcha_activo %}
+<div class="captcha-caja"
+     data-captcha-url="{{ url_for('auth.captcha_desafio') }}"
+     style="display:flex; align-items:center; gap:.6rem; margin:1rem 0;
+            padding:.75rem 1rem; border:1px solid rgba(0,0,0,.08);
+            border-radius:8px; background:rgba(57,169,0,.05);">
+    {# fa-shield-alt y no fa-shield-halved: el sitio carga Font Awesome 5,
+       donde el segundo nombre todavia no existe y el icono sale en blanco. #}
+    <i class="fas fa-shield-alt" style="color:#39A900;" aria-hidden="true"></i>
+    <span data-captcha-estado role="status" aria-live="polite"
+          style="font-size:.85rem; color:var(--text-muted);">
+        Verificando que eres una persona...
+    </span>
+    <input type="hidden" name="captcha_payload" value="">
+</div>
+<script src="{{ url_for('static', filename='js/captcha.js') }}" defer></script>
+{% endif %}

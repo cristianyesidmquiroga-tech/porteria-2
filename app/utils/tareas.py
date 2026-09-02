@@ -3,86 +3,101 @@ from ..models.usuarios import TurnoCelador, Usuario
 from ..models.entidades import Visitante, Vehiculo, Equipo
 from ..models.accesos import Acceso, Auditoria
 from . import get_colombia_time
-from datetime import datetime, timedelta
+from datetime import timedelta
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def auto_exit_all():
+    """Cierra turnos, accesos y estados de entidades que quedaron abiertos.
+
+    Se ejecuta a las 00:00:05. Todo el trabajo va en una sola transaccion: si
+    algo falla se revierte completo, para no dejar la mitad de las salidas
+    registradas y la otra mitad no.
+
+    El contexto de aplicacion lo aporta el envoltorio _con_contexto() de
+    app/__init__.py, porque flask-apscheduler no lo empuja por su cuenta.
     """
-    Cierra automáticamente todos los turnos, accesos y estados de entidades 
-    que quedaron abiertos al final del día.
-    """
-    # Necesitamos el contexto de la aplicación para interactuar con la DB si se llama desde el scheduler
-    from flask import current_app
-    with current_app.app_context():
-        ahora = get_colombia_time()
-        print(f"[{ahora}] Iniciando proceso de salida automática de medianoche...")
-        
-        # 1. Cerrar Turnos de Celadores
-        turnos_activos = TurnoCelador.query.filter_by(estado='Activo').all()
-        for turno in turnos_activos:
+    ahora = get_colombia_time()
+    logger.info("Iniciando cierre automatico de medianoche (%s)", ahora)
+
+    # El job corre pasada la medianoche, asi que las salidas pendientes
+    # pertenecen al dia anterior y se fechan a las 23:59:59 de ese dia.
+    if ahora.hour < 1:
+        cierre = (ahora - timedelta(days=1)).replace(
+            hour=23, minute=59, second=59, microsecond=0)
+    else:
+        cierre = ahora
+
+    try:
+        turnos_cerrados = 0
+        for turno in TurnoCelador.query.filter_by(estado='Activo').all():
             turno.estado = 'Finalizado'
-            turno.fecha_salida = ahora
-            # Registrar en historial general de accesos
-            db.session.add(Acceso(punto_id=1, referencia_id=turno.celador_id, tipo_referencia='Usuario', tipo='Salida', fecha=ahora))
-            print(f" - Turno finalizado y salida registrada para celador ID: {turno.celador_id}")
+            turno.fecha_salida = cierre
+            turnos_cerrados += 1
 
-        # 2. Desactivar Visitantes
-        visitantes_dentro = Visitante.query.filter_by(activo=True).all()
-        for v in visitantes_dentro:
-            v.activo = False
-            # Registrar salida en Accesos
-            db.session.add(Acceso(punto_id=1, referencia_id=v.id, tipo_referencia='Visitante', tipo='Salida', fecha=ahora))
-            print(f" - Salida automática registrada para visitante: {v.nombre}")
+        visitantes_cerrados = 0
+        for visitante in Visitante.query.filter_by(activo=True).all():
+            visitante.activo = False
+            visitantes_cerrados += 1
 
-        # 3. Desactivar Vehículos
-        vehiculos_dentro = Vehiculo.query.filter_by(activo=True).all()
-        for veh in vehiculos_dentro:
-            veh.activo = False
-            db.session.add(Acceso(punto_id=1, referencia_id=veh.id, tipo_referencia='Vehiculo', tipo='Salida', fecha=ahora))
-            print(f" - Salida automática registrada para vehículo: {veh.placa}")
+        vehiculos_cerrados = 0
+        for vehiculo in Vehiculo.query.filter_by(activo=True).all():
+            vehiculo.activo = False
+            vehiculos_cerrados += 1
 
-        # 4. Actualizar Equipos
-        equipos_adentro = Equipo.query.filter_by(estado='Adentro').all()
-        for eq in equipos_adentro:
-            eq.estado = 'Afuera'
-            print(f" - Equipo {eq.nombre} marcado como fuera del campus.")
+        equipos_cerrados = Equipo.query.filter_by(estado='Adentro').update(
+            {Equipo.estado: 'Afuera'}, synchronize_session=False)
 
-        # 5. Usuarios Genéricos (Aprendices, Instructores, etc. que no son Celadores en turno)
-        # Obtenemos el último acceso de cada usuario en el sistema para ver quién quedó "Adentro"
-        subquery = db.session.query(
-            Acceso.referencia_id, 
-            db.func.max(Acceso.fecha).label('max_fecha')
-        ).filter(
-            Acceso.tipo_referencia == 'Usuario'
-        ).group_by(Acceso.referencia_id).subquery()
+        # Toda entidad cuyo ultimo movimiento fue 'Entrada' sigue figurando
+        # adentro y necesita una salida automatica.
+        ultimo_movimiento = db.session.query(
+            Acceso.referencia_id,
+            Acceso.tipo_referencia,
+            db.func.max(Acceso.fecha).label('max_fecha'),
+        ).group_by(Acceso.referencia_id, Acceso.tipo_referencia).subquery()
 
-        usuarios_dentro = db.session.query(Acceso).join(
-            subquery, 
-            (Acceso.referencia_id == subquery.c.referencia_id) & (Acceso.fecha == subquery.c.max_fecha)
+        adentro = db.session.query(Acceso).join(
+            ultimo_movimiento,
+            (Acceso.referencia_id == ultimo_movimiento.c.referencia_id)
+            & (Acceso.tipo_referencia == ultimo_movimiento.c.tipo_referencia)
+            & (Acceso.fecha == ultimo_movimiento.c.max_fecha),
         ).filter(Acceso.tipo == 'Entrada').all()
 
-        # Para que el reporte de ayer quede cerrado correctamente, usamos las 23:59:59 de ayer
-        ayer_final = (ahora - timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=0) if ahora.hour < 1 else ahora
-
-        for acceso in usuarios_dentro:
-            # Crear registro de salida automática
+        for acceso in adentro:
             db.session.add(Acceso(
-                punto_id=1, 
-                referencia_id=acceso.referencia_id, 
-                tipo_referencia='Usuario', 
-                tipo='Salida', 
-                fecha=ayer_final
+                punto_id=acceso.punto_id or 1,
+                referencia_id=acceso.referencia_id,
+                tipo_referencia=acceso.tipo_referencia,
+                tipo='Salida',
+                fecha=cierre,
             ))
-            print(f" - Salida automática de Usuario ID: {acceso.referencia_id} registrada a las {ayer_final}")
 
-        # 6. Registrar en Auditoría
-        db.session.add(Auditoria(
-            usuario_id=1, # Admin o Sistema
-            nombre_usuario="SISTEMA",
-            tabla_afectada="VARIAS (Limpieza Nocturna)",
-            registro_id=0,
-            accion="Cierre automático de todos los ingresos a medianoche.",
-            fecha=ahora
-        ))
+        # La auditoria referencia un usuario real; usar un id fijo revienta
+        # la clave foranea si esa cuenta fue eliminada.
+        admin = Usuario.query.join(Usuario.rol).filter_by(nombre='Admin').first()
+        if admin:
+            db.session.add(Auditoria(
+                usuario_id=admin.id,
+                nombre_usuario="SISTEMA",
+                tabla_afectada="VARIAS (cierre nocturno)",
+                registro_id=0,
+                accion="Cierre automatico de ingresos a medianoche",
+                detalles=(f"Turnos: {turnos_cerrados}, visitantes: {visitantes_cerrados}, "
+                          f"vehiculos: {vehiculos_cerrados}, equipos: {equipos_cerrados}, "
+                          f"salidas registradas: {len(adentro)}"),
+                fecha=cierre,
+            ))
 
         db.session.commit()
-        print(f"[{ahora}] Proceso de limpieza completado con éxito.")
+        logger.info(
+            "Cierre nocturno completado: %s turnos, %s visitantes, %s vehiculos, "
+            "%s equipos, %s salidas registradas",
+            turnos_cerrados, visitantes_cerrados, vehiculos_cerrados,
+            equipos_cerrados, len(adentro),
+        )
+    except Exception:
+        db.session.rollback()
+        logger.exception("Fallo el cierre automatico de medianoche")
+        raise

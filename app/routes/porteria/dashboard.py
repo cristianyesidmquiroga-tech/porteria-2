@@ -1,12 +1,31 @@
-from flask import render_template, request, redirect, url_for, flash, Response
+from flask import render_template, request, redirect, url_for, flash, Response, current_app
+import os
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 import csv
 import io
 from . import porteria_bp as bp
-from ...models.usuarios import Usuario, Rol
-from ...models.accesos import Acceso
+from ...models.usuarios import Usuario, Rol, avatar_de_cargo
+from ...utils.fotos import url_de_foto
+from ...models.accesos import Acceso, Auditoria
 from ... import db
+from ...utils import get_colombia_time, parsear_fecha_bd
+
+_PREFIJOS_PELIGROSOS = ('=', '+', '-', '@', '\t', '\r')
+
+
+def _celda_segura(valor):
+    """Neutraliza formulas antes de escribir una celda del CSV.
+
+    Excel interpreta como formula el contenido que empieza por = + - @ o
+    tabulador. El documento y el nombre los escribe el propio usuario, asi que
+    sin esto un aprendiz podia ejecutar codigo en el equipo del administrador
+    que abriera el reporte de auditoria.
+    """
+    texto = '' if valor is None else str(valor)
+    if texto[:1] in _PREFIJOS_PELIGROSOS:
+        return "'" + texto
+    return texto
 
 @bp.route('/dashboard')
 @login_required
@@ -60,22 +79,21 @@ def dashboard():
         labels_7days.append(lbl)
         day_map[d] = 6 - i
 
-    start_utc = datetime.utcnow() - timedelta(days=8)
+    inicio_ventana = get_colombia_time() - timedelta(days=8)
     entries = db.session.query(Acceso.fecha, Usuario.cargo).join(
         Usuario, Acceso.referencia_id == Usuario.id
     ).filter(
-        Acceso.fecha >= start_utc,
+        Acceso.fecha >= inicio_ventana,
         Acceso.tipo == 'Entrada',
         Acceso.tipo_referencia == 'Usuario'
     ).all()
 
     total_entries = 0
-    for fecha_utc, cargo in entries:
-        if isinstance(fecha_utc, str):
-            try: fecha_utc = datetime.strptime(fecha_utc, '%Y-%m-%d %H:%M:%S')
-            except ValueError: fecha_utc = datetime.strptime(fecha_utc, '%Y-%m-%d %H:%M:%S.%f')
-
-        fecha_local = fecha_utc.replace(tzinfo=timezone.utc).astimezone(colombia_tz)
+    for fecha_registro, cargo in entries:
+        # La fecha ya esta guardada en hora de Colombia: no se convierte.
+        fecha_local = parsear_fecha_bd(fecha_registro)
+        if fecha_local is None:
+            continue
         d = fecha_local.date()
         if d in day_map:
             idx = day_map[d]
@@ -95,6 +113,11 @@ def dashboard():
     cargos += ['Visitante', 'Vehículo', 'Objeto Externo']
     fichas = [f[0] for f in db.session.query(Usuario.ficha).filter(Usuario.ficha.isnot(None), Usuario.ficha != '').distinct().all()]
 
+    hoy_local = get_colombia_time().date()
+    fecha_inicio_filtro = (request.args.get('fecha_inicio')
+                           or (hoy_local - timedelta(days=30)).isoformat())
+    fecha_fin_filtro = request.args.get('fecha_fin') or hoy_local.isoformat()
+
     accesos_db = Acceso.query.order_by(Acceso.fecha.desc()).limit(100).all()
     historial = []
 
@@ -104,6 +127,7 @@ def dashboard():
         rol_or_tipo = acc.tipo_referencia
         cargo_or_clase = "N/A"
         foto = None
+        usuario_id = None
         programa_ficha = "N/A"
         rsuffix = "trabajador"
         
@@ -115,7 +139,11 @@ def dashboard():
                 rol_or_tipo = u.rol.nombre if u.rol else 'Usuario'
                 cargo_or_clase = u.cargo or "N/A"
                 foto = u.foto
-                rsuffix = 'aprendiz' if cargo_or_clase == 'Aprendiz' else ('instructor' if cargo_or_clase == 'Instructor' else 'trabajador')
+                usuario_id = u.id
+                # rol_or_tipo es Admin/Usuario/Trabajador; la distincion real esta en cargo.
+                rsuffix = ('aprendiz' if cargo_or_clase == 'Aprendiz'
+                           else 'instructor' if cargo_or_clase == 'Instructor'
+                           else 'trabajador')
                 if u.programa:
                     programa_ficha = f"{u.programa} (Ficha: {u.ficha or 'N/A'})"
         elif acc.tipo_referencia == 'Visitante':
@@ -155,8 +183,19 @@ def dashboard():
             if not u or u.ficha != ficha_filter:
                 continue
 
+        # Se resuelven aqui, no en la plantilla: asi la vista no tiene que
+        # saber donde viven las fotos ni que hacer si falta una.
+        if acc.tipo_referencia == 'Usuario':
+            url_img = url_de_foto(usuario_id, foto, cargo_or_clase)
+            avatar_img = avatar_de_cargo(cargo_or_clase)
+        else:
+            avatar_img = avatar_de_cargo(acc.tipo_referencia)
+            url_img = url_for('static', filename=avatar_img)
+
         historial.append({
             "acceso": acc,
+            "url_foto": url_img,
+            "avatar": avatar_img,
             "nombre": nombre,
             "documento": documento,
             "rol_or_tipo": rol_or_tipo,
@@ -173,7 +212,9 @@ def dashboard():
         'visitantes': total_visitantes_adentro,
         'vehiculos': total_vehiculos_adentro,
         'objetos': total_objetos_adentro
-    }, chart_data={'labels': labels_7days, 'aprendices': stats_aprendiz, 'instructores': stats_instructor, 'trabajadores': stats_trabajador}, analisis_texto=analisis_texto, historial=historial, cargos=cargos, fichas=fichas, current_cargo=cargo_filter, current_ficha=ficha_filter)
+    }, chart_data={'labels': labels_7days, 'aprendices': stats_aprendiz, 'instructores': stats_instructor, 'trabajadores': stats_trabajador}, analisis_texto=analisis_texto, historial=historial, cargos=cargos, fichas=fichas, current_cargo=cargo_filter, current_ficha=ficha_filter,
+       current_fecha_inicio=fecha_inicio_filtro,
+       current_fecha_fin=fecha_fin_filtro)
 
 @bp.route('/export_dashboard')
 @login_required
@@ -183,10 +224,56 @@ def export_dashboard():
         return redirect(url_for('usuarios.profile'))
 
     cargo_filter, ficha_filter = request.args.get('cargo'), request.args.get('ficha')
-    history_query = db.session.query(Acceso, Usuario, Rol).join(Usuario, Acceso.referencia_id == Usuario.id).join(Rol, Usuario.rol_id == Rol.id).filter(Acceso.tipo_referencia == 'Usuario')
+
+    # Sin rango obligatorio, un clic volcaba TODO el historico de accesos
+    # (documento, nombre, programa, ficha) a un archivo fuera del sistema.
+    # Exigir fechas acota lo que sale de una sola vez (minimizacion, Ley 1581).
+    fecha_inicio_str = request.args.get('fecha_inicio')
+    fecha_fin_str = request.args.get('fecha_fin')
+    if not fecha_inicio_str or not fecha_fin_str:
+        flash('Elige un rango de fechas (inicio y fin) antes de exportar.', 'warning')
+        return redirect(url_for('porteria.dashboard', tab='history',
+                                cargo=cargo_filter, ficha=ficha_filter))
+
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d')
+        # El fin es inclusivo: se exporta hasta el final de ese dia.
+        fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d') + timedelta(days=1)
+    except ValueError:
+        flash('El rango de fechas no es válido.', 'warning')
+        return redirect(url_for('porteria.dashboard', tab='history',
+                                cargo=cargo_filter, ficha=ficha_filter))
+
+    if fecha_fin <= fecha_inicio:
+        flash('La fecha final debe ser posterior a la inicial.', 'warning')
+        return redirect(url_for('porteria.dashboard', tab='history',
+                                cargo=cargo_filter, ficha=ficha_filter))
+
+    history_query = db.session.query(Acceso, Usuario, Rol).join(Usuario, Acceso.referencia_id == Usuario.id).join(Rol, Usuario.rol_id == Rol.id).filter(
+        Acceso.tipo_referencia == 'Usuario',
+        Acceso.fecha >= fecha_inicio,
+        Acceso.fecha < fecha_fin,
+    )
     if cargo_filter: history_query = history_query.filter(Usuario.cargo == cargo_filter)
     if ficha_filter: history_query = history_query.filter(Usuario.ficha == ficha_filter)
     historial = history_query.order_by(Acceso.fecha.desc()).all()
+
+    # Deja constancia de quien saco el historico y que rango pidio: es el
+    # unico registro que queda de que estos datos salieron del sistema.
+    db.session.add(Auditoria(
+        usuario_id=current_user.id,
+        nombre_usuario=current_user.nombre,
+        tabla_afectada='accesos',
+        registro_id=0,
+        accion='Exportación de histórico de accesos',
+        autorizado_por=current_user.nombre,
+        motivo='Exportación CSV desde el dashboard de portería',
+        detalles=(f'Rango {fecha_inicio_str} a {fecha_fin_str}'
+                  + (f', cargo={cargo_filter}' if cargo_filter else '')
+                  + (f', ficha={ficha_filter}' if ficha_filter else '')
+                  + f'. {len(historial)} registros exportados.'),
+    ))
+    db.session.commit()
 
     def generate():
         yield '\ufeff'
@@ -195,21 +282,20 @@ def export_dashboard():
         writer.writerow(('Documento', 'Nombre Completo', 'Cargo', 'Programa/Especialidad', 'Ficha', 'Equipo(s)', 'Tipo Acceso', 'Fecha', 'Hora'))
         yield data.getvalue(); data.seek(0); data.truncate(0)
         for acceso, usuario, rol in historial:
-            colombia_tz = timezone(timedelta(hours=-5))
-            fecha_utc = acceso.fecha
-            if isinstance(fecha_utc, str):
-                for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f'):
-                    try: fecha_utc = datetime.strptime(fecha_utc, fmt); break
-                    except ValueError: continue
-            if isinstance(fecha_utc, datetime):
-                fecha_local = fecha_utc.replace(tzinfo=timezone.utc).astimezone(colombia_tz)
-                fecha_str, hora_str = fecha_local.strftime('%d/%m/%Y'), fecha_local.strftime('%I:%M:%S %p')
-            else: fecha_str, hora_str = str(acceso.fecha), ""
+            fecha_local = parsear_fecha_bd(acceso.fecha)
+            if fecha_local is not None:
+                fecha_str = fecha_local.strftime('%d/%m/%Y')
+                hora_str = fecha_local.strftime('%I:%M:%S %p')
+            else:
+                fecha_str, hora_str = str(acceso.fecha), ""
             
             equipo_text = acceso.equipos_str if acceso.equipos_str else 'Ninguno'
             cargo_text = usuario.cargo if usuario.cargo else (rol.nombre if rol else 'N/A')
             
-            writer.writerow((usuario.documento or 'N/A', usuario.nombre or 'N/A', cargo_text, usuario.programa or 'N/A', usuario.ficha or 'N/A', equipo_text, acceso.tipo or 'N/A', fecha_str, hora_str))
+            writer.writerow(tuple(_celda_segura(c) for c in (
+                usuario.documento or 'N/A', usuario.nombre or 'N/A', cargo_text,
+                usuario.programa or 'N/A', usuario.ficha or 'N/A', equipo_text,
+                acceso.tipo or 'N/A', fecha_str, hora_str)))
             yield data.getvalue(); data.seek(0); data.truncate(0)
 
     return Response(generate(), mimetype='text/csv', headers={"Content-Disposition": f"attachment; filename=Auditoria_Accesos_{datetime.now().strftime('%Y-%m-%d_%H%M')}.csv"})

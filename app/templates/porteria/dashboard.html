@@ -31,8 +31,8 @@
 
 {% block content %}
 <div class="top-tabs">
-    <button id="btn-tab-dashboard" class="tab-btn active" onclick="switchTab('dashboard')">Panel General</button>
-    <button id="btn-tab-history" class="tab-btn" onclick="switchTab('history')">Historial de Accesos</button>
+    <button id="btn-tab-dashboard" class="tab-btn active" data-pestana="dashboard">Panel General</button>
+    <button id="btn-tab-history" class="tab-btn" data-pestana="history">Historial de Accesos</button>
 </div>
 
 <div id="view-dashboard">
@@ -127,39 +127,29 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="fecha_inicio" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">Desde</label>
+                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ current_fecha_inicio }}"
+                    style="padding: 0.6rem; border: 1px solid var(--glass-border); background-color: var(--white); color: var(--text-main); border-radius: 8px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="fecha_fin" style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted);">Hasta</label>
+                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ current_fecha_fin }}"
+                    style="padding: 0.6rem; border: 1px solid var(--glass-border); background-color: var(--white); color: var(--text-main); border-radius: 8px;">
+            </div>
             <button type="submit" class="btn-primary magnetic-btn" style="height: 42px; padding: 0 1.5rem;"><i
                     class="fas fa-filter"></i> Aplicar</button>
             <a href="{{ url_for('porteria.dashboard', tab='history') }}" class="glass-btn magnetic-btn"
                 style="height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500;">Limpiar</a>
             <div style="flex-grow: 1;"></div>
-            <a href="{{ url_for('porteria.export_dashboard', cargo=current_cargo, ficha=current_ficha) }}" class="btn-primary magnetic-btn"
+            {# La exportacion exige rango de fechas: sin el, la ruta redirige con un aviso. #}
+            <a href="{{ url_for('porteria.export_dashboard', cargo=current_cargo, ficha=current_ficha,
+                                fecha_inicio=current_fecha_inicio, fecha_fin=current_fecha_fin) }}" class="btn-primary magnetic-btn"
                 style="height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.5rem; background-color: var(--primary-color); text-decoration: none;">
                 <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Exportar XLS/CSV
             </a>
         </form>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const cargoFilter = document.getElementById('cargoFilter');
-                const fichaContainer = document.getElementById('fichaFilterContainer');
-                
-                function toggleFichaFilter() {
-                    const val = cargoFilter.value.toLowerCase();
-                    // Mostrar si el cargo es Aprendiz
-                    if (val === 'aprendiz') {
-                        fichaContainer.style.display = 'block';
-                    } else {
-                        fichaContainer.style.display = 'none';
-                        // Limpiar el valor si se oculta para no enviar filtros fantasmas
-                        document.getElementById('ficha').value = '';
-                    }
-                }
-                
-                cargoFilter.addEventListener('change', toggleFichaFilter);
-                // Run on load to set initial state
-                toggleFichaFilter();
-            });
-        </script>
 
         <div style="overflow-x: auto;">
             <table class="modern-table" style="width: 100%; text-align: left; font-size: 0.95rem;">
@@ -180,8 +170,10 @@
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 {% set rsuffix = item.rsuffix %}
-                                <img src="{{ url_for('static', filename='uploads/profiles/' + item.foto) if item.foto else 'https://ui-avatars.com/api/?name=' + item.nombre|urlencode + '&background=39A900&color=fff' }}"
-                                    alt="Foto" class="role-img role-border-{{ rsuffix }}" onerror="this.src='https://ui-avatars.com/api/?name={{ item.nombre|urlencode }}&background=39A900&color=fff'">
+                                <img src="{{ item.url_foto }}"
+                                    alt="Foto de {{ item.nombre }}" class="role-img role-border-{{ rsuffix }}"
+                                    loading="lazy" decoding="async" width="44" height="44"
+                                    data-respaldo="{{ url_for('static', filename=item.avatar) }}">
                                 <span style="font-weight: 600;">{{ item.nombre }}</span>
                             </div>
                         </td>
@@ -240,114 +232,5 @@
     data-trabajadores='{{ chart_data.trabajadores | tojson }}'>
 </div>
 
-<script>
-    function switchTab(viewName) {
-        document.querySelectorAll('.tab-btn').forEach(function (btn) {
-            btn.classList.remove('active');
-        });
-        document.getElementById('btn-tab-' + viewName).classList.add('active');
-        document.getElementById('view-dashboard').style.display = 'none';
-        document.getElementById('view-history').style.display = 'none';
-        document.getElementById('view-' + viewName).style.display = 'block';
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Switch to history tab on load if there are active filters or specific tab requested
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('cargo') || urlParams.get('ficha') || urlParams.get('tab') === 'history' || window.location.href.includes('cargo=')) {
-            switchTab('history');
-        }
-
-        // Read chart data from hidden element
-        var src = document.getElementById('chart-data-source');
-        var labels = JSON.parse(src.getAttribute('data-labels'));
-        var aprendices = JSON.parse(src.getAttribute('data-aprendices'));
-        var instructores = JSON.parse(src.getAttribute('data-instructores'));
-        var trabajadores = JSON.parse(src.getAttribute('data-trabajadores'));
-
-        // Initialize chart only if canvas exists
-        var chartCanvas = document.getElementById('entriesChart');
-        if (chartCanvas) {
-            var ctx = chartCanvas.getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Aprendices',
-                            data: aprendices,
-                            backgroundColor: 'rgba(57, 169, 0, 0.1)',
-                            borderColor: '#39A900',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#39A900',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                        },
-                        {
-                            label: 'Instructores',
-                            data: instructores,
-                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                            borderColor: '#36A2EB',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#36A2EB',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                        },
-                        {
-                            label: 'Trabajadores',
-                            data: trabajadores,
-                            backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                            borderColor: '#FF9F40',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#FF9F40',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1, color: '#999' },
-                            grid: { color: '#F0F0F0' }
-                        },
-                        x: {
-                            ticks: { color: '#999' },
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: { boxWidth: 12, usePointStyle: true }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            padding: 10,
-                            cornerRadius: 8
-                        }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    }
-                }
-            });
-        }
-    });
-</script>
+<script src="{{ url_for('static', filename='js/panel.js') }}"></script>
 {% endblock %}

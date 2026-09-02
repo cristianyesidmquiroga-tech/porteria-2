@@ -1,0 +1,3 @@
+Marcador para que la carpeta exista tras un clone limpio.
+Su contenido (las fotos de perfil) esta excluido en .gitignore: son
+datos personales y nunca deben viajar en el repositorio.

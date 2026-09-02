@@ -1,3 +1,16 @@
+/* ==========================================================================
+   TOKENS DE COLOR CANONICOS (SENA - Porteria)
+   Este archivo es la fuente unica de verdad para variables de color. El
+   sistema antiguo definido en app/static/css/global.css (--primary,
+   --danger, --glass-text, etc.) sigue cargado en paralelo para no romper
+   vistas que ya lo usan, pero cualquier CSS nuevo debe usar las variables
+   de este archivo. Ver el comentario en global.css para el detalle.
+
+   --danger-color y --warning-color fueron oscurecidos/documentados el
+   2026-08-29 tras una auditoria de contraste WCAG AA: los tonos "premium"
+   originales (#E74C3C y #f39c12 usados como texto plano) no llegaban a
+   4.5:1 sobre fondos claros. Los valores nuevos si.
+   ========================================================================== */
 :root {
     --primary-color: #39A900;
     --secondary-color: #00324D;
@@ -10,10 +23,16 @@
     --sidebar-width: 290px;
     --sidebar-bg: #FFFFFF;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    
+
     /* Status Colors */
     --success-color: #39A900;
-    --danger-color: #E74C3C;
+    --danger-color: #a93226;   /* antes #E74C3C (3.82:1); 6.62:1 sobre blanco */
+    --warning-color: #B45309;  /* mismo tono que .badge-warning; 5.02:1 sobre blanco */
+    --muted-readable: #6B7280; /* gris para texto secundario que aun debe leerse (antes #999/#888/#CBD5E0); 4.83:1 sobre blanco */
+    /* --primary-color (#39A900) es del sistema pero solo pasa como texto
+       grande/icono (3.07:1 como texto normal). Para texto pequeno en verde
+       SENA sobre fondo claro usar esta variable en su lugar. */
+    --primary-text-color: #256a00; /* 6.69:1 sobre blanco */
     --input-bg-custom: rgba(0, 0, 0, 0.05);
 
     /* Pastel Rainbow Palette */
@@ -36,4 +55,8 @@
     --sidebar-bg: #1e272e;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     --input-bg-custom: #FFFFFF;
+    --danger-color: #f4776f;   /* 5.57:1 sobre tarjeta oscura #1e272e, 4.99:1 sobre filas resaltadas mas claras */
+    --warning-color: #FFB74D;  /* 8.76:1 sobre tarjeta oscura #1e272e */
+    --muted-readable: #9CA3AF; /* 5.97:1 sobre tarjeta oscura #1e272e */
+    --primary-text-color: #4cd137; /* mismo valor que --primary-color en oscuro: ya pasa 6.76-10:1 en los fondos oscuros del sistema */
 }

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Avatar de Objeto externo">
+  <title>Objeto externo</title>
+  <circle cx="48" cy="48" r="48" fill="#37474F"/>
+  <path d="M48 22l24 12v28L48 74 24 62V34z" fill="#ffffff"/><path d="M24 34l24 12 24-12M48 46v28" stroke="#37474F" stroke-width="4" fill="none" stroke-linejoin="round"/>
+</svg>

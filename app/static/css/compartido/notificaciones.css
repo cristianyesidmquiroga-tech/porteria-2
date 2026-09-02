@@ -70,26 +70,32 @@
 
 .toast-success .toast-icon {
     background: rgba(57, 169, 0, 0.1);
-    color: #39A900;
+    /* #39A900 en el texto/icono del toast da 3.07:1 sobre su fondo casi
+       blanco. */
+    color: var(--primary-text-color);
 }
 .toast-success {
     border-left: 5px solid #39A900;
 }
 
+/* El texto en #e74c3c/#f39c12 sobre el fondo casi blanco del toast bajaba a
+   3.82:1 y 2.19:1. Se usan las variables ya corregidas en variables.css
+   (--danger-color / --warning-color), que ademas cambian solas en modo
+   oscuro. */
 .toast-danger .toast-icon {
     background: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
+    color: var(--danger-color);
 }
 .toast-danger {
-    border-left: 5px solid #e74c3c;
+    border-left: 5px solid var(--danger-color);
 }
 
 .toast-warning .toast-icon {
     background: rgba(243, 156, 18, 0.1);
-    color: #f39c12;
+    color: var(--warning-color);
 }
 .toast-warning {
-    border-left: 5px solid #f39c12;
+    border-left: 5px solid var(--warning-color);
 }
 
 .toast-info .toast-icon {
@@ -119,7 +125,7 @@
 }
 
 .toast-success .toast-progress-bar { color: #39A900; }
-.toast-danger .toast-progress-bar { color: #e74c3c; }
+.toast-danger .toast-progress-bar { color: var(--danger-color); }
 
 @keyframes toastProgress {
     from { transform: scaleX(1); }

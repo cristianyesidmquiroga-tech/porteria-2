@@ -114,12 +114,21 @@
     transform: scale(1.15) rotate(5deg);
 }
 
-[data-theme="dark"] .sidebar-nav a, [data-theme="dark"] .dropdown-btn { 
-    background: rgba(255, 255, 255, 0.05); 
-    border-color: rgba(255, 255, 255, 0.05); 
+[data-theme="dark"] .sidebar-nav a, [data-theme="dark"] .dropdown-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.05);
 }
-[data-theme="dark"] .sidebar-nav a:hover, [data-theme="dark"] .dropdown-btn:hover { 
-    background: rgba(255, 255, 255, 0.1); 
+[data-theme="dark"] .sidebar-nav a:hover, [data-theme="dark"] .dropdown-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Foco visible para el resto de enlaces del menu (el enlace de cerrar
+   sesion ya tiene el suyo propio en rojo, mas abajo, por eso se excluye
+   aqui para no pisarlo). */
+.sidebar-nav a:focus-visible:not(.enlace-cerrar-sesion),
+.dropdown-btn:focus-visible {
+    outline: 3px solid #1565C0;
+    outline-offset: -2px;
 }
 
 /* Sidebar Dropdown Accordion */
@@ -148,6 +157,10 @@
 .dropdown-content a:hover {
     background: rgba(57, 169, 0, 0.05); color: var(--primary-color); padding-left: 22px; margin: 0; transform: none;
 }
+.dropdown-content a:focus-visible {
+    outline: 3px solid #1565C0;
+    outline-offset: -2px;
+}
 .dropdown-content a.active {
     background: linear-gradient(135deg, var(--primary-color), #2E7D32); color: white !important; font-weight: 700; box-shadow: 0 8px 20px rgba(57, 169, 0, 0.25);
 }
@@ -174,4 +187,34 @@
     .sidebar { 
         width: 280px; /* Ancho completo al abrir en móvil */
     }
+}
+
+
+/* Cerrar sesión: separado del resto de la navegación y en rojo, porque es la
+   única opción del menú que saca a la persona del sistema. Antes estaba en la
+   barra superior, donde se desbordaba en pantallas estrechas. */
+.enlace-cerrar-sesion {
+    margin-top: auto;
+    border-top: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1));
+    padding-top: 1rem !important;
+    color: #C62828 !important;
+}
+
+.enlace-cerrar-sesion i { color: #C62828 !important; }
+
+.enlace-cerrar-sesion:hover {
+    background: rgba(198, 40, 40, 0.08) !important;
+    color: #B71C1C !important;
+}
+
+.enlace-cerrar-sesion:focus-visible {
+    outline: 3px solid #C62828;
+    outline-offset: 2px;
+}
+
+[data-theme="dark"] .enlace-cerrar-sesion,
+[data-theme="dark"] .enlace-cerrar-sesion i { color: #EF5350 !important; }
+
+[data-theme="dark"] .enlace-cerrar-sesion:hover {
+    background: rgba(239, 83, 80, 0.12) !important;
 }

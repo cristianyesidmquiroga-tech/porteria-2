@@ -1,380 +1,183 @@
-# Manual de Usuario - Control de Acceso (Portería)
+# Manual de Usuario — Control de Acceso (Portería)
 
-## Tabla de Contenidos
-1. [Introducción](#introducción)
-2. [Acceso al Módulo de Portería](#acceso-al-módulo-de-portería)
-3. [Escaneo de Código QR](#escaneo-de-código-qr)
-4. [Verificación de Usuarios](#verificación-de-usuarios)
-5. [Registro de Entradas y Salidas](#registro-de-entradas-y-salidas)
-6. [Gestión de Equipos en Acceso](#gestión-de-equipos-en-acceso)
-7. [Pases Temporales](#pases-temporales)
-8. [Dashboard de Accesos](#dashboard-de-accesos)
-9. [Historial de Clases](#historial-de-clases)
-10. [Preguntas Frecuentes](#preguntas-frecuentes)
+Para quien opera la portería: rol Admin, o rol Usuario con cargo **Celador**
+o **Administrador**. Cubre el escáner, el registro de movimientos, los pases
+manuales y el panel general.
 
----
-
-## Introducción
-
-El módulo de control de acceso (portería) permite a los celadores y personal de seguridad gestionar el ingreso y egreso de personas y equipos a las instalaciones del SENA mediante el uso de códigos QR y verificación de identidad.
-
-### Objetivos del Módulo
-- Controlar el acceso de usuarios a las instalaciones
-- Registrar entradas y salidas con timestamp
-- Verificar la identidad de usuarios mediante QR
-- Gestionar el ingreso de equipos personales
-- Emitir pases temporales para visitantes
-- Mantener un historial de accesos
-
-### Usuarios Autorizados
-- Celadores
-- Administradores de Sistema
-- Personal de seguridad autorizado
+## Índice
+1. [Ideas clave](#ideas-clave)
+2. [Escáner](#escáner)
+3. [Registrar entradas y salidas](#registrar-entradas-y-salidas)
+4. [Pases manuales: visitantes, vehículos y objetos](#pases-manuales-visitantes-vehículos-y-objetos)
+5. [Incidentes](#incidentes)
+6. [Panel General (dashboard)](#panel-general-dashboard)
+7. [Turnos de celador y cierre de medianoche](#turnos-de-celador-y-cierre-de-medianoche)
+8. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ---
 
-## Acceso al Módulo de Portería
+## Ideas clave
 
-### Paso 1: Iniciar Sesión
-1. Acceda al sistema mediante la URL proporcionada por el SENA
-2. Ingrese su correo institucional y contraseña
-3. Haga clic en "Iniciar Sesión"
-
-### Paso 2: Navegar al Módulo de Portería
-1. Una vez iniciada la sesión, haga clic en el menú lateral
-2. Seleccione la opción "Portería" o "Control de Acceso"
-3. Se mostrará el dashboard de control de acceso
-
-### Opciones Disponibles
-- **Escáner**: Para escanear códigos QR
-- **Verificar**: Para verificar usuarios manualmente
-- **Dashboard**: Ver historial y estadísticas
-- **Pases**: Gestionar pases temporales
-- **Historial de Clases**: Control de asistencia por ficha
+- El carnet digital lleva un **código de barras** generado a partir del
+  documento. No hay códigos QR ni pases con fecha de vencimiento.
+- El "estado" de una persona o entidad (Adentro/Afuera) es simplemente su
+  **último movimiento registrado**. El sistema impide registrar dos entradas
+  seguidas o una salida sin entrada.
+- **La foto es la verificación de identidad.** El escáner indica si la foto
+  fue aprobada por un administrador; una foto sin aprobar no sirve para
+  confirmar quién está en la puerta.
 
 ---
 
-## Escaneo de Código QR
+## Escáner
 
-### Paso 1: Acceder al Escáner
-1. En el menú de portería, seleccione "Escáner"
-2. Se abrirá la interfaz de escaneo de QR
+Menú lateral → **"Escáner"**.
 
-### Paso 2: Escanear el Código QR
-1. Solicite al usuario que presente su carnet digital con código QR
-2. Apunte la cámara del dispositivo hacia el código QR
-3. El sistema detectará automáticamente el código
-4. Se mostrará la información del usuario
+1. Pulse el botón de encender cámara (puede alternar entre cámaras).
+2. Apunte al **código de barras** del carnet digital (en pantalla o
+   descargado). El lector también acepta los códigos de los pases manuales.
+3. Si la cámara falla, use **"¿Cámara con problemas? Usar búsqueda manual"**
+   y teclee el **número de documento** (o la placa/serial para pases).
 
-### Información Mostrada al Escanear
-- **Nombre completo** del usuario
-- **Documento** de identidad
-- **Cargo/Rol** en el sistema
-- **Foto de perfil**
-- **Estado** del perfil (verificado/bloqueado)
-- **Equipos** registrados (si tiene)
+Al identificar a una persona, el sistema muestra: nombre, documento, cargo,
+rol, foto (con la marca de si está **aprobada**), estado actual
+(Adentro/Afuera) y sus equipos registrados con el estado de cada uno.
 
-### Paso 3: Registrar Acceso
-1. Verifique que la información sea correcta
-2. Seleccione el tipo de acceso:
-   - **Entrada**: Para registrar ingreso a las instalaciones
-   - **Salida**: Para registrar egreso de las instalaciones
-3. Si el usuario tiene equipos registrados, seleccione los equipos que ingresan/egresan
-4. Haga clic en el botón correspondiente ("Registrar Entrada" o "Registrar Salida")
-5. El sistema mostrará un mensaje de confirmación
-
-### Validaciones Automáticas
-- **Perfil Completo**: El sistema verifica que el perfil esté completo
-- **Estado del Usuario**: Verifica que el usuario no esté bloqueado
-- **Horarios**: (Opcional) Verifica si el usuario tiene acceso en el horario actual
-
-### Errores Comunes
-
-| Error | Causa | Solución |
-|-------|-------|----------|
-| "QR no válido" | Código QR dañado o incorrecto | Solicite al usuario que muestre su carnet nuevamente |
-| "Usuario no encontrado" | Usuario no registrado en el sistema | Verifique manualmente la identidad del usuario |
-| "Perfil incompleto" | El usuario no ha completado su perfil | Indique al usuario que complete su perfil |
-| "Usuario bloqueado" | El usuario tiene bloqueo activo | Contacte a administración |
+Para un visitante que está adentro, muestra además el **tiempo transcurrido**
+desde su entrada y lo resalta si supera **2 horas**.
 
 ---
 
-## Verificación de Usuarios
+## Registrar entradas y salidas
 
-### Paso 1: Acceder a Verificación
-1. En el menú de portería, seleccione "Verificar"
-2. Se abrirá el formulario de verificación manual
+1. Identifique a la persona (escáner o búsqueda manual).
+2. Si trae equipos, **marque cuáles**: solo aparecen los equipos registrados
+   a nombre de esa persona; no se pueden agregar equipos ajenos desde aquí.
+3. Pulse **Entrada** o **Salida**.
 
-### Paso 2: Buscar Usuario
-Puede buscar usuario por:
-- **Documento de identidad**: Ingrese el número de documento
-- **Nombre**: Ingrese el nombre completo (puede ser parcial)
+El sistema guarda fecha y hora, los equipos marcados y **qué operador
+registró el movimiento**, y actualiza el estado de los equipos
+(Adentro/Afuera).
 
-### Paso 3: Verificar Información
-1. El sistema mostrará los resultados de búsqueda
-2. Seleccione el usuario correcto de la lista
-3. Se mostrará la información completa del usuario
+### Validaciones de flujo
 
-### Información Disponible
-- Datos personales (nombre, documento, correo)
-- Información del perfil (cargo, rol, programa, ficha)
-- Estado de verificación de correo
-- Estado de bloqueo (si aplica)
-- Foto de perfil
-- Equipos registrados
-
-### Paso 4: Registrar Acceso
-Una vez verificado el usuario, puede registrar su acceso siguiendo el mismo proceso que en el escáner de QR.
+- **Entrada de alguien que ya figura adentro** o **salida de alguien sin
+  entrada previa**: el sistema **rechaza** el movimiento y deja constancia en
+  la auditoría ("Inconsistencia de Acceso Detectada"). Si la situación es
+  real (por ejemplo, ayer no se registró la salida), tenga en cuenta que el
+  cierre de medianoche ya debió registrar la salida automática; si aun así
+  hay inconsistencia, repórtela como incidente.
+- Los registros de acceso **no se pueden editar ni borrar** desde ninguna
+  pantalla.
 
 ---
 
-## Registro de Entradas y Salidas
+## Pases manuales: visitantes, vehículos y objetos
 
-### Registro de Entrada
+Menú lateral → **"Pases Manuales"**. Tres pestañas: Personas (Visitantes),
+Vehículos (Logística) y Objetos Externos.
 
-#### Paso 1: Identificar al Usuario
-- Escanee el código QR del usuario, o
-- Busque el usuario manualmente
+**No son pases temporales:** no tienen fecha ni hora de validez, no expiran
+por sí solos, y no existen "revocar" ni "extender". Son registros de
+entidades externas para poder marcarles entradas y salidas. El cierre de
+medianoche los desactiva y les registra la salida automática.
 
-#### Paso 2: Verificar Equipos
-Si el usuario tiene equipos registrados:
-1. Se mostrará una lista de sus equipos
-2. Seleccione los equipos que ingresan con el usuario
-3. Puede seleccionar múltiples equipos
-4. Si no ingresa equipos, deje la selección vacía
+### Visitantes
+- Datos: **nombre y documento (obligatorios)** y motivo.
+- Si el documento ya existe, el registro se **reactiva y actualiza** en vez
+  de duplicarse.
+- El sistema genera un código interno (`SENA-VISIT:<documento>`) cuyo código
+  de barras se puede mostrar/imprimir desde la lista, aunque el celador
+  también puede buscarlo tecleando el documento.
 
-#### Paso 3: Confirmar Entrada
-1. Haga clic en "Registrar Entrada"
-2. El sistema registrará:
-   - Fecha y hora de entrada
-   - Usuario que ingresa
-   - Equipos que ingresan (si aplica)
-   - Celador que realizó el registro
+### Vehículos
+- Datos: **placa (obligatoria)**, tipo (**SENA** o **Externo**), propietario
+  y motivo. Placa repetida = se reactiva y actualiza.
 
-### Registro de Salida
+### Objetos externos
+- Para equipos de terceros (ej. un taladro de un contratista, un portátil de
+  un visitante). Datos: **descripción (obligatoria)**, serial (si no se
+  escribe, el sistema genera uno), propietario y motivo.
+- Los objetos sí se pueden **editar** después y **desactivar** (los
+  visitantes y vehículos no tienen edición posterior: se sobrescriben al
+  volver a registrarlos).
 
-#### Paso 1: Identificar al Usuario
-- Escanee el código QR del usuario, o
-- Busque el usuario manualmente
-
-#### Paso 2: Verificar Equipos
-Si el usuario tiene equipos registrados:
-1. Se mostrará una lista de sus equipos
-2. Seleccione los equipos que egresan con el usuario
-3. Puede seleccionar múltiples equipos
-4. Si no egresan equipos, deje la selección vacía
-
-#### Paso 3: Confirmar Salida
-1. Haga clic en "Registrar Salida"
-2. El sistema registrará:
-   - Fecha y hora de salida
-   - Usuario que egresa
-   - Equipos que egresan (si aplica)
-   - Celador que realizó el registro
-
-### Validaciones de Salida
-- **Equipos sin entrada**: Si un equipo egresa sin haber entrado, el sistema mostrará una advertencia
-- **Salida sin entrada**: Si un usuario egresa sin haber entrado, el sistema mostrará una advertencia
+### Registrar movimientos de pases
+Escanee el código del pase o búsquelo manualmente, y registre Entrada o
+Salida igual que con una persona. Aplican las mismas validaciones de flujo.
 
 ---
 
-## Gestión de Equipos en Acceso
+## Incidentes
 
-### Visualización de Equipos del Usuario
-Al escanear o verificar un usuario, el sistema muestra:
-- Lista de equipos registrados por el usuario
-- Estado de cada equipo (dentro/fuera de instalaciones)
-- Número de serie de cada equipo
-
-### Selección de Equipos
-- **Entrada**: Seleccione los equipos que ingresan con el usuario
-- **Salida**: Seleccione los equipos que egresan con el usuario
-- **Selección múltiple**: Puede seleccionar varios equipos a la vez
-
-### Advertencias
-- **Equipo ya dentro**: Si intenta registrar entrada de un equipo que ya está dentro, el sistema mostrará una advertencia
-- **Equipo fuera**: Si intenta registrar salida de un equipo que ya está fuera, el sistema mostrará una advertencia
+Desde el escáner puede registrar un **incidente** (equipo no registrado,
+anomalía, persona sin identificar): escriba el detalle y quedará en el
+historial de auditoría con su nombre como quien reporta. Es el mecanismo para
+dejar rastro de lo que el flujo normal no cubre.
 
 ---
 
-## Pases Temporales
+## Panel General (dashboard)
 
-### ¿Qué son los Pases Temporales?
-Los pases temporales permiten el acceso a visitantes o personas que no tienen perfil permanente en el sistema.
+Menú lateral → **"Panel General"**:
 
-### Paso 1: Acceder a Pases
-1. En el menú de portería, seleccione "Pases"
-2. Se mostrará la lista de pases activos y el formulario para crear nuevos
+- **KPIs:** total de aprendices, instructores y trabajadores registrados, y
+  cuántos visitantes, vehículos y objetos están **adentro ahora**.
+- **Gráfica** de ingresos de los últimos 7 días por cargo, con un resumen en
+  texto.
+- **Historial reciente:** los últimos **100 movimientos**, con filtros por
+  **cargo** y por **ficha**. **No hay filtro por fechas** en esta pantalla;
+  para consultar por rango de fechas use **"Historial de Ingresos"**
+  (ver `manual_historial_ingresos.md`).
+- **Exportar:** botón de exportación que descarga un **CSV** (se abre en
+  Excel) con el historial de accesos de usuarios, aplicando los filtros de
+  cargo/ficha activos.
 
-### Paso 2: Crear un Pase Temporal
-1. Haga clic en "Crear Nuevo Pase"
-2. Complete el formulario:
-   - **Nombre completo** del visitante
-   - **Documento** de identidad
-   - **Motivo** de la visita
-   - **Fecha** de validez
-   - **Hora** de validez (inicio y fin)
-   - **Área** a la que tiene acceso
-3. Haga clic en "Generar Pase"
-
-### Paso 3: Entregar el Pase
-1. El sistema generará un código QR temporal
-2. Imprima o muestre el código QR al visitante
-3. El visitante puede usar este QR para acceso durante el periodo de validez
-
-### Gestión de Pases
-- **Ver pases activos**: Lista de pases actualmente vigentes
-- **Ver pases expirados**: Historial de pases que ya expiraron
-- **Cancelar pase**: Puede cancelar un pase antes de que expire
-- **Extender validez**: Puede extender la validez de un pase existente
+Los administradores y el cargo Administrador ven además **"Reporte
+Usuarios"**: analíticas de ingresos de hoy y de los últimos 7 días por
+programa/ficha (aprendices), por área (instructores) o por cargo (personal),
+con la lista de quiénes están adentro en ese momento.
 
 ---
 
-## Dashboard de Accesos
+## Turnos de celador y cierre de medianoche
 
-### Paso 1: Acceder al Dashboard
-1. En el menú de portería, seleccione "Dashboard"
-2. Se mostrará el panel de control de accesos
-
-### Información Disponible
-
-#### Estadísticas Generales
-- Total de accesos hoy
-- Total de entradas hoy
-- Total de salidas hoy
-- Usuarios actualmente dentro
-- Equipos actualmente dentro
-
-#### Filtros
-- **Por fecha**: Filtrar accesos por rango de fechas
-- **Por cargo**: Filtrar por tipo de usuario (aprendiz, instructor, etc.)
-- **Por tipo de acceso**: Entradas o salidas
-
-#### Historial Reciente
-- Lista de los últimos accesos registrados
-- Muestra usuario, tipo de acceso, fecha y hora
-- Puede ver detalles de cada acceso
-
-### Exportación de Datos
-1. Seleccione el rango de fechas deseado
-2. Aplique los filtros necesarios
-3. Haga clic en "Exportar"
-4. El sistema generará un archivo con los datos
+- Al iniciar sesión, a quien tiene cargo **Celador** se le abre un **turno**
+  automáticamente (uno por día). El turno se cierra con el cierre automático
+  de medianoche.
+- **Todos los días a las 00:00** el sistema cierra lo que quedó abierto:
+  registra salida (23:59:59) a toda persona/entidad que seguía adentro,
+  desactiva visitantes y vehículos, y pone los equipos en "Afuera". Por eso
+  cada mañana el conteo de "adentro" empieza en cero.
 
 ---
 
-## Historial de Clases
+## Preguntas frecuentes
 
-### ¿Qué es el Historial de Clases?
-El historial de clases permite ver los accesos de aprendices de una ficha específica, útil para controlar asistencia.
+**¿El código no se deja leer?** Suba el brillo de la pantalla, acerque y
+aleje el teléfono, o use la búsqueda manual por documento. Funciona igual.
 
-### Paso 1: Acceder al Historial de Clases
-1. En el menú de portería, seleccione "Historial de Clases"
-2. Se mostrará el formulario de búsqueda por ficha
+**¿Alguien sin cuenta quiere entrar?** Regístrelo como visitante en "Pases
+Manuales" y márquele la entrada.
 
-### Paso 2: Buscar por Ficha
-1. Ingrese el número de ficha
-2. Haga clic en "Buscar"
-3. Se mostrarán los aprendices de esa ficha
+**¿La persona aparece "Adentro" pero está en la puerta?** Su salida de ayer
+no se registró; el cierre de medianoche la habrá corregido hoy a las 00:00.
+Si pasa el mismo día, registre el incidente y avise a administración.
 
-### Paso 3: Ver Historial
-Para cada aprendiz se muestra:
-- Nombre completo
-- Documento
-- Historial de accesos recientes
-- Estado actual (dentro/fuera)
+**¿Puedo corregir un registro equivocado?** No. Los accesos no se editan.
+Registre el movimiento contrario cuando el flujo lo permita y deje incidente
+si hace falta explicación.
 
-### Registro de Asistencia
-1. Puede registrar asistencia masiva para la ficha
-2. Seleccione la fecha
-3. Marque los aprendices presentes
-4. Haga clic en "Guardar Asistencia"
+**¿Dónde veo el historial de una persona concreta o de una ficha?** En
+**"Historial de Ingresos"** (`manual_historial_ingresos.md`), que sí permite
+rango de fechas, resumen de asistencia y detalle de equipos.
+
+**¿Cuánto historial hay?** El historial de accesos del mes anterior se
+exporta a Excel y **se borra de la base el día 1 de cada mes**. Lo anterior
+al mes en curso está en los archivos de respaldo (los administra el rol
+Admin).
 
 ---
 
-## Buenas Prácticas
-
-### Durante el Escaneo de QR
-1. **Verifique la identidad**: Asegúrese de que la persona corresponde al perfil escaneado
-2. **Revise el estado**: Verifique que el usuario no esté bloqueado
-3. **Confirme equipos**: Si el usuario lleva equipos, verifique que coincidan con los registrados
-4. **Registre correctamente**: Seleccione el tipo de acceso apropiado (entrada/salida)
-
-### Al Manejar Visitantes
-1. **Solicite identificación**: Pida documento de identidad al visitante
-2. **Registre el motivo**: Anote el motivo de la visita
-3. **Defina el tiempo**: Establezca un periodo de validez apropiado
-4. **Monitoree el pase**: Revise regularmente los pases activos
-
-### Seguridad
-1. **No comparta credenciales**: Mantenga su cuenta de celador segura
-2. **Reporte irregularidades**: Notifique cualquier situación sospechosa
-3. **Mantenga el orden**: Siga los protocolos establecidos
-4. **Documente incidentes**: Registre cualquier incidente o anomalía
-
----
-
-## Preguntas Frecuentes
-
-### ¿Qué hago si el código QR no se escanea?
-1. Solicite al usuario que muestre el QR nuevamente
-2. Asegúrese de que haya buena iluminación
-3. Si persiste, use la verificación manual por documento
-
-### ¿Puedo registrar acceso sin escanear QR?
-Sí, puede usar la función de verificación manual buscando al usuario por documento o nombre.
-
-### ¿Qué hago si el usuario no tiene perfil en el sistema?
-1. Verifique si es un visitante y emita un pase temporal
-2. Si es un usuario del SENA sin perfil, contacte a administración
-3. No permita el acceso sin verificación adecuada
-
-### ¿Puedo corregir un registro de acceso incorrecto?
-No, los registros de acceso no se pueden modificar directamente. Contacte a administración para correcciones.
-
-### ¿Cómo sé si un usuario tiene equipos registrados?
-Al escanear o verificar el usuario, el sistema muestra automáticamente la lista de equipos registrados.
-
-### ¿Qué hago si un usuario intenta salir con equipos que no registró?
-1. No permita la salida de equipos no registrados
-2. Indique al usuario que registre sus equipos en su perfil
-3. Si es necesario, contacte a administración
-
-### ¿Puedo ver el historial de accesos de un usuario específico?
-Sí, puede usar el dashboard y filtrar por usuario, o verificar al usuario específico para ver su historial.
-
-### ¿Qué pasa si el sistema se cae durante mi turno?
-1. Mantenga un registro manual de accesos
-2. Notifique al soporte técnico inmediatamente
-3. Cuando el sistema se restablezca, reporte los accesos manuales
-
-### ¿Puedo acceder al sistema desde mi teléfono?
-Sí, el sistema es responsive y puede accederse desde dispositivos móviles, aunque se recomienda usar una tablet o computadora para mejor experiencia.
-
-### ¿Cómo manejo situaciones de emergencia?
-En caso de emergencia, siga los protocolos de seguridad establecidos por el SENA. El sistema de acceso es secundario a la seguridad física.
-
-### ¿Puedo delegar mis funciones a otro celador?
-No, cada celador debe usar sus propias credenciales. No comparta su cuenta con otros usuarios.
-
----
-
-## Soporte Técnico
-
-Para reportar problemas o solicitar ayuda adicional con el módulo de control de acceso, contacte al equipo de soporte técnico del Centro de Gestión Agroempresarial del Oriente.
-
-### Información de Contacto
-- **Soporte Técnico**: [Correo de soporte]
-- **Horario**: [Horario de atención]
-- **Ubicación**: [Ubicación física del soporte]
-
-### Emergencias del Sistema
-Para emergencias del sistema fuera del horario de soporte:
-- Contacte al administrador de sistema on-call
-- Use los canales de emergencia establecidos
-
----
-
-**Versión:** 1.0  
-**Fecha:** Mayo 2026  
-**Institución:** SENA - Centro de Gestión Agroempresarial del Oriente
+**Institución:** SENA — Centro de Gestión Agroempresarial del Oriente
+**Última revisión contra el código:** septiembre de 2026

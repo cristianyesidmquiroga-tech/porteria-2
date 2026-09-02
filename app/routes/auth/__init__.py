@@ -1,11 +1,10 @@
 from flask import Blueprint
-from ...utils.security import check_security_and_verification
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-@bp.before_app_request
-def check_security():
-    return check_security_and_verification()
+# El chequeo de sesion unica y verificacion de correo se registra en
+# create_app(), no aqui: colgarlo del blueprint hacia que dejara de aplicarse
+# en toda la aplicacion si alguien dejaba de importar este modulo.
 
-# Importamos las rutas para que se registren en el blueprint
-from . import login, registro, verificacion, logout, recuperacion
+from . import (login, registro, verificacion, logout, recuperacion,  # noqa: E402,F401
+               desafio)

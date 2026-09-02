@@ -6,7 +6,7 @@
         <!-- Encabezado de Marca / Branded Hero -->
         <div class="welcome-section glass-welcome animate-on-scroll" data-animation="swipe-left">
             <div class="brand-hero stagger-item" style="display: flex; align-items: center; gap: 1rem;">
-                <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="SENA Logo" class="sidebar-logo" style="height: 80px;">
+                <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="SENA Logo" class="sidebar-logo" style="height: 80px;">
                 <h1 class="text-3d dust-reveal">Verifica tu <span class="highlight-rainbow">Correo</span></h1>
             </div>
             <p class="stagger-item">Protegemos tu identidad con autenticación de dos factores. Ingresa el código de 6 dígitos que enviamos a tu bandeja institucional para desbloquear el acceso táctico.</p>
@@ -25,7 +25,7 @@
                     <div class="floating-group">
                         <input type="text" id="codigo" name="codigo" required placeholder=" " maxlength="6" pattern="\d{6}" 
                                style="text-align: center; font-size: 2.5rem; letter-spacing: 12px; font-weight: 800; border-bottom: 3px solid var(--primary-color); background: rgba(255,255,255,0.4);" 
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                               data-solo-digitos>
                         <label for="codigo" style="text-align: center; width: 100%; left: 0;">Código de 6 Dígitos</label>
                         <div class="floating-border"></div>
                     </div>

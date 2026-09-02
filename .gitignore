@@ -1,23 +1,43 @@
-# Secretos y configuración
+# Secretos y configuracion
 config/.env
+.env
 
 # Base de datos local
 instance/
 
-# Entorno virtual (Librerías)
+# Datos personales: fotos de perfil de usuarios reales (Ley 1581 de 2012).
+# Nunca deben viajar en el repositorio. Se versiona solo el .gitkeep, para que
+# la carpeta exista tras un clone limpio: si no existe, Docker la crea al montar
+# el volumen y lo hace como root, dejando al usuario del contenedor sin permiso
+# de escritura.
+app/static/uploads/profiles/*
+!app/static/uploads/profiles/.gitkeep
+
+# Respaldos generados (mismo motivo que arriba para el .gitkeep)
+app/respaldos_mensuales/*
+!app/respaldos_mensuales/.gitkeep
+
+# Archivo de depuracion con codigos OTP (eliminado del codigo, se ignora por si acaso)
+CODIGOS_DESARROLLO.txt
+
+# Entorno virtual
+.venv/
 venv/
 env/
 ENV/
 
-# Archivos temporales de Python
+# Temporales de Python
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Archivos de sistema
+# Sistema
 .DS_Store
 Thumbs.db
 
-# Respaldos generados (opcional, si no quieres subirlos a Git)
-app/respaldos_mensuales/
+# Fotos de referencia de las pruebas: son rostros de personas reales, no deben
+# viajar en el repositorio. Se versiona solo el README que explica como usarlas.
+tests/fixtures/*
+!tests/fixtures/README.md
+

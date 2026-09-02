@@ -1,239 +1,153 @@
-# Manual de Usuario - Gestión de Perfil
+# Manual de Usuario — Gestión de Perfil y Carnet Digital
 
-## Tabla de Contenidos
-1. [Introducción](#introducción)
-2. [Acceso al Perfil](#acceso-al-perfil)
-3. [Completar Perfil](#completar-perfil)
-4. [Actualizar Datos Personales](#actualizar-datos-personales)
-5. [Gestión de Foto de Perfil](#gestión-de-foto-de-perfil)
-6. [Registro de Equipos](#registro-de-equipos)
-7. [Carnet Digital y Código QR](#carnet-digital-y-código-qr)
-8. [Preguntas Frecuentes](#preguntas-frecuentes)
+Para toda persona con cuenta en el sistema. Explica cómo completar el perfil,
+subir la foto y obtener el carnet digital con **código de barras**.
 
----
-
-## Introducción
-
-El módulo de gestión de perfil permite a los usuarios del sistema mantener su información personal actualizada, registrar sus equipos, y obtener su carnet digital con código QR para el acceso a las instalaciones del SENA.
-
-### Objetivos del Módulo
-- Mantener actualizada la información personal
-- Registrar equipos personales (laptops, tablets)
-- Obtener carnet digital con código QR
-- Gestionar foto de perfil con validación facial
+## Índice
+1. [Cómo funciona la activación del carnet](#cómo-funciona-la-activación-del-carnet)
+2. [Acceso al perfil](#acceso-al-perfil)
+3. [Completar la información](#completar-la-información)
+4. [Foto de perfil](#foto-de-perfil)
+5. [Carnet digital y código de barras](#carnet-digital-y-código-de-barras)
+6. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ---
 
-## Acceso al Perfil
+## Cómo funciona la activación del carnet
 
-### Paso 1: Iniciar Sesión
-![Pantalla de inicio de sesión](../images/login_screenshot.png)
-1. Acceda al sistema mediante la URL proporcionada por el SENA
-2. Ingrese su correo institucional y contraseña
-3. Haga clic en "Iniciar Sesión"
+El carnet digital (con su código de barras) **no se activa solo** al crear la
+cuenta. Se activa cuando se cumplen TODAS estas condiciones:
 
-> **💡 Consejo**: Si olvidó su contraseña, contacte al administrador del sistema.
+1. Documento de identidad registrado y válido.
+2. Tipo de sangre registrado.
+3. Foto de perfil subida **y aprobada por un administrador** (la revisión es
+   manual; mientras esté pendiente, el carnet sigue bloqueado).
+4. Solo aprendices: ficha de formación seleccionada.
 
-### Paso 2: Navegar al Perfil
-![Menú lateral con opción Mi Perfil](../images/menu_perfil.png)
-1. Una vez iniciada la sesión, haga clic en el menú lateral (icono de tres líneas en la esquina superior izquierda)
-2. Seleccione la opción "Mi Perfil"
-3. Se mostrará la página de gestión de perfil con su carnet digital
+Mientras falte algo, en "Mi Perfil" el carnet aparece con el aviso
+"Carnet bloqueado: completa tu perfil y espera la aprobación de tu foto".
 
 ---
 
-## Completar Perfil
+## Acceso al perfil
 
-### Campos Obligatorios
-Para activar su código QR de acceso, debe completar los siguientes campos:
-
-#### 1. Documento de Identidad
-- Ingrese su número de documento de identidad
-- Este campo es obligatorio para la generación del QR
-
-#### 2. Tipo de Sangre
-- Seleccione su tipo de sangre de la lista desplegable
-- Opciones disponibles: O+, O-, A+, A-, B+, B-, AB+, AB-
-- Este campo es obligatorio para emergencias médicas
-
-#### 3. Foto de Perfil
-- Suba una foto reciente de su rostro
-- La foto debe ser individual (sin otras personas)
-- Se realizará validación facial automática
-
-### Campos Adicionales (Según Rol)
-
-#### Para Aprendices:
-- **Programa de Formación**: Nombre del programa en el que está matriculado
-- **Ficha**: Número de ficha de formación
-- **Horario**: Mañana, Tarde o Noche
-
-#### Para Instructores:
-- **Especialidad/Área**: Área de especialización
+1. Inicie sesión con su **correo o su número de documento** y su contraseña.
+2. En el menú lateral, elija **"Mi Perfil"**.
+3. La página muestra el carnet digital (o el aviso de bloqueo), y los botones
+   para editar información, gestionar equipos y descargar el carnet.
 
 ---
 
-## Actualizar Datos Personales
+## Completar la información
 
-### Paso 1: Acceder al Formulario de Actualización
-1. En la página de perfil, haga clic en el botón "Información" (icono de usuario)
-2. Se abrirá el formulario de actualización de datos
+Pulse el botón **"Información"** y diligencie:
 
-### Paso 2: Modificar los Datos
-1. **Documento**: Edite el campo de documento si es necesario
-2. **Tipo de Sangre**: Seleccione o cambie su tipo de sangre
-3. **Programa/Área**: Actualice su programa de formación o área de especialización
-4. **Ficha**: Modifique el número de ficha si ha cambiado
+- **Tipo y número de documento.** El sistema valida el número según el tipo:
+  - Cédula de ciudadanía (CC): 6 a 10 dígitos, no empieza por cero.
+  - Tarjeta de identidad (TI): 10 u 11 dígitos, no empieza por cero.
+  - Cédula de extranjería (CE): 6 o 7 dígitos.
+  - PPT: 7 a 10 dígitos.
+  - Pasaporte (PA): 5 a 15 caracteres, admite letras.
+  Escriba el número **sin puntos ni espacios** (el sistema los quita, pero
+  guarda siempre la forma limpia). El documento debe ser único: no puede
+  estar registrado por otra persona.
+- **Tipo de sangre:** O+, O-, A+, A-, B+, B-, AB+ o AB-.
+- **Nombres y apellidos por separado** (opcional): así se imprimen en el
+  carnet. Si no los declara, el sistema reparte su nombre completo solo para
+  mostrarlo.
+- **Solo aprendices — Ficha de formación:** se elige de una **lista** de
+  fichas registradas por el administrador. El programa y la fecha de
+  finalización **se heredan de la ficha**, no se escriben a mano. Si su ficha
+  no aparece en la lista, pídala por "Mensajes" o el "Centro de Ayuda".
+- **Programa/Área** (instructores y otros cargos): texto libre, solo letras y
+  espacios.
 
-### Paso 3: Guardar Cambios
-1. Haga clic en el botón "Guardar Cambios"
-2. El sistema mostrará un mensaje de confirmación
-3. Los datos se actualizarán inmediatamente
-
-### Validaciones
-- **Programa**: Solo permite letras y espacios (sin números ni símbolos)
-- **Tipo de Sangre**: Debe ser uno de los tipos válidos predefinidos
-- **Documento**: Se eliminan caracteres HTML por seguridad
-
----
-
-## Gestión de Foto de Perfil
-
-### Requisitos de la Foto
-- Formatos aceptados: PNG, JPG, JPEG, GIF, WebP, BMP, SVG, TIFF
-- Tamaño máximo: 10 MB
-- Debe mostrar claramente el rostro
-- Debe ser una foto individual (sin otras personas)
-
-### Paso 1: Subir Foto
-1. En el formulario de actualización, haga clic en el campo "Foto de Perfil"
-2. Seleccione la imagen desde su dispositivo
-3. El sistema realizará validación facial automática
-
-### Validación Facial Automática
-El sistema utiliza detección facial para asegurar que:
-- **Se detecte al menos un rostro**: Si no se detecta ningún rostro, la foto será rechazada
-- **Solo una persona**: Si se detectan múltiples rostros, la foto será rechazada
-- **Formato válido**: Si el formato no puede procesarse, se solicitará otro formato (JPG o PNG)
-
-### Errores Comunes y Soluciones
-
-| Error | Causa | Solución |
-|-------|-------|----------|
-| "No se detectó ningún rostro" | Foto sin rostro visible | Use una foto donde se vea claramente su cara |
-| "Se detectó más de una persona" | Foto con múltiples personas | Use una foto individual |
-| "No se pudo procesar la imagen" | Formato incompatible | Use JPG o PNG |
+Al guardar, el sistema indica si el perfil quedó completo o qué falta.
 
 ---
 
-## Registro de Equipos
+## Foto de perfil
 
-### Paso 1: Acceder a la Sección de Equipos
-1. En la página de perfil, haga clic en el botón "Mis Equipos" (icono de laptop)
-2. Se mostrará la lista de equipos registrados
+La foto la ve el celador en portería para confirmar que usted es usted, así
+que tiene requisitos y **doble validación**: una automática al subirla y una
+manual por un administrador.
 
-### Paso 2: Registrar Nuevo Equipo
-1. Haga clic en el botón "Añadir Equipos" (icono de más)
-2. Complete el formulario:
-   - **Serial/SN**: Número de serie del equipo
-   - **Nombre del Equipo**: Nombre descriptivo (ej: "Laptop HP Pavilion")
-   - **Tipo de Equipo**: Seleccione el tipo (Computador, Tablet, etc.)
-3. Haga clic en "Vincular Equipo"
+### Requisitos del archivo
+- Formatos aceptados: **PNG, JPG/JPEG, WebP, BMP, TIFF y GIF**. (SVG está
+  excluido a propósito por seguridad.) La imagen se convierte siempre a JPEG
+  optimizado y se le eliminan los metadatos (incluido el GPS del celular).
+- Tamaño máximo de la petición: **10 MB**.
 
-### Paso 3: Eliminar Equipo
-1. En la lista de equipos, haga clic en el icono de papelera
-2. Confirme la eliminación en el modal de confirmación
-3. El equipo será desvinculado de su cuenta
+### Validación automática (al subir)
+El sistema rechaza la foto, con un mensaje que explica el motivo, si:
 
-### Notas Importantes
-- Solo los usuarios con permiso pueden registrar equipos
-- El número de serie debe ser único
-- Puede registrar múltiples equipos
+- No detecta un rostro humano real (dibujos, logos, capturas no pasan).
+- Detecta **más de una persona**.
+- El rostro se ve muy pequeño (tómela de cerca, tipo foto de documento).
+- Está muy oscura, quemada por el flash, o borrosa/movida.
+- La boca o la nariz están tapadas (mascarilla, bufanda) o lleva gorra/gorro
+  que cubre la frente. **Las gafas sí están permitidas.**
 
----
+### Revisión manual (después de subir)
+- La foto queda **"Pendiente de revisión"**. Un administrador confirma que la
+  persona de la foto corresponde a la cuenta.
+- **Aprobada:** el carnet se activa (si el resto del perfil está completo).
+  Llega aviso por correo y por "Mensajes".
+- **Rechazada:** el motivo llega por correo y por "Mensajes", la foto se
+  **borra** del sistema y hay que subir una nueva.
 
-## Carnet Digital y Código QR
-
-### Visualización del Carnet
-El carnet digital se muestra automáticamente en la página de perfil cuando el perfil está completo.
-
-### Información del Carnet
-El carnet incluye:
-- **Logo del SENA**
-- **Nombre completo**
-- **Cargo/Rol**
-- **Documento de identidad**
-- **Tipo de sangre**
-- **Ficha** (para aprendices)
-- **Programa de formación** (para aprendices)
-- **Horario** (si está configurado)
-- **Correo institucional**
-- **Código QR de acceso**
-
-### Código QR de Acceso
-- **Estado Bloqueado**: Si el perfil está incompleto, el QR no se genera
-- **Estado Activo**: Cuando el perfil está completo, el QR se genera automáticamente
-- **Uso**: El QR se utiliza para el acceso a las instalaciones mediante escaneo
-
-### Ampliar QR
-1. Haga clic en el código QR en el carnet
-2. Se abrirá una ventana modal con el QR ampliado
-3. Preséntelo al escáner de manera clara
-
-### Descargar Carnet
-1. Haga clic en el botón "Descargar Carnet Institucional"
-2. El sistema generará una imagen PNG del carnet
-3. La imagen se descargará automáticamente a su dispositivo
-
-### Requisitos para QR Activo
-El código QR se activa cuando se completan todos los campos obligatorios:
-- ✅ Documento de identidad
-- ✅ Tipo de sangre
-- ✅ Foto de perfil (distinta de la predeterminada)
-- ✅ Programa y ficha (para aprendices)
+Mientras la foto esté pendiente puede ingresar al centro presentando su
+documento físico en portería.
 
 ---
 
-## Preguntas Frecuentes
+## Carnet digital y código de barras
 
-### ¿Por qué mi código QR aparece bloqueado?
-El código QR se bloquea cuando el perfil está incompleto. Complete todos los campos obligatorios (documento, tipo de sangre, foto de perfil) para activarlo.
-
-### ¿Puedo cambiar mi foto de perfil?
-Sí, puede cambiar su foto de perfil en cualquier momento accediendo al formulario de actualización y seleccionando una nueva imagen.
-
-### ¿Qué pasa si mi foto es rechazada por validación facial?
-Si su foto es rechazada, intente con otra foto que cumpla los requisitos: rostro visible, foto individual, formato JPG o PNG.
-
-### ¿Cuántos equipos puedo registrar?
-Puede registrar múltiples equipos. No hay límite establecido, pero cada equipo debe tener un número de serie único.
-
-### ¿Puedo eliminar mi cuenta del sistema?
-No, la eliminación de cuentas debe ser realizada por un administrador del sistema.
-
-### ¿Qué debo hacer si olvidé mi contraseña?
-Utilice la opción "Recuperar Contraseña" en la página de inicio de sesión y siga los pasos indicados.
-
-### ¿Mi información está segura?
-Sí, el sistema implementa medidas de seguridad para proteger su información personal, incluyendo encriptación y validaciones de seguridad.
-
-### ¿Puedo actualizar mi información desde cualquier dispositivo?
-Sí, puede acceder a su perfil y actualizar su información desde cualquier dispositivo con conexión a internet.
-
-### ¿Qué formato debe tener mi foto?
-Formatos aceptados: PNG, JPG, JPEG, GIF, WebP, BMP, SVG, TIFF. Tamaño máximo: 10 MB.
-
-### ¿Por qué mi programa de formación no se guarda?
-El campo de programa solo permite letras y espacios. Si incluye números o símbolos, el sistema mostrará un error y no guardará el cambio.
+- El carnet reproduce el formato institucional: nombres y apellidos, tipo y
+  número de documento, tipo de sangre, perfil (APRENDIZ, INSTRUCTOR,
+  FUNCIONARIO, CONTRATISTA), y para aprendices la ficha, el programa, la
+  fecha de finalización y los datos de la póliza estudiantil.
+- El código es un **código de barras (Code128)** generado a partir del número
+  de documento. **No es un código QR** y no se "regenera": si el documento no
+  cambia, el código es siempre el mismo.
+- **Único botón disponible: "Descargar carnet"**, que genera una imagen del
+  carnet para guardarla en el teléfono. No existe "Imprimir QR", "Descargar
+  QR" ni "Generar nuevo código".
+- En portería, muestre el código en pantalla con buen brillo, o descargue el
+  carnet y muéstrelo desde la galería. El celador también puede buscarlo
+  manualmente por número de documento.
 
 ---
 
-## Soporte Técnico
+## Preguntas frecuentes
 
-Para reportar problemas o solicitar ayuda adicional con la gestión de perfil, contacte al equipo de soporte técnico del Centro de Gestión Agroempresarial del Oriente.
+**¿Por qué mi carnet sigue bloqueado si ya llené todo?**
+Casi siempre es la foto: debe estar **aprobada**, no solo subida. Revise el
+estado en su perfil o pregunte por "Mensajes".
+
+**¿Puedo cambiar la foto?**
+Sí, en cualquier momento. La nueva foto reemplaza a la anterior y vuelve a
+pasar por revisión (el carnet queda bloqueado hasta que la aprueben).
+
+**¿Puedo cambiar mi documento?**
+Sí, desde "Información", siempre que el nuevo número sea válido para su tipo
+de documento y no esté registrado por otra persona. El código de barras
+cambia con él.
+
+**¿Qué hago si olvidé mi contraseña?**
+Use "¿Olvidaste tu contraseña?" en la pantalla de ingreso (ver el manual de
+registro y recuperación). No necesita contactar al administrador.
+
+**¿Por qué me cerró la sesión al entrar desde otro dispositivo?**
+El sistema permite **una sola sesión activa** por cuenta: la más reciente
+cierra las demás. Además la sesión caduca a los 10 minutos de inactividad.
+
+**¿Quién puede ver mi foto y mis datos?**
+Su foto solo la ven usted, los administradores, el personal de portería, los
+asesores y los instructores, dentro de sus funciones. El detalle está en la
+Política de Tratamiento de Datos Personales, enlazada al pie de cada página.
 
 ---
 
-**Versión:** 1.0  
-**Fecha:** Mayo 2026  
-**Institución:** SENA - Centro de Gestión Agroempresarial del Oriente
+**Institución:** SENA — Centro de Gestión Agroempresarial del Oriente
+**Última revisión contra el código:** septiembre de 2026

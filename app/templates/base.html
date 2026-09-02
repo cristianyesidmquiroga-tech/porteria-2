@@ -4,27 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENA - Centro de Gestión Agroempresarial del Oriente</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo-sena-verde.svg') }}">
+    <title>{{ generalidades.entidad }} - {{ generalidades.centro }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/sena-logo.svg') }}">
     <!-- Modern Global CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/componentes.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/control.css') }}">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-    <!-- Third Party Scripts -->
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    {# Tipografia Outfit y Font Awesome 5.15.4 autoalojados en /static: antes
+       se cargaban desde fonts.googleapis.com/cdnjs.cloudflare.com en cada
+       pagina, lo que avisaba a esos terceros (con la IP del usuario) de cada
+       carga y dejaba el sistema dependiendo de que sigan disponibles. #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/outfit.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-5.15.4.min.css') }}">
+
+    {# particles.js 2.0.0 y vanilla-tilt 1.8.0 (fondo animado y efecto de
+       inclinacion de tarjetas, puramente decorativos): autoalojados con
+       version fijada en el nombre del archivo, igual que el lector de
+       codigos, en vez de depender de cdn.jsdelivr.net/cdnjs.cloudflare.com. #}
+    <script src="{{ url_for('static', filename='js/particles-2.0.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vanilla-tilt-1.8.0.min.js') }}"></script>
 
     <!-- Theme Switcher & JS Ready State -->
-    <script>
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-        document.documentElement.classList.add('js-ready');
-    </script>
+    <script src="{{ url_for('static', filename='js/tema-inicial.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
 
@@ -37,7 +40,7 @@
     <div id="global-loader">
         <div class="loader-content">
             <div class="loader-spinner"></div>
-            <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="Cargando SENA" style="width: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="Cargando SENA" style="width: 40px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
         </div>
     </div>
 
@@ -66,7 +69,17 @@
                 <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; color: #e74c3c;"></i>
                 <div>
                     <h3 style="margin: 0 0 5px 0; color: #e74c3c; font-size: 1.1rem;">¡Perfil Incompleto!</h3>
-                    <p style="margin: 0; color: var(--text-main); font-size: 0.95rem;">Para activar tu código QR de acceso y utilizar el sistema correctamente, debes <a href="{{ url_for('usuarios.profile') }}" style="color: #e74c3c; text-decoration: underline; font-weight: bold;">completar todos los campos obligatorios de tu perfil</a>.</p>
+                    <p style="margin: 0; color: var(--text-main); font-size: 0.95rem;">Para activar tu código de barras de acceso y utilizar el sistema correctamente, debes <a href="{{ url_for('usuarios.profile') }}" style="color: #e74c3c; text-decoration: underline; font-weight: bold;">completar todos los campos obligatorios de tu perfil</a>.</p>
+                    {# Este acceso al tutorial solo existe mientras el perfil este
+                       incompleto: cuando la persona ya completo todo, deja de
+                       necesitar la guia y el boton desaparece con el aviso. #}
+                    <a href="/usuarios/tutorial"
+                       style="display: inline-flex; align-items: center; gap: 7px; margin-top: 0.7rem;
+                              background: #39A900; color: #fff; text-decoration: none; font-weight: 700;
+                              font-size: 0.87rem; padding: 0.5rem 1rem; border-radius: 8px;">
+                        <i class="fas fa-map-signs" aria-hidden="true"></i>
+                        Ver tutorial de primeros pasos
+                    </a>
                 </div>
             </div>
             {% endif %}
@@ -85,7 +98,12 @@
         </main>
 
         <footer style="margin-top: auto; padding: 40px 0; text-align: center; color: var(--glass-subtext); font-size: 0.85rem;">
-            <p>&copy; 2026 SENA - Centro de Gestión Agroempresarial del Oriente. Gestión de Acceso.</p>
+            <p>&copy; 2026 {{ generalidades.entidad }} - {{ generalidades.centro }}. Gestión de Acceso.</p>
+            <p style="margin-top: 0.5rem;">
+                <a href="{{ url_for('main.politica_privacidad') }}" style="color: inherit; text-decoration: underline;">
+                    Política de Tratamiento de Datos Personales
+                </a>
+            </p>
         </footer>
     </div>
 
@@ -114,14 +132,19 @@
 
     <!-- Main Application Logic -->
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
-    <script>
-        // Evitar que el navegador muestre páginas cacheadas (Bfcache) al presionar el botón "Atrás" después de cerrar sesión.
-        window.onpageshow = function(event) {
-            if (event.persisted) {
-                window.location.reload();
-            }
-        };
-    </script>
+    {% if current_user.is_authenticated and current_user.correo_verificado %}
+    {# Recorrido guiado de primer ingreso. Lleva su configuracion en data-*
+       para que el JS quede cacheable y sin datos incrustados. Las rutas van
+       literales a proposito: el servidor de desarrollo no recarga Python, y
+       un url_for hacia un endpoint aun no cargado tumbaria todas las paginas
+       hasta el reinicio (el prefijo /usuarios del blueprint es fijo). #}
+    <script src="{{ url_for('static', filename='js/tutorial.js') }}" defer
+            data-tutorial-visto="{{ 'true' if current_user.tutorial_visto else 'false' }}"
+            data-en-perfil="{{ 'true' if request.endpoint == 'usuarios.profile' else 'false' }}"
+            data-url-completar="/usuarios/tutorial/completar"
+            data-url-texto="/usuarios/tutorial"
+            data-csrf="{{ csrf_token() }}"></script>
+    {% endif %}
     {% block scripts %}{% endblock %}
 </body>
 </html>

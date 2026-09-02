@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from ...models.usuarios import Usuario
 from ...models.accesos import Acceso
 from ... import db
-from datetime import datetime
+from ...utils import get_colombia_time
 from . import bp
 
 @bp.route('/asistencia', methods=['GET', 'POST'])
@@ -21,7 +21,7 @@ def asistencia():
         action = request.form.get('action', 'buscar')
         
         if action == 'buscar':
-            today = datetime.now().date()
+            today = get_colombia_time().date()
             # Grouping to avoid duplicates if they entered multiple times
             students = Usuario.query.join(Acceso, Acceso.referencia_id == Usuario.id).filter(
                 Usuario.ficha == ficha,
@@ -37,7 +37,7 @@ def asistencia():
             estudiantes_presentes = request.form.getlist('presente')
             
             try:
-                today = datetime.now().date()
+                today = get_colombia_time().date()
                 students_to_mark = Usuario.query.join(Acceso, Acceso.referencia_id == Usuario.id).filter(
                     Usuario.ficha == ficha_id,
                     db.func.date(Acceso.fecha) == today,
@@ -49,13 +49,11 @@ def asistencia():
                 from ...models.asistencia import AsistenciaClase
                 for s in students_to_mark:
                     is_present = str(s.id) in estudiantes_presentes
-                    comentario = request.form.get(f'comentario_{s.id}', '').strip() or None
                     nueva_clase = AsistenciaClase(
                         instructor_id=current_user.id,
                         aprendiz_id=s.id,
                         ficha=ficha_id,
-                        presente=is_present,
-                        evaluacion=comentario
+                        presente=is_present
                     )
                     db.session.add(nueva_clase)
                 

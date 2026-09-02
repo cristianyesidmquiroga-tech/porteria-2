@@ -76,9 +76,5 @@
     {% endif %}
 </div>
 
-<script>
-    setTimeout(() => {
-        if(document.getElementById('ficha').value) document.getElementById('ficha').classList.add('has-value');
-    }, 100);
-</script>
+<script src="{{ url_for('static', filename='js/historial-clases.js') }}"></script>
 {% endblock %}

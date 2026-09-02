@@ -1,25 +1,29 @@
-FROM python:3.10-slim
+FROM python:3.12-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV FLASK_APP=run.py
-ENV FLASK_ENV=production
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TZ=America/Bogota
 
 WORKDIR /app
 
-# Install dependencies
+# libglib es requerida por opencv-python-headless (deteccion facial de la foto).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libglib2.0-0 tzdata curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
 COPY . .
 
-# Make entrypoint executable
-RUN chmod +x docker/entrypoint.sh
+RUN chmod +x docker/entrypoint.sh \
+    && useradd --create-home --uid 10001 appuser \
+    && mkdir -p /app/app/static/uploads/profiles /app/app/respaldos_mensuales \
+    && chown -R appuser:appuser /app
 
-# Expose port 5000
+# No correr como root: limita el impacto de una ejecucion de codigo arbitrario.
+USER appuser
+
 EXPOSE 5000
 
-# Run entrypoint: creates admin user + starts Flask server
 ENTRYPOINT ["./docker/entrypoint.sh"]

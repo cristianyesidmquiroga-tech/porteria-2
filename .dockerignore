@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+venv
+**/__pycache__
+*.pyc
+config/.env
+.env
+instance/
+docs/
+scripts/generar_pdfs_*.py
+app/static/uploads/
+app/respaldos_mensuales/
+CODIGOS_DESARROLLO.txt

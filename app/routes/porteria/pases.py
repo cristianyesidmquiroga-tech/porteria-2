@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from . import porteria_bp as bp
 from ...models.entidades import Visitante, Vehiculo, ObjetoExterno
 from ... import db
+from ...utils.security import sanitize_html
 
 @bp.route('/pases')
 @login_required
@@ -20,7 +21,10 @@ def pases():
 def crear_visitante():
     if not current_user.puede_operar_porteria:
         return {"error": "Unauthorized"}, 403
-    nombre, documento, motivo = request.form.get('nombre'), request.form.get('documento'), request.form.get('motivo')
+    # Estos valores se muestran despues en el escaner, asi que se limpian aqui.
+    nombre = sanitize_html(request.form.get('nombre'))
+    documento = sanitize_html(request.form.get('documento'))
+    motivo = sanitize_html(request.form.get('motivo'))
     if not nombre or not documento:
         flash('Nombre y documento requeridos.', 'warning')
         return redirect(url_for('porteria.pases'))
@@ -41,7 +45,12 @@ def crear_visitante():
 def crear_vehiculo():
     if not current_user.puede_operar_porteria:
         return {"error": "Unauthorized"}, 403
-    placa, tipo, propietario, motivo = request.form.get('placa').upper(), request.form.get('tipo'), request.form.get('propietario'), request.form.get('motivo')
+    # request.form.get('placa').upper() reventaba con 500 si no se enviaba
+    # el campo.
+    placa = (request.form.get('placa') or '').strip().upper()
+    tipo = request.form.get('tipo')
+    propietario = sanitize_html(request.form.get('propietario'))
+    motivo = sanitize_html(request.form.get('motivo'))
     if not placa:
         flash('La placa es requerida.', 'warning')
         return redirect(url_for('porteria.pases'))
@@ -63,10 +72,10 @@ def crear_vehiculo():
 def crear_objeto():
     if not current_user.puede_operar_porteria:
         return {"error": "Unauthorized"}, 403
-    descripcion = request.form.get('descripcion')
-    serial = request.form.get('serial')
-    propietario = request.form.get('propietario')
-    motivo = request.form.get('motivo')
+    descripcion = sanitize_html(request.form.get('descripcion'))
+    serial = sanitize_html(request.form.get('serial'))
+    propietario = sanitize_html(request.form.get('propietario'))
+    motivo = sanitize_html(request.form.get('motivo'))
 
     if not descripcion:
         flash('La descripción es requerida.', 'warning')

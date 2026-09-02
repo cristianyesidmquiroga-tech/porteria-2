@@ -1,0 +1,92 @@
+{# Carnet institucional, una variante por perfil del formato impreso del SENA.
+
+   Disposición común (tomada de la hoja oficial): logotipo arriba a la
+   izquierda, fotografía arriba a la derecha, el perfil en mayúsculas
+   subrayado, los datos alineados a la izquierda y el pie con regional y
+   centro en negrita.
+
+   El aprendiz es la única variante distinta: lleva ficha, fecha de
+   finalización, programa y el bloque de la póliza estudiantil.
+
+   Regional, centro, aseguradora, teléfono y póliza salen de `generalidades`
+   (config/config.py), nunca escritos aquí: el sistema debe poder instalarse
+   en otro centro cambiando solo el .env.
+#}
+<div class="carnet-oficial" id="carnet-capture">
+
+    <div class="carnet-of-cabecera">
+        <img class="carnet-of-logo"
+             src="{{ url_for('static', filename='img/sena-logo.svg') }}"
+             alt="{{ generalidades.entidad }}" width="64" height="64">
+        <div class="carnet-of-foto">
+            <img src="{{ usuario.url_foto }}"
+                 alt="Fotografía de {{ usuario.nombre }}"
+                 width="120" height="150" decoding="async"
+                 data-respaldo="{{ url_for('static', filename=usuario.avatar_cargo) }}">
+        </div>
+    </div>
+
+    <h2 class="carnet-of-perfil">{{ usuario.perfil_carnet }}</h2>
+
+    <dl class="carnet-of-datos">
+        <div class="carnet-of-fila">
+            <dt>Nombres</dt>
+            <dd>{{ usuario.nombres_carnet or '—' }}</dd>
+        </div>
+        <div class="carnet-of-fila">
+            <dt>Apellidos</dt>
+            <dd>{{ usuario.apellidos_carnet or '—' }}</dd>
+        </div>
+        <div class="carnet-of-fila">
+            <dt>Documento</dt>
+            <dd>{{ usuario.documento_carnet or '—' }}</dd>
+        </div>
+        <div class="carnet-of-fila">
+            <dt>RH</dt>
+            <dd class="carnet-of-rh">{{ usuario.tipo_sangre or '—' }}</dd>
+        </div>
+
+        {% if usuario.es_perfil_aprendiz %}
+        <div class="carnet-of-fila">
+            <dt>Ficha de Formación No.</dt>
+            <dd>{{ usuario.ficha_numero or '—' }}</dd>
+        </div>
+        <div class="carnet-of-fila">
+            <dt>Fecha de Finalización</dt>
+            <dd>{{ usuario.fecha_finalizacion_carnet or '—' }}</dd>
+        </div>
+        <div class="carnet-of-fila carnet-of-programa">
+            <dd>{{ usuario.programa_carnet or 'Programa sin asignar' }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+
+    {% if usuario.es_perfil_aprendiz and generalidades.aseguradora %}
+    <div class="carnet-of-poliza">
+        <p>{{ generalidades.aseguradora }}</p>
+        {% if generalidades.aseguradora_tel %}<p>Tel: {{ generalidades.aseguradora_tel }}</p>{% endif %}
+        {% if generalidades.poliza %}<p>Póliza No. {{ generalidades.poliza }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    {# El código de barras codifica el número de documento, que es lo que
+       busca el escáner de portería. En la hoja impresa el aprendiz no lo
+       lleva (allí basta la póliza), pero el carnet DIGITAL sí lo necesita:
+       sin él los aprendices —el grupo más numeroso— no podrían entrar. #}
+    <div class="carnet-of-barras">
+        {% if barcode_svg %}
+        <div class="carnet-of-barras-caja">{{ barcode_svg | safe }}</div>
+        <span class="carnet-of-barras-texto">{{ usuario.documento }}</span>
+        {% else %}
+        <p class="carnet-of-bloqueado">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            Carnet bloqueado: completa tu perfil y espera la aprobación de tu foto.
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="carnet-of-pie">
+        <strong>{{ generalidades.regional }}</strong>
+        <em>{{ generalidades.centro }}</em>
+    </div>
+</div>

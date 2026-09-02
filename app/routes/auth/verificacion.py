@@ -1,10 +1,17 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from ... import db
-import random
+import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import timedelta
 from ...utils.email import enviar_correo
+from ...utils import get_colombia_time
+from ...utils.security import comparar_codigo
+import logging
+
+logger = logging.getLogger(__name__)
+
+MAX_INTENTOS_CODIGO = 5
 from . import bp
 
 @bp.route('/verificar', methods=['GET', 'POST'])
@@ -15,14 +22,25 @@ def verificar_correo():
 
     if request.method == 'POST':
         codigo = request.form.get('codigo')
-        if getattr(current_user, 'codigo_verificacion', '') == codigo:
-            if current_user.codigo_expiracion and datetime.utcnow() > current_user.codigo_expiracion:
+
+        # Sin limite, un codigo de 6 digitos se puede probar hasta acertar.
+        # Como el registro es publico, alguien podia crear una cuenta con el
+        # correo de un tercero y validarla por fuerza bruta.
+        if (current_user.intentos_codigo or 0) >= MAX_INTENTOS_CODIGO:
+            current_user.codigo_verificacion = None
+            db.session.commit()
+            flash('Demasiados intentos fallidos. Solicita un codigo nuevo.', 'danger')
+            return render_template('auth/verificar.html')
+
+        if comparar_codigo(getattr(current_user, 'codigo_verificacion', None), codigo):
+            if current_user.codigo_expiracion and get_colombia_time() > current_user.codigo_expiracion:
                 flash('El código ha expirado. Por favor, solicita uno nuevo.', 'danger')
                 return redirect(url_for('auth.verificar_correo'))
 
             current_user.correo_verificado = True
             current_user.codigo_verificacion = None
             current_user.codigo_expiracion = None
+            current_user.intentos_codigo = 0
             db.session.commit()
 
             flash('¡Correo verificado exitosamente!', 'success')
@@ -30,15 +48,11 @@ def verificar_correo():
                 return redirect(url_for('usuarios.profile'))
             return redirect(url_for('main.index'))
         else:
-            flash('Código incorrecto. Intenta nuevamente.', 'danger')
-
-    if current_user.codigo_verificacion:
-        print(f"\n[ACCESO] Codigo para {current_user.correo}: {current_user.codigo_verificacion}", flush=True)
-        # Registro en Archivo (Fail-safe)
-        try:
-            with open('CODIGOS_DESARROLLO.txt', 'a', encoding='utf-8') as f:
-                f.write(f"[{datetime.now().strftime('%H:%M:%S')}] Acceso: {current_user.correo} -> CODIGO: {current_user.codigo_verificacion}\n")
-        except: pass
+            current_user.intentos_codigo = (current_user.intentos_codigo or 0) + 1
+            db.session.commit()
+            restantes = MAX_INTENTOS_CODIGO - current_user.intentos_codigo
+            flash(f'Código incorrecto. Te quedan {max(restantes, 0)} intentos.',
+                  'danger')
 
     return render_template('auth/verificar.html')
 
@@ -46,17 +60,19 @@ def verificar_correo():
 @login_required
 def reenviar_codigo():
     if not getattr(current_user, 'correo_verificado', False):
-        current_user.codigo_verificacion = ''.join(random.choices(string.digits, k=6))
-        current_user.codigo_expiracion = datetime.utcnow() + timedelta(minutes=15)
+        current_user.codigo_verificacion = ''.join(secrets.choice(string.digits) for _ in range(6))
+        current_user.codigo_expiracion = get_colombia_time() + timedelta(minutes=15)
+        current_user.intentos_codigo = 0
         db.session.commit()
 
-        asunto = "Nuevo código de verificación - Sistema de Acceso SENA"
+        _g = current_app.config['GENERALIDADES']
+        asunto = f"Nuevo código de verificación - Sistema de Acceso {_g['entidad']}"
         link_verificacion = url_for('auth.verificar_correo', _external=True)
         cuerpo_html = f"""
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 640px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
             <div style="background-color: #39A900; padding: 24px; text-align: center;">
-                <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
-                <p style="color: white; margin: 6px 0 0 0;">Centro de Gestión Agroempresarial del Oriente - Vélez</p>
+                <h2 style="color: white; margin: 0;">{_g['entidad']} - {_g['regional']}</h2>
+                <p style="color: white; margin: 6px 0 0 0;">{_g['centro']} - {_g['municipio']}</p>
             </div>
             <div style="padding: 24px;">
                 <h3>Hola, {current_user.nombre}</h3>
@@ -81,16 +97,7 @@ def reenviar_codigo():
         """
         enviar_correo(current_user.correo, asunto, cuerpo_html)
         
-        print("\n" + "=" * 50, flush=True)
-        print(f"REENVIO DE CORREO A: {current_user.correo}", flush=True)
-        print(f"NUEVO CODIGO DE VERIFICACION: {current_user.codigo_verificacion}", flush=True)
-        print("=" * 50 + "\n", flush=True)
 
-        # Registro en Archivo (Fail-safe)
-        try:
-            with open('CODIGOS_DESARROLLO.txt', 'a', encoding='utf-8') as f:
-                f.write(f"[{datetime.now().strftime('%H:%M:%S')}] Reenvio: {current_user.correo} -> CODIGO: {current_user.codigo_verificacion}\n")
-        except: pass
 
         flash('Se ha reenviado un nuevo código a tu correo.', 'info')
     return redirect(url_for('auth.verificar_correo'))

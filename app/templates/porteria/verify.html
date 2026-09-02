@@ -6,7 +6,7 @@
 <div class="carnet-wrapper animate-on-scroll" data-animation="scale-in">
     <div class="carnet-card" style="width: 400px;">
         <div class="carnet-header">
-            <img src="{{ url_for('static', filename='img/logo-sena-verde.svg') }}" alt="SENA Logo"
+            <img src="{{ url_for('static', filename='img/sena-logo.svg') }}" alt="SENA Logo"
                 class="sena-logo-carnet">
             <span class="sena-text"><span class="highlight-rainbow">SENA</span> <span
                     class="highlight-rainbow">C.G.A.O</span></span>
@@ -19,8 +19,10 @@
                 </span>
             </div>
             <div class="photo-area {{ 'photo-entrada' if status == 'Entrada' else 'photo-salida' }}">
-                <img src="{{ url_for('static', filename='uploads/profiles/' + user_profile.foto) if user_profile.foto else 'https://ui-avatars.com/api/?name=' + user_profile.nombre|urlencode + '&background=39A900&color=fff' }}"
-                    alt="Foto Perfil" class="profile-photo-carnet" onerror="this.src='https://ui-avatars.com/api/?name={{ user_profile.nombre|urlencode }}&background=39A900&color=fff'">
+                <img src="{{ user_profile.url_foto }}"
+                    alt="Foto de {{ user_profile.nombre }}" class="profile-photo-carnet"
+                    fetchpriority="high" decoding="async" width="200" height="200"
+                    data-respaldo="{{ url_for('static', filename=user_profile.avatar_cargo) }}">
             </div>
 
             <div class="info-area">
@@ -34,7 +36,7 @@
                 <h2 class="user-name">{{ user_profile.nombre }}</h2>
                 <p class="detail-text"><strong>ID:</strong> {{ user_profile.documento or 'N/A' }}</p>
                 
-                {% if user_profile.rol.nombre == 'Aprendiz' %}
+                {% if user_profile.cargo == 'Aprendiz' %}
                 <p class="detail-text"><strong>Ficha:</strong> {{ user_profile.ficha or 'N/A' }}</p>
                 <p class="detail-text"><strong>Programa:</strong> {{ user_profile.programa or 'N/A' }}</p>
                 {% elif user_profile.rol.nombre == 'Instructor' %}
@@ -135,7 +137,7 @@
                 <i class="fas fa-lock"></i> Solo la Portería puede modificar accesos de usuarios.
             </div>
             {% endif %}
-            <button onclick="window.history.back()" class="btn-back">Volver al Escáner</button>
+            <button id="btn-volver-atras" class="btn-back">Volver al Escáner</button>
         </div>
     </div>
 </div>
@@ -191,31 +193,5 @@
     }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const formEntrada = document.getElementById('form-entrada');
-        if (formEntrada) {
-            formEntrada.addEventListener('submit', function() {
-                const checked = document.querySelectorAll('.equipo-checkbox:checked');
-                const container = document.getElementById('equipos-entrada');
-                container.innerHTML = '';
-                checked.forEach(cb => {
-                    container.innerHTML += `<input type="hidden" name="equipos_ids" value="${cb.value}">`;
-                });
-            });
-        }
-
-        const formSalida = document.getElementById('form-salida');
-        if (formSalida) {
-            formSalida.addEventListener('submit', function() {
-                const checked = document.querySelectorAll('.equipo-checkbox:checked');
-                const container = document.getElementById('equipos-salida');
-                container.innerHTML = '';
-                checked.forEach(cb => {
-                    container.innerHTML += `<input type="hidden" name="equipos_ids" value="${cb.value}">`;
-                });
-            });
-        }
-    });
-</script>
+<script src="{{ url_for('static', filename='js/verificacion.js') }}"></script>
 {% endblock %}

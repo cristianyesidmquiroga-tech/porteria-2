@@ -55,9 +55,13 @@
     border: 2px solid var(--primary-color);
 }
 
-/* Logout Button - Premium Header */
+/* Logout Button - Premium Header
+   #E74C3C sobre el fondo rosado casi blanco de este boton da 3.13:1, y en
+   el hover el texto blanco sobre el mismo #E74C3C solido da 3.82:1: los
+   dos fallan el minimo de 4.5:1. Se usa #a93226, que pasa en ambos casos
+   (4.94:1 y 6.62:1 respectivamente). */
 .btn-logout-header {
-    background: rgba(231, 76, 60, 0.1); color: #E74C3C;
+    background: rgba(231, 76, 60, 0.1); color: #a93226;
     border: 1px solid rgba(231, 76, 60, 0.2); border-radius: 20px;
     padding: 8px 18px; display: flex; align-items: center; justify-content: center;
     text-decoration: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -65,10 +69,14 @@
 }
 .btn-logout-header i { margin-right: 8px; font-size: 1rem; }
 .btn-logout-header:hover {
-    background: #E74C3C; color: white; transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3); border-color: transparent;
+    background: #a93226; color: white; transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 20px rgba(169, 50, 38, 0.3); border-color: transparent;
 }
 .btn-logout-header:active { transform: translateY(0) scale(0.98); }
+.btn-logout-header:focus-visible {
+    outline: 3px solid #1565C0;
+    outline-offset: 2px;
+}
 
 /* Responsive Header Enhancements */
 @media (max-width: 992px) {

@@ -1,12 +1,19 @@
 from flask import render_template, redirect, url_for, flash, request
-from flask_login import current_user, login_required
+from flask_login import current_user
 from ...models.usuarios import Usuario, Rol
 from ... import db
-import random
+import secrets
 import string
 import re
-from datetime import datetime, timedelta
-from ...utils.security import sanitize_html
+from datetime import timedelta
+from ...utils.security import sanitize_html, validar_contrasena, correo_permitido
+from ...utils.captcha import validar_formulario
+from ...utils.documentos import validar_documento
+from ...utils import get_colombia_time
+from flask import current_app
+import logging
+
+logger = logging.getLogger(__name__)
 from ...utils.email import enviar_correo
 from . import bp
 
@@ -24,9 +31,16 @@ def register():
         nombre_raw = request.form.get('nombre')
         nombre = re.sub(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]', '', nombre_raw).strip().title() if nombre_raw else None
         
-        correo = sanitize_html(request.form.get('correo')).lower().strip()
-        documento_raw = sanitize_html(request.form.get('documento')).strip()
-        documento = documento_raw if documento_raw else None
+        correo = (sanitize_html(request.form.get('correo')) or '').lower().strip()
+        documento_raw = (sanitize_html(request.form.get('documento')) or '').strip()
+        tipo_documento = (request.form.get('tipo_documento') or 'CC').upper()
+        documento = None
+        if documento_raw:
+            documento, error_documento = validar_documento(tipo_documento, documento_raw)
+            if error_documento:
+                if is_ajax: return {"status": "error", "message": error_documento}, 400
+                flash(error_documento, 'danger')
+                return redirect(url_for('auth.register'))
         contraseña = request.form.get('password')
         # 2. Selección de Cargo (Solo Admin elige, público es Aprendiz)
         if current_user.is_authenticated and current_user.es_admin:
@@ -46,20 +60,65 @@ def register():
             return redirect(url_for('auth.register'))
 
         # 4. Datos Dinámicos por Cargo
-        ficha = sanitize_html(request.form.get('ficha')).strip() if cargo == 'Aprendiz' else None
+        ficha = ((sanitize_html(request.form.get('ficha')) or '').strip() or None) if cargo == 'Aprendiz' else None
         horario = request.form.get('horario') if cargo == 'Aprendiz' else None
         programa_raw = request.form.get('programa')
         programa = re.sub(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s0-9]', '', programa_raw).strip() if programa_raw else None
 
-        # 5. Validaciones de Existencia
+        # 5a. Consentimiento de tratamiento de datos (Ley 1581 de 2012):
+        # sin autorizacion expresa del titular no se puede crear la cuenta.
+        if not request.form.get('acepta_datos'):
+            msg = ('Debes autorizar el tratamiento de tus datos personales '
+                   'para poder registrarte.')
+            if is_ajax: return {"status": "error", "message": msg}, 400
+            flash(msg, 'danger')
+            return redirect(url_for('auth.register'))
+
+        # 5a-bis. Desafio anti-bot. Va antes de tocar la base de datos y antes
+        # de enviar ningun correo: es el endpoint publico que crea cuentas.
+        captcha_ok, error_captcha = validar_formulario()
+        if not captcha_ok:
+            if is_ajax: return {"status": "error", "message": error_captcha}, 400
+            flash(error_captcha, 'danger')
+            return redirect(url_for('auth.register'))
+
+        # 5b. Datos minimos
+        if not nombre or not correo:
+            msg = 'El nombre y el correo son obligatorios.'
+            if is_ajax: return {"status": "error", "message": msg}, 400
+            flash(msg, 'danger')
+            return redirect(url_for('auth.register'))
+
+        # 5c. Contrasena: antes no se validaba nada y se podia crear una
+        # cuenta con contrasena vacia.
+        error_contrasena = validar_contrasena(contraseña, request.form.get('confirm_password'))
+        if error_contrasena:
+            if is_ajax: return {"status": "error", "message": error_contrasena}, 400
+            flash(error_contrasena, 'danger')
+            return redirect(url_for('auth.register'))
+
+        # 5d. Dominios permitidos (configurable con DOMINIOS_REGISTRO)
+        dominios = current_app.config.get('DOMINIOS_REGISTRO') or []
+        if not correo_permitido(correo, dominios):
+            msg = ('Solo se permiten correos de los dominios institucionales: '
+                   + ', '.join(dominios))
+            if is_ajax: return {"status": "error", "message": msg}, 400
+            flash(msg, 'danger')
+            return redirect(url_for('auth.register'))
+
+        # 5e. Validaciones de existencia
         if Usuario.query.filter_by(correo=correo).first():
-            msg = f'El correo {correo} ya está registrado.'
+            # Mensaje neutro: confirmar que un correo o una cedula ya existen
+            # permite enumerar las cuentas del centro desde un endpoint publico.
+            msg = ('Si los datos son correctos, recibiras un correo con las '
+                   'instrucciones para continuar.')
             if is_ajax: return {"status": "error", "message": msg}, 400
             flash(msg, 'danger')
             return redirect(url_for('auth.register'))
             
         if documento and Usuario.query.filter_by(documento=documento).first():
-            msg = f'El documento {documento} ya se encuentra registrado.'
+            msg = ('Si los datos son correctos, recibiras un correo con las '
+                   'instrucciones para continuar.')
             if is_ajax: return {"status": "error", "message": msg}, 400
             flash(msg, 'danger')
             return redirect(url_for('auth.register'))
@@ -68,7 +127,8 @@ def register():
         if cargo == 'Aprendiz' and ficha:
             # Ahora buscamos consistencia por cargo, no por rol_id
             existing = Usuario.query.filter(Usuario.ficha == ficha, Usuario.cargo == 'Aprendiz').first()
-            if existing and (existing.programa.lower() != (programa or "").lower() or existing.horario != horario):
+            if existing and ((existing.programa or '').lower() != (programa or '').lower()
+                             or existing.horario != horario):
                 msg = "Consistencia de ficha fallida. Verifica Programa/Jornada para esta ficha."
                 if is_ajax: return {"status": "error", "message": msg}, 400
                 flash(msg, 'danger')
@@ -78,6 +138,7 @@ def register():
             new_user = Usuario(
                 nombre=nombre,
                 documento=documento,
+                tipo_documento=tipo_documento,
                 correo=correo,
                 rol_id=rol_usuario.id, # Siempre Rol Usuario
                 ficha=ficha,
@@ -87,19 +148,20 @@ def register():
                 correo_verificado=False)
             
             new_user.set_password(contraseña)
-            new_user.codigo_verificacion = ''.join(random.choices(string.digits, k=6))
-            new_user.codigo_expiracion = datetime.utcnow() + timedelta(minutes=15)
+            new_user.codigo_verificacion = ''.join(secrets.choice(string.digits) for _ in range(6))
+            new_user.codigo_expiracion = get_colombia_time() + timedelta(minutes=15)
 
             db.session.add(new_user)
             db.session.commit()
 
-            asunto = "Código de verificación - Sistema de Acceso SENA"
+            _g = current_app.config['GENERALIDADES']
+            asunto = f"Código de verificación - Sistema de Acceso {_g['entidad']}"
             link_verificacion = url_for('auth.verificar_correo', _external=True)
             cuerpo_html = f"""
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 640px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
                 <div style="background-color: #39A900; padding: 24px; text-align: center;">
-                    <h2 style="color: white; margin: 0;">SENA - Regional Santander</h2>
-                    <p style="color: white; margin: 6px 0 0 0;">Centro de Gestión Agroempresarial del Oriente - Vélez</p>
+                    <h2 style="color: white; margin: 0;">{_g['entidad']} - {_g['regional']}</h2>
+                    <p style="color: white; margin: 6px 0 0 0;">{_g['centro']} - {_g['municipio']}</p>
                 </div>
                 <div style="padding: 24px;">
                     <h3>Hola, {nombre}</h3>
@@ -125,15 +187,10 @@ def register():
             enviado = enviar_correo(correo, asunto, cuerpo_html)
             
             if not enviado:
-                print(f"[!] No se pudo enviar correo a {new_user.correo}. Revisa configuración SMTP.")
+                logger.warning("No se pudo enviar el correo de verificacion al usuario %s. "
+                               "Revisa la configuracion SMTP.", new_user.id)
 
-            # Logging
-            print(f"\n[REGISTRO] {correo} registrado como {cargo}")
             
-            try:
-                with open('CODIGOS_DESARROLLO.txt', 'a', encoding='utf-8') as f:
-                    f.write(f"[{datetime.now().strftime('%H:%M:%S')}] Registro: {correo} ({cargo}) -> CODIGO: {new_user.codigo_verificacion}\n")
-            except: pass
 
             msg = '¡Registro exitoso! Revisa tu correo.'
             if is_ajax: return {"status": "success", "message": msg, "redirect": url_for('auth.login')}
@@ -142,7 +199,7 @@ def register():
 
         except Exception as e:
             db.session.rollback()
-            print(f"[ERROR REGISTRO] {str(e)}")
+            logger.exception("Error durante el registro")
             if is_ajax: return {"status": "error", "message": "Error interno al procesar el registro."}, 500
             flash("Error interno durante el registro.", 'danger')
             return redirect(url_for('auth.register'))

@@ -1,0 +1,292 @@
+/* === CARNET INSTITUCIONAL (formato oficial impreso del SENA) ===
+   El carnet se pinta SIEMPRE en blanco con texto negro, en los dos temas.
+   No es una decisión estética: el celador lee el código de barras desde la
+   pantalla del móvil, y un fondo oscuro o un filtro de inversión lo dejan
+   ilegible. Por eso aquí no hay variables de tema ni reglas de modo oscuro. */
+
+.carnet-oficial {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    background: #ffffff;
+    color: #111111;
+    border: 1px solid #d4d4d4;
+    border-radius: 14px;
+    padding: 18px 20px 0 20px;
+    font-family: 'Outfit', system-ui, sans-serif;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    position: relative;
+}
+
+/* --- Cabecera: logotipo a la izquierda, fotografía a la derecha --- */
+.carnet-of-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.carnet-of-logo {
+    width: 64px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.carnet-of-foto {
+    width: 96px;
+    height: 120px;
+    border: 1px solid #c8c8c8;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #f2f2f2;
+    flex-shrink: 0;
+}
+
+.carnet-of-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* --- Perfil en mayúsculas, subrayado con una línea horizontal --- */
+.carnet-of-perfil {
+    margin: 14px 0 0 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #111111;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #111111;
+    text-align: left;
+}
+
+/* --- Datos, alineados a la izquierda y en texto pequeño --- */
+.carnet-of-datos {
+    margin: 12px 0 0 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.carnet-of-fila {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin: 0 0 3px 0;
+}
+
+.carnet-of-fila dt {
+    font-weight: 600;
+    color: #444444;
+    flex-shrink: 0;
+}
+
+/* "Nombres" y "Apellidos" van cada uno en su línea sin etiqueta visible en el
+   formato impreso, pero el lector de pantalla sí necesita saber qué es cada
+   dato: la etiqueta se deja en el DOM y se oculta solo a la vista. */
+.carnet-of-fila:nth-child(1) dt,
+.carnet-of-fila:nth-child(2) dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.carnet-of-fila:nth-child(1) dd,
+.carnet-of-fila:nth-child(2) dd {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111111;
+}
+
+.carnet-of-fila dd {
+    margin: 0;
+    color: #111111;
+    overflow-wrap: anywhere;
+}
+
+.carnet-of-rh {
+    font-weight: 700;
+}
+
+/* El nombre del programa va en negrita y ocupa la línea entera. */
+.carnet-of-programa {
+    margin-top: 6px;
+}
+
+.carnet-of-programa dd {
+    font-weight: 800;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+/* --- Bloque de la póliza estudiantil (solo aprendiz) --- */
+.carnet-of-poliza {
+    margin-top: 12px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: #222222;
+}
+
+.carnet-of-poliza p {
+    margin: 0;
+}
+
+/* --- Código de barras ---
+   Ocupa todo el ancho disponible: leer un código lineal desde la pantalla de
+   un móvil es mucho más difícil que leer un QR, y el ancho es la variable que
+   más ayuda. El relleno lateral es la zona muda que exige la norma. */
+.carnet-of-barras {
+    margin: 14px -20px 0 -20px;
+    padding: 10px 0 6px 0;
+    background: #ffffff;
+    border-top: 1px solid #e2e2e2;
+    text-align: center;
+}
+
+.carnet-of-barras-caja {
+    background: #ffffff;
+    padding: 4px 10px;
+}
+
+.carnet-of-barras-caja svg {
+    display: block;
+    width: 100%;
+    height: 68px;
+}
+
+.carnet-of-barras-texto {
+    display: block;
+    margin-top: 2px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: #111111;
+}
+
+.carnet-of-bloqueado {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    color: #8a5a00;
+    background: #fff6e0;
+    line-height: 1.4;
+}
+
+/* --- Pie: regional y centro, en negrita, en dos líneas --- */
+.carnet-of-pie {
+    margin: 0 -20px;
+    padding: 10px 20px 12px 20px;
+    border-top: 2px solid #111111;
+    text-align: center;
+    line-height: 1.35;
+}
+
+.carnet-of-pie strong {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #111111;
+}
+
+.carnet-of-pie em {
+    display: block;
+    font-size: 0.76rem;
+    font-style: italic;
+    font-weight: 700;
+    color: #222222;
+}
+
+/* Aviso bajo el carnet cuando faltan datos por completar. */
+.carnet-aviso {
+    max-width: 380px;
+    margin: 1rem auto 0 auto;
+    padding: 0.9rem 1.1rem;
+    border-radius: 12px;
+    background: rgba(243, 156, 18, 0.12);
+    border: 1px solid rgba(243, 156, 18, 0.35);
+    color: var(--glass-text);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Botón de descarga: NO usa .glass-btn a propósito, porque esa clase impone
+   color, ancho y relleno con !important y no dejaría ajustarlo aquí. */
+.carnet-boton-descarga {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 380px;
+    margin: 1.2rem auto 0 auto;
+    padding: 0.9rem 1.4rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #39A900, #2E7D32);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 8px 22px rgba(57, 169, 0, 0.28);
+}
+
+.carnet-boton-descarga:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(57, 169, 0, 0.38);
+}
+
+.carnet-boton-descarga:focus-visible {
+    outline: 3px solid #1b5e20;
+    outline-offset: 3px;
+}
+
+.carnet-boton-descarga:active {
+    transform: translateY(0);
+}
+
+.carnet-boton-descarga:disabled {
+    opacity: 0.6;
+    cursor: progress;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .carnet-boton-descarga {
+        transition: none;
+    }
+    .carnet-boton-descarga:hover {
+        transform: none;
+    }
+}
+
+/* En móvil el carnet ocupa el ancho completo: cuanto más ancho, más fácil de
+   escanear. Comprobado a 375 px. */
+@media (max-width: 600px) {
+    .carnet-oficial {
+        max-width: 100%;
+        padding: 16px 16px 0 16px;
+    }
+    .carnet-of-barras,
+    .carnet-of-pie {
+        margin-left: -16px;
+        margin-right: -16px;
+    }
+    .carnet-of-pie {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .carnet-of-barras-caja svg {
+        height: 76px;
+    }
+    .carnet-aviso,
+    .carnet-boton-descarga {
+        max-width: 100%;
+    }
+}

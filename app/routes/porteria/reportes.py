@@ -2,9 +2,10 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, timezone
 from . import porteria_bp as bp
-from ...models.usuarios import Usuario, Rol
+from ...models.usuarios import Usuario
 from ...models.accesos import Acceso
 from ... import db
+from ...utils import get_colombia_time, parsear_fecha_bd
 
 @bp.route('/analytics/<rol_nombre>')
 @login_required
@@ -14,12 +15,12 @@ def analytics(rol_nombre):
         return redirect(url_for('porteria.dashboard'))
 
     colombia_tz = timezone(timedelta(hours=-5))
-    start_utc_7d = datetime.utcnow() - timedelta(days=8)
+    inicio_ventana = get_colombia_time() - timedelta(days=8)
     today_local = datetime.now(colombia_tz).date()
 
     # Consulta ajustada a Cargo en lugar de Rol
     entries = db.session.query(Acceso.fecha, Usuario).join(Usuario, Acceso.referencia_id == Usuario.id).filter(
-        Acceso.fecha >= start_utc_7d, 
+        Acceso.fecha >= inicio_ventana, 
         Acceso.tipo == 'Entrada', 
         Acceso.tipo_referencia == 'Usuario', 
         Usuario.cargo == rol_nombre
@@ -27,13 +28,11 @@ def analytics(rol_nombre):
 
     counts_hoy, counts_7dias, subcharts_hoy, subcharts_7dias = {}, {}, {}, {}
 
-    for fecha_utc, u in entries:
-        if isinstance(fecha_utc, str):
-            for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f'):
-                try: fecha_utc = datetime.strptime(fecha_utc, fmt); break
-                except ValueError: continue
-
-        fecha_local = fecha_utc.replace(tzinfo=timezone.utc).astimezone(colombia_tz)
+    for fecha_registro, u in entries:
+        # La fecha ya esta en hora de Colombia: no se reinterpreta como UTC.
+        fecha_local = parsear_fecha_bd(fecha_registro)
+        if fecha_local is None:
+            continue
         d_local = fecha_local.date()
         
         if rol_nombre == 'Aprendiz':
@@ -78,7 +77,8 @@ def analytics(rol_nombre):
                 "documento": u.documento,
                 "programa": u.programa or u.cargo or "N/A",
                 "ficha": u.ficha or "N/A",
-                "hora_ingreso": ultimo_acceso.fecha.replace(tzinfo=timezone.utc).astimezone(colombia_tz).strftime('%I:%M %p')
+                "hora_ingreso": (parsear_fecha_bd(ultimo_acceso.fecha).strftime('%I:%M %p')
+                                 if parsear_fecha_bd(ultimo_acceso.fecha) else 'N/A')
             })
 
     return render_template('porteria/analytics_rol.html', rol_nombre=rol_nombre, chart_data={'hoy_labels': list(counts_hoy.keys()), 'hoy_data': list(counts_hoy.values()), '7d_labels': list(counts_7dias.keys()), '7d_data': list(counts_7dias.values())}, program_charts=program_charts, analisis=analisis, usuarios_adentro=usuarios_adentro)
@@ -86,7 +86,7 @@ def analytics(rol_nombre):
 @bp.route('/historial_clases', methods=['GET', 'POST'])
 @login_required
 def historial_clases():
-    if not (current_user.es_admin or current_user.puede_ver_ambientes):
+    if not current_user.es_admin:
         flash('No tienes permiso para ver el historial de clases.', 'danger')
         return redirect(url_for('usuarios.profile'))
     from ...models.asistencia import AsistenciaClase

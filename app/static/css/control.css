@@ -17,5 +17,7 @@
 @import 'vistas/login/login.css';
 @import 'vistas/registro/registro.css';
 @import 'vistas/perfil/perfil.css';
+@import 'vistas/perfil/carnet.css';
+@import 'vistas/fichas/fichas.css';
 @import 'vistas/dashboard/dashboard.css';
 @import 'vistas/escaner/escaner.css';

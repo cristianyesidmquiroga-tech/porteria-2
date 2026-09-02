@@ -1,0 +1,111 @@
+/* === PANTALLA DE FICHAS DE FORMACIÓN (solo administradores) === */
+
+.campos-ficha {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.1rem;
+}
+
+.formulario-ficha label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--glass-text);
+    margin-bottom: 0.4rem;
+}
+
+.formulario-ficha input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(127, 127, 127, 0.08);
+    color: var(--glass-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.formulario-ficha input:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.formulario-ficha small {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--glass-subtext);
+}
+
+/* No usa .glass-btn: esa clase impone color, ancho y relleno con !important. */
+.boton-ficha {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1.4rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #39A900, #2E7D32);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.boton-ficha:hover { transform: translateY(-2px); }
+.boton-ficha:active { transform: translateY(0); }
+.boton-ficha:focus-visible { outline: 3px solid #1b5e20; outline-offset: 3px; }
+
+.boton-ficha-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.45rem 0.85rem;
+    margin-left: 0.35rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 9px;
+    background: rgba(127, 127, 127, 0.1);
+    color: var(--glass-text);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.boton-ficha-mini:hover { background: rgba(127, 127, 127, 0.22); }
+.boton-ficha-mini:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.modal-ficha {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-ficha-caja {
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .boton-ficha,
+    .boton-ficha-mini {
+        transition: none;
+    }
+    .boton-ficha:hover { transform: none; }
+}
+
+@media (max-width: 600px) {
+    .boton-ficha { width: 100%; justify-content: center; }
+    .boton-ficha-mini { margin: 0.2rem 0.2rem 0 0; }
+}

@@ -114,29 +114,35 @@ def api_enviar_comunicado():
                         <span style="font-size:1.5rem;font-weight:900;color:#c0392b;margin-left:8px;">{total_faltas}</span>
                     </div>"""
 
-            asunto = f"Comunicado SENA - {tipo}"
+            gen = current_app.config.get('GENERALIDADES', {})
+            entidad = gen.get('entidad', 'SENA')
+            centro = gen.get('centro', 'Centro de Formación')
+            regional = gen.get('regional', 'Regional')
+            municipio = gen.get('municipio', '')
+
+            asunto = f"Comunicado {entidad} - {tipo}"
             cuerpo = f"""
 <div style="font-family:Arial,sans-serif;color:#333;max-width:640px;margin:0 auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#fff;">
   <div style="background:{tipo_color};padding:24px;text-align:center;">
-    <h2 style="color:#fff;margin:0;font-size:1.4rem;">SENA - Centro de Gestión Agroempresarial del Oriente</h2>
-    <p style="color:rgba(255,255,255,0.9);margin:6px 0 0;font-size:0.95rem;">Vélez, Santander</p>
+    <h2 style="color:#fff;margin:0;font-size:1.4rem;">{entidad} - {centro}</h2>
+    <p style="color:rgba(255,255,255,0.9);margin:6px 0 0;font-size:0.95rem;">{municipio}{', ' + regional if regional else ''}</p>
   </div>
   <div style="padding:28px;">
     <div style="display:inline-block;background:{tipo_color}22;border:1px solid {tipo_color};color:{tipo_color};padding:6px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;margin-bottom:16px;">
       {tipo.upper()}
     </div>
     <h3 style="margin-top:0;">Estimado/a {u.nombre},</h3>
-    <p>Le informamos que ha sido registrado(a) un <strong>{tipo}</strong> en el Sistema de Acceso SENA el día <strong>{fecha_str}</strong>.</p>
+    <p>Le informamos que ha sido registrado(a) un <strong>{tipo}</strong> en el Sistema de Acceso {entidad} el día <strong>{fecha_str}</strong>.</p>
     {faltas_txt}
     {f'<div style="background:#f8f9fa;border-left:4px solid {tipo_color};padding:14px 16px;border-radius:6px;margin:16px 0;"><strong>Observación:</strong><br>{mensaje_personalizado}</div>' if mensaje_personalizado else ''}
     <p>Le solicitamos atender el presente comunicado y tomar las medidas correspondientes a la brevedad posible.</p>
     <p>Si considera que este comunicado es un error, por favor comuníquese directamente con:</p>
     <div style="background:#f1f1f1;padding:12px 16px;border-radius:6px;margin:16px 0;">
       <strong>{remitente_nombre}</strong> — {remitente_cargo}<br>
-      <span style="color:#555;font-size:0.9rem;">Centro de Gestión Agroempresarial del Oriente - SENA Vélez</span>
+      <span style="color:#555;font-size:0.9rem;">{centro} - {entidad} {municipio}</span>
     </div>
     <div style="background:#f9f9f9;border-left:4px solid #39A900;padding:12px;margin-top:20px;font-size:13px;color:#555;">
-      <strong>Política de privacidad:</strong> Este comunicado es de uso exclusivo del Sistema de Acceso SENA y se emite conforme a las políticas institucionales de convivencia y reglamento interno.
+      <strong>Política de privacidad:</strong> Este comunicado es de uso exclusivo del Sistema de Acceso {entidad} y se emite conforme a las políticas institucionales de convivencia y reglamento interno.
     </div>
   </div>
   <div style="background:#f4f4f4;padding:16px;text-align:center;font-size:12px;color:#777;">
