@@ -127,7 +127,7 @@ Consecuencias operativas:
 **No existe ninguna función de restauración.** Una vez borradas, las filas
 solo existen en el `.xlsx`. Por eso:
 
-- El volumen `../app/respaldos_mensuales:/app/app/respaldos_mensuales` del
+- El volumen `app/respaldos_mensuales:/app/app/respaldos_mensuales` del
   `docker-compose.yml` **no es opcional**: sin él, el archivo se escribe en el
   disco efímero del contenedor y el siguiente redespliegue lo pierde — junto
   con los datos ya borrados de la base.

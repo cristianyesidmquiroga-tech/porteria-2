@@ -1,7 +1,7 @@
 services:
   web:
     build:
-      context: ..
+      context: .
       dockerfile: docker/Dockerfile
     container_name: carnet_sena_web
     restart: always
@@ -12,18 +12,54 @@ services:
       # cualquiera sin sesion. Este volumen NO es opcional: sin el, las fotos
       # viven en el disco efimero del contenedor y el siguiente redespliegue
       # las borra todas, sin copia posible (el respaldo mensual no las incluye).
-      - ../datos/fotos_perfil:/app/datos/fotos_perfil
+      - datos/fotos_perfil:/app/datos/fotos_perfil
       # Carpeta antigua: se conserva montada para que las fotos que quedaron
       # dentro se puedan trasladar en el primer arranque.
-      - ../app/static/uploads:/app/app/static/uploads
+      - app/static/uploads:/app/app/static/uploads
       # Respaldos mensuales: el proceso de respaldo BORRA los datos de la base
       # despues de exportarlos, asi que este volumen no es opcional.
-      - ../app/respaldos_mensuales:/app/app/respaldos_mensuales
-    env_file:
-      - ../config/.env
+      - app/respaldos_mensuales:/app/app/respaldos_mensuales
     environment:
       - TZ=America/Bogota
       - CARPETA_FOTOS=/app/datos/fotos_perfil
+      # Coolify entrega estos valores mediante el entorno de despliegue.
+      # Enumerarlos aqui los pasa al contenedor sin versionar config/.env.
+      - SECRET_KEY
+      - DATABASE_URL
+      - ADMIN_EMAIL
+      - ADMIN_PASSWORD
+      - ADMIN_DOCUMENTO
+      - MAIL_SERVER
+      - MAIL_PORT
+      - MAIL_USERNAME
+      - MAIL_PASSWORD
+      - MAIL_DEFAULT_SENDER
+      - MAIL_NOMBRE_REMITENTE
+      - MAIL_CIFRADO
+      - MAIL_MODO
+      - MAIL_RESPALDO_RELE
+      - MAIL_PAUSA_SEGUNDOS
+      - DOMINIOS_REGISTRO
+      - COOKIES_SEGURAS
+      - PROXIES_CONFIABLES
+      - RATELIMIT_STORAGE_URI
+      - LIMITE_PETICIONES
+      - LIMITE_GENERAL
+      - CAPTCHA_ACTIVO
+      - CAPTCHA_DIFICULTAD
+      - EJECUTAR_TAREAS
+      - ZONA_HORARIA
+      - GUNICORN_THREADS
+      - CARNET_ENTIDAD
+      - CARNET_ENTIDAD_LARGA
+      - CARNET_REGIONAL
+      - CARNET_CENTRO
+      - CARNET_MUNICIPIO
+      - CARNET_ASEGURADORA
+      - CARNET_ASEGURADORA_TEL
+      - CARNET_POLIZA
+      - CARNET_PERFILES
+      - RECARGAR_PLANTILLAS
     mem_limit: 1g
     cpus: 1.0
     healthcheck:
