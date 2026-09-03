@@ -12,7 +12,8 @@
    (config/config.py), nunca escritos aquí: el sistema debe poder instalarse
    en otro centro cambiando solo el .env.
 #}
-<div class="carnet-oficial" id="carnet-capture">
+<div class="carnet-oficial carnet-oficial--{{ usuario.perfil_carnet|lower }}"
+     id="carnet-capture" data-perfil="{{ usuario.perfil_carnet }}">
 
     <div class="carnet-of-cabecera">
         <img class="carnet-of-logo"
@@ -37,9 +38,9 @@
             <dt>Apellidos</dt>
             <dd>{{ usuario.apellidos_carnet or '—' }}</dd>
         </div>
-        <div class="carnet-of-fila">
-            <dt>Documento</dt>
-            <dd>{{ usuario.documento_carnet or '—' }}</dd>
+        <div class="carnet-of-fila carnet-of-documento">
+            <dt>{% if usuario.es_perfil_aprendiz %}Tip.{% else %}C.C.{% endif %}</dt>
+            <dd data-documento-formato="{{ usuario.documento_carnet }}">{{ usuario.documento or '—' }}</dd>
         </div>
         <div class="carnet-of-fila">
             <dt>RH</dt>

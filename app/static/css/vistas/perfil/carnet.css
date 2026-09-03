@@ -19,6 +19,30 @@
     position: relative;
 }
 
+/* Cada perfil conserva la misma identidad institucional, pero el tamaño se
+   adapta a la ficha de datos que realmente imprime ese carnet. */
+.carnet-oficial--aprendiz .carnet-of-datos {
+    margin-top: 10px;
+}
+
+.carnet-oficial--aprendiz .carnet-of-perfil {
+    color: #111111;
+}
+
+.carnet-oficial--instructor .carnet-of-perfil,
+.carnet-oficial--contratista .carnet-of-perfil,
+.carnet-oficial--funcionario .carnet-of-perfil,
+.carnet-oficial--subdirector .carnet-of-perfil {
+    margin-top: 12px;
+}
+
+.carnet-oficial--instructor .carnet-of-datos,
+.carnet-oficial--contratista .carnet-of-datos,
+.carnet-oficial--funcionario .carnet-of-datos,
+.carnet-oficial--subdirector .carnet-of-datos {
+    margin-top: 10px;
+}
+
 /* --- Cabecera: logotipo a la izquierda, fotografía a la derecha --- */
 .carnet-of-cabecera {
     display: flex;
