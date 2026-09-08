@@ -1,0 +1,121 @@
+# El sistema entero para PROBARLO: aplicación y base de datos juntas.
+#
+# El otro archivo, `docker-compose.yml`, es el del despliegue real: da por
+# hecho que hay una base fuera y una red de Coolify ya creada, así que a solas
+# no arranca. Este levanta todo y publica el puerto, que es lo que hace falta
+# para entrar y ver si funciona.
+#
+#     cp config/.env.example config/.env      # y rellenar lo obligatorio
+#     docker compose -f docker/docker-compose.pruebas.yml \
+#         --project-directory . up -d --build
+#
+# Después: http://IP_DEL_SERVIDOR:5000
+#
+# NO es una configuración de producción. Publica el puerto sin https delante,
+# la contraseña de la base es fija y las cookies van sin `Secure`. Para
+# producción se usa el otro archivo, con Coolify poniendo el certificado.
+
+services:
+  base:
+    image: postgres:16-alpine
+    container_name: porteria_base_pruebas
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: porteria
+      POSTGRES_USER: porteria
+      # Fija y conocida a propósito: esto es un entorno de prueba y el puerto
+      # de la base NO se publica, solo lo alcanza la aplicación por la red
+      # interna. Si algún día se publica, hay que cambiarla.
+      POSTGRES_PASSWORD: porteria_de_prueba
+      TZ: America/Bogota
+    volumes:
+      - base_pruebas:/var/lib/postgresql/data
+    healthcheck:
+      # `pg_isready` responde antes de que la base acepte conexiones de verdad,
+      # así que se le pide el usuario y la base concretos.
+      test: ["CMD-SHELL", "pg_isready -U porteria -d porteria"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    networks:
+      - porteria
+
+  web:
+    build:
+      # Relativo al directorio del proyecto: hay que invocar el compose con
+      # `--project-directory .` desde la raíz del repositorio.
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: porteria_web_pruebas
+    restart: unless-stopped
+    depends_on:
+      base:
+        # Se espera a que la base esté sana, no solo a que exista el
+        # contenedor. Aun así el arranque vuelve a comprobarlo por su cuenta
+        # (docker/entrypoint.sh): `depends_on` no cubre un reinicio posterior
+        # de la base.
+        condition: service_healthy
+    ports:
+      # Solo en pruebas. En producción el contenedor no publica nada: el
+      # proxy de Coolify entra por la red interna.
+      - "5000:5000"
+
+    env_file:
+      # Lo que no esté aquí se toma de `environment`, más abajo. El archivo
+      # está en `.gitignore` y no viaja a la imagen (ver .dockerignore).
+      - path: ../config/.env
+        required: false
+
+    environment:
+      TZ: America/Bogota
+      CARPETA_FOTOS: /app/datos/fotos_perfil
+      # Apunta a la base de este mismo compose y pisa lo que traiga el .env:
+      # es lo que separa una prueba de tocar la base real por accidente.
+      DATABASE_URL: postgresql://porteria:porteria_de_prueba@base:5432/porteria
+      # Sin https delante, una cookie con `Secure` no se manda nunca y no se
+      # puede iniciar sesión.
+      COOKIES_SEGURAS: "false"
+      # La aplicación se expone directa, sin proxy propio. Poner un número
+      # mayor que el real es un agujero: cualquiera mandaría un
+      # X-Forwarded-For inventado y se saltaría los límites por IP.
+      PROXIES_CONFIABLES: "0"
+      GUNICORN_PROXIES_CONFIABLES: "127.0.0.1"
+      # El planificador sí corre, para poder probar el cierre nocturno y el
+      # respaldo mensual.
+      EJECUTAR_TAREAS: "true"
+
+    volumes:
+      - fotos_perfil_pruebas:/app/datos/fotos_perfil
+      - fotos_antiguas_pruebas:/app/app/static/uploads
+      - respaldos_pruebas:/app/app/respaldos_mensuales
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5000/salud', timeout=5).status == 200 else 1)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    networks:
+      - porteria
+
+volumes:
+  base_pruebas:
+  fotos_perfil_pruebas:
+  fotos_antiguas_pruebas:
+  respaldos_pruebas:
+
+networks:
+  porteria:
+    driver: bridge

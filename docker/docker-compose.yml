@@ -1,31 +1,63 @@
+# Despliegue en el servidor, detrás de Coolify.
+#
+# La base de datos vive FUERA de este archivo: se conecta con DATABASE_URL.
+# Para probar el sistema entero —aplicación y base juntas, sin Coolify y sin
+# base externa— está `docker-compose.pruebas.yml`, que sí levanta PostgreSQL.
+#
+# OJO al ejecutarlo a mano: las rutas de `build` son relativas al directorio
+# del proyecto, que por omisión es la carpeta del archivo. Como aquí el
+# contexto es la RAÍZ del repositorio, hay que decírselo:
+#
+#     docker compose -f docker/docker-compose.yml --project-directory . \
+#         up -d --build
+#
+# Coolify ya usa la raíz del repositorio como directorio de proyecto, así que
+# allí no hace falta añadir nada.
+
 services:
-  # La base de datos vive fuera de este despliegue. Se conecta mediante
-  # DATABASE_URL; este Compose solo construye y ejecuta la aplicación web.
   web:
     build:
+      # Relativo a la raíz del repositorio, no a esta carpeta. Ver la nota de
+      # arriba sobre `--project-directory`.
       context: .
       dockerfile: docker/Dockerfile
     container_name: carnet_sena_web
     restart: always
     expose:
       - 5000
+
     volumes:
-      # Fotos de perfil. Fuera de static/ a proposito: alli Flask las servia a
-      # cualquiera sin sesion. Este volumen NO es opcional: sin el, las fotos
-      # viven en el disco efimero del contenedor y el siguiente redespliegue
-      # las borra todas, sin copia posible (el respaldo mensual no las incluye).
-      - datos/fotos_perfil:/app/datos/fotos_perfil
-      # Carpeta antigua: se conserva montada para que las fotos que quedaron
-      # dentro se puedan trasladar en el primer arranque.
-      - app/static/uploads:/app/app/static/uploads
-      # Respaldos mensuales: el proceso de respaldo BORRA los datos de la base
-      # despues de exportarlos, asi que este volumen no es opcional.
-      - app/respaldos_mensuales:/app/app/respaldos_mensuales
+      # Volúmenes CON NOMBRE, no rutas del disco del servidor.
+      #
+      # Antes decían `datos/fotos_perfil:/app/datos/fotos_perfil`: una ruta
+      # relativa sin `./`. Compose no la admite como volumen con nombre —esos
+      # no pueden llevar barras— ni queda claro que sea una ruta del disco.
+      # Con nombre es inequívoco, lo gestiona Docker, y al montarse sobre una
+      # carpeta que ya existe en la imagen hereda su dueño: por eso el
+      # Dockerfile las crea a nombre de `appuser` antes de tiempo. Sin eso el
+      # volumen nacería propiedad de root y subir una foto fallaría en
+      # silencio.
+      #
+      # Las fotos de perfil viven fuera de `static/` a propósito: allí Flask
+      # las servía a cualquiera sin sesión. Este volumen NO es opcional: sin
+      # él las fotos quedan en el disco efímero del contenedor y el siguiente
+      # redespliegue las borra todas, sin copia posible —el respaldo mensual
+      # exporta accesos y asistencias, no imágenes—.
+      - fotos_perfil:/app/datos/fotos_perfil
+
+      # Carpeta antigua. Se mantiene montada para que las fotos que quedaron
+      # dentro se trasladen solas en el primer arranque (app/utils/fotos.py).
+      - fotos_antiguas:/app/app/static/uploads
+
+      # El respaldo mensual BORRA las filas de la base después de exportarlas,
+      # así que este volumen tampoco es opcional.
+      - respaldos:/app/app/respaldos_mensuales
+
     environment:
       - TZ=America/Bogota
       - CARPETA_FOTOS=/app/datos/fotos_perfil
-      # Coolify entrega estos valores mediante el entorno de despliegue.
-      # Enumerarlos aqui los pasa al contenedor sin versionar config/.env.
+      # Coolify entrega estos valores desde el entorno de despliegue.
+      # Enumerarlos aquí los pasa al contenedor sin versionar config/.env.
       - SECRET_KEY
       - DATABASE_URL
       - ADMIN_EMAIL
@@ -52,6 +84,7 @@ services:
       - EJECUTAR_TAREAS
       - ZONA_HORARIA
       - GUNICORN_THREADS
+      - GUNICORN_PROXIES_CONFIABLES
       - CARNET_ENTIDAD
       - CARNET_ENTIDAD_LARGA
       - CARNET_REGIONAL
@@ -62,16 +95,39 @@ services:
       - CARNET_POLIZA
       - CARNET_PERFILES
       - RECARGAR_PLANTILLAS
+
     mem_limit: 1g
     cpus: 1.0
+
+    # Sin `curl` en la imagen: la sonda la hace Python, que ya está dentro.
+    # `start_period` cubre la espera a la base y la creación de las tablas del
+    # primer arranque; mientras dura, un fallo no cuenta como caída.
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5000/salud"]
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5000/salud', timeout=5).status == 200 else 1)"
       interval: 60s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 90s
+
+    logging:
+      driver: json-file
+      options:
+        # Sin tope, el registro crece hasta llenar el disco del servidor y se
+        # lleva por delante todo lo demás que corra ahí.
+        max-size: "10m"
+        max-file: "3"
+
     networks:
       - coolify
+
+volumes:
+  fotos_perfil:
+  fotos_antiguas:
+  respaldos:
 
 networks:
   coolify:
