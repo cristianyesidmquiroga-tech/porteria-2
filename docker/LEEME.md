@@ -16,16 +16,11 @@ Tres archivos, y cada uno tiene un momento:
 El de producción no arranca a solas: da por hecho una base externa y una red de
 Coolify ya creada. Para probar se usa el otro.
 
-El repositorio es **privado**, así que por HTTPS el clon pide credenciales. Con
-una llave SSH ya cargada en el servidor:
-
 ```bash
-git clone git@github.com:cristianyesidmquiroga-tech/porteria-2.git
+git clone https://github.com/cristianyesidmquiroga-tech/porteria-2.git
 cd porteria-2
 cp config/.env.example config/.env
 ```
-
-Si el servidor todavía no tiene llave, ver «Repositorio privado» al final.
 
 En `config/.env` basta con rellenar lo que la aplicación exige para arrancar:
 
@@ -127,61 +122,3 @@ contenedor reiniciándose— no dice en ninguna parte que la causa es una carrer
 - **`.dockerignore` más estricto**: fuera las pruebas, la documentación y
   cualquier `.env`. Un secreto copiado a una imagen se queda en su capa para
   siempre, aunque una capa posterior lo borre.
-
----
-
-## Repositorio privado
-
-El repositorio es privado, así que ni Coolify ni el servidor pueden clonarlo
-sin credenciales. Hay dos formas, y conviene saber cuál se está usando.
-
-### La llave que Coolify trae de fábrica NO sirve para esto
-
-En *Keys & Tokens → Private keys* aparece `localhost's key`, descrita como «la
-llave privada de la máquina anfitriona de Coolify». Esa es la que Coolify usa
-para hablar con **su propio servidor**, no con GitHub. Añadirla como llave de
-despliegue del repositorio no es lo previsto y mezcla dos cosas que conviene
-tener separadas: si algún día se revoca el acceso al repositorio, no debería
-quedarse Coolify sin poder administrar su propia máquina.
-
-### Opción A — Aplicación de GitHub (la que recomienda Coolify)
-
-*Sources → + Add → GitHub App*. Coolify guía la instalación y queda con acceso
-a los repositorios que se le indiquen.
-
-Ventajas sobre una llave de despliegue: los permisos se pueden acotar y
-revocar por repositorio desde GitHub, se renueva sola, y habilita el
-despliegue automático al empujar sin configurar nada más.
-
-### Opción B — Llave de despliegue
-
-1. En Coolify: *Keys & Tokens → Private keys → + New private key*. Se genera
-   una nueva; **no** se reutiliza `localhost's key`.
-2. Copiar la parte **pública** que muestra Coolify.
-3. En GitHub: *Settings → Deploy keys → Add deploy key* del repositorio,
-   pegar ahí la pública. **Sin** marcar «Allow write access»: el despliegue
-   solo necesita leer, y una llave de solo lectura que se filtre no permite
-   reescribir el repositorio.
-4. En el recurso de Coolify, elegir esa llave y usar la dirección **SSH**
-   (`git@github.com:usuario/repo.git`). Con la de HTTPS la llave no se usa y
-   el clon falla igual.
-
-Una llave de despliegue vale para **un** repositorio. Si mañana hay un segundo
-proyecto, hace falta otra: reutilizar la misma en varios repositorios convierte
-una filtración en un problema múltiple.
-
-### Para clonar a mano en el servidor
-
-Con la llave ya en `~/.ssh` del servidor:
-
-```bash
-ssh -T git@github.com          # debe saludar por el nombre de usuario
-git clone git@github.com:cristianyesidmquiroga-tech/porteria-2.git
-```
-
-Si responde `Permission denied (publickey)`, la llave no está cargada o la
-pública no está registrada en el repositorio.
-
-> Ser privado **no** cambia nada del despliegue en sí: los volúmenes, la
-> imagen y los dos Compose funcionan igual. Solo cambia cómo se obtiene el
-> código.
