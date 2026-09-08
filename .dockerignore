@@ -1,47 +1,14 @@
-# Lo que NO entra en la imagen.
-#
-# Importa por dos motivos: lo que se copia pesa y se despliega, y lo que se
-# copia con un secreto dentro queda dentro de la imagen para siempre —aunque
-# una capa posterior lo borre, sigue estando en la capa anterior—.
-
-# --- Nunca, por secretos ---
-config/.env
-.env
-*.env
-!config/.env.example
-
-# --- Control de versiones y herramientas ---
 .git
 .gitignore
-.gitattributes
-.github/
 .venv
-venv/
+venv
 **/__pycache__
 *.pyc
-*.pyo
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-
-# --- Datos que viven en volúmenes, no en la imagen ---
-# Si viajaran dentro, cada despliegue traería fotos y respaldos viejos y los
-# pondría encima de los del servidor.
+config/.env
+.env
 instance/
-datos/
+docs/
+scripts/generar_pdfs_*.py
 app/static/uploads/
 app/respaldos_mensuales/
-
-# --- No hace falta para ejecutar ---
-docs/
-tests/
-requirements-dev.txt
-scripts/generar_pdfs_*.py
 CODIGOS_DESARROLLO.txt
-*.md
-!THIRD_PARTY_LICENSES.md
-
-# El Compose no se usa desde dentro del contenedor.
-docker/docker-compose*.yml
