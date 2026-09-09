@@ -136,11 +136,9 @@
                             <i class="fas fa-briefcase input-icon"></i>
                             <select name="cargo" class="glass-input" data-cargo-prefijo="add">
                                 <option value="">Seleccione...</option>
-                                <option value="Aprendiz">Aprendiz</option>
-                                <option value="Instructor">Instructor</option>
-                                <option value="Administrativo">Administrativo</option>
-                                <option value="Celador">Celador</option>
-                                <option value="Administrador">Administrador de Sistema</option>
+                                {% for cargo in cargos_validos %}
+                                <option value="{{ cargo }}">{{ 'Administrador de Sistema' if cargo == 'Administrador' else cargo }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -209,11 +207,9 @@
                         <label>Cargo / Dependencia</label>
                         <select id="edit-cargo" name="cargo" class="glass-input" data-cargo-prefijo="edit">
                             <option value="">Seleccione...</option>
-                            <option value="Aprendiz">Aprendiz</option>
-                            <option value="Instructor">Instructor</option>
-                            <option value="Administrativo">Administrativo</option>
-                            <option value="Celador">Celador</option>
-                            <option value="Administrador">Administrador de Sistema</option>
+                            {% for cargo in cargos_validos %}
+                            <option value="{{ cargo }}">{{ 'Administrador de Sistema' if cargo == 'Administrador' else cargo }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">

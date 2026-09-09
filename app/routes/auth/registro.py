@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import current_user
-from ...models.usuarios import Usuario, Rol
+from ...models.usuarios import CARGOS_VALIDOS, Usuario, Rol
 from ... import db
 import secrets
 import string
@@ -50,6 +50,11 @@ def register():
         
         if not cargo:
             cargo = 'Aprendiz'
+        if cargo not in CARGOS_VALIDOS:
+            msg = 'El cargo seleccionado no es válido.'
+            if is_ajax: return {"status": "error", "message": msg}, 400
+            flash(msg, 'danger')
+            return redirect(url_for('auth.register'))
 
         # 3. Asignación Automática de Rol 'Usuario'
         rol_usuario = Rol.query.filter_by(nombre='Usuario').first()

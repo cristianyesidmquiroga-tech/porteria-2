@@ -26,7 +26,8 @@ AVATAR_GENERICO = 'img/perfiles/generico.svg'
 # llegue (por ejemplo desde una importacion de Excel) se descarta, porque el
 # cargo gobierna permisos.
 CARGOS_VALIDOS = ('Aprendiz', 'Instructor', 'Administrativo', 'Celador',
-                  'Administrador')
+                  'Portería', 'Administrador', 'Coordinacion', 'Subdirector',
+                  'Contratista', 'Funcionario')
 
 # Roles que se pueden asignar en una importacion masiva. 'Admin' queda fuera a
 # proposito: da acceso total y solo debe concederse desde el panel, uno a uno.

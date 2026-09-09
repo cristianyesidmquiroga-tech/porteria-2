@@ -63,7 +63,8 @@ def admin_gestion():
     roles = Rol.query.all()
     usuarios = Usuario.query.order_by(Usuario.id.desc()).all()
     
-    return render_template('usuarios/gestion.html', usuarios=usuarios, roles=roles)
+    return render_template('usuarios/gestion.html', usuarios=usuarios, roles=roles,
+                           cargos_validos=CARGOS_VALIDOS)
 
 @bp.route('/admin/descargar_respaldo/<filename>')
 @login_required
@@ -142,6 +143,10 @@ def api_crear_usuario():
         
         rol = Rol.query.get(int(data['rol_id']))
         es_usuario_normal = rol and rol.nombre == 'Usuario'
+        cargo = data.get('cargo') or None
+        if cargo and cargo not in CARGOS_VALIDOS:
+            return jsonify({"status": "error",
+                            "message": "El cargo seleccionado no es válido"}), 400
 
         nuevo_usuario = Usuario(
             nombre=data['nombre'],
@@ -149,7 +154,7 @@ def api_crear_usuario():
             documento=documento,
             tipo_documento=tipo_documento or TIPO_POR_DEFECTO,
             rol_id=int(data['rol_id']),
-            cargo=data.get('cargo'),
+            cargo=cargo,
             ficha=data.get('ficha'),
             programa=data.get('programa'),
             horario=data.get('horario'),
@@ -283,7 +288,12 @@ def api_editar_usuario(id):
             usuario.documento = nuevo_documento
             if tipo_documento:
                 usuario.tipo_documento = tipo_documento
-        if 'cargo' in data: usuario.cargo = data['cargo']
+        if 'cargo' in data:
+            cargo = data.get('cargo') or None
+            if cargo and cargo not in CARGOS_VALIDOS:
+                return jsonify({"status": "error",
+                                "message": "El cargo seleccionado no es válido"}), 400
+            usuario.cargo = cargo
         if 'rol_id' in data: usuario.rol_id = int(data['rol_id'])
         if 'ficha' in data:
             usuario.ficha = data['ficha']

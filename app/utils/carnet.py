@@ -43,6 +43,7 @@ PERFILES_POR_CARGO_POR_DEFECTO = {
     'administrativo': PERFIL_FUNCIONARIO,
     'administrador': PERFIL_FUNCIONARIO,
     'funcionario': PERFIL_FUNCIONARIO,
+    'coordinacion': PERFIL_FUNCIONARIO,
     'subdirector': PERFIL_SUBDIRECTOR,
 }
 
