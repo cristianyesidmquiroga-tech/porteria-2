@@ -11,6 +11,7 @@ from flask_login import current_user, login_required
 from . import bp
 from app.utils.fotos import puede_ver_la_foto, ruta_de_foto
 from app.models.usuarios import Usuario
+from app import db
 
 
 @bp.route('/foto/<int:usuario_id>')
@@ -21,7 +22,7 @@ def foto_perfil(usuario_id):
         # 404 y no 403: un 403 confirmaria que esa persona existe y tiene foto.
         abort(404)
 
-    usuario = Usuario.query.get(usuario_id)
+    usuario = db.session.get(Usuario, usuario_id)
     if usuario is None:
         abort(404)
 

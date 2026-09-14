@@ -61,7 +61,7 @@ def ambientes():
         )
         instructor_nombre = 'Sin instructor registrado'
         if asistencia_hoy:
-            instr = Usuario.query.get(asistencia_hoy.instructor_id)
+            instr = db.session.get(Usuario, asistencia_hoy.instructor_id)
             if instr:
                 instructor_nombre = instr.nombre
 
@@ -130,7 +130,7 @@ def detalle_ambiente(ficha):
     )
     instructor = None
     if asistencias_hoy:
-        instr_obj = Usuario.query.get(asistencias_hoy[0].instructor_id)
+        instr_obj = db.session.get(Usuario, asistencias_hoy[0].instructor_id)
         instructor = instr_obj
 
     # Mapa aprendiz_id -> asistencia para mostrar estado y comentario

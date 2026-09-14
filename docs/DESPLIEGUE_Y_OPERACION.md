@@ -66,6 +66,20 @@ La referencia completa y comentada es **`config/.env.example`** — está al dí
 y documenta cada variable. El archivo real es `config/.env` y **nunca se
 commitea**. Resumen:
 
+### Rotación inicial de credenciales
+
+Si una instalación conserva los valores de ejemplo de `SECRET_KEY` o
+`POSTGRES_PASSWORD`, hay que rotarlos cuanto antes. Genera la clave en el
+servidor, no en el repositorio:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Actualiza también la contraseña de PostgreSQL y `DATABASE_URL`, reinicia la
+aplicación y ten presente que cambiar `SECRET_KEY` invalida las sesiones
+activas.
+
 | Grupo | Variables | Obligatoria |
 |---|---|---|
 | Núcleo | `SECRET_KEY`, `DATABASE_URL` | **Sí** (sin ellas no arranca) |

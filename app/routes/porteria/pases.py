@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import abort, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from . import porteria_bp as bp
 from ...models.entidades import Visitante, Vehiculo, ObjetoExterno
@@ -91,8 +91,8 @@ def crear_objeto():
         obj_exist.motivo = motivo
         obj_exist.activo = True
     else:
-        from datetime import datetime
-        serial_val = serial if serial else f"SN-{int(datetime.utcnow().timestamp())}"
+        from datetime import UTC, datetime
+        serial_val = serial if serial else f"SN-{int(datetime.now(UTC).timestamp())}"
         # Si el serial generado ya existe por casualidad, intentamos con milisegundos
         while ObjetoExterno.query.filter_by(serial=serial_val).first():
             import time
@@ -122,7 +122,9 @@ def editar_objeto(obj_id):
     if not current_user.puede_operar_porteria:
         flash('No tienes permiso para editar objetos.', 'danger')
         return redirect(url_for('porteria.pases'))
-    obj = ObjetoExterno.query.get_or_404(obj_id)
+    obj = db.session.get(ObjetoExterno, obj_id)
+    if obj is None:
+        abort(404)
     return render_template('porteria/editar_objeto.html', objeto=obj)
 
 # Update ObjetoExterno (POST)
@@ -132,7 +134,9 @@ def actualizar_objeto(obj_id):
     if not current_user.puede_operar_porteria:
         flash('No tienes permiso para actualizar objetos.', 'danger')
         return redirect(url_for('porteria.pases'))
-    obj = ObjetoExterno.query.get_or_404(obj_id)
+    obj = db.session.get(ObjetoExterno, obj_id)
+    if obj is None:
+        abort(404)
     descripcion = request.form.get('descripcion')
     serial = request.form.get('serial')
     propietario = request.form.get('propietario')
@@ -153,7 +157,9 @@ def eliminar_objeto(obj_id):
     if not current_user.puede_operar_porteria:
         flash('No tienes permiso para eliminar objetos.', 'danger')
         return redirect(url_for('porteria.pases'))
-    obj = ObjetoExterno.query.get_or_404(obj_id)
+    obj = db.session.get(ObjetoExterno, obj_id)
+    if obj is None:
+        abort(404)
     obj.activo = False
     db.session.commit()
     flash('Objeto desactivado.', 'warning')

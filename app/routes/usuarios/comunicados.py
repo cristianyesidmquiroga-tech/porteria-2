@@ -33,7 +33,7 @@ def comunicados():
 
     inasistentes = []
     for aprendiz_id, total_faltas in inasistencias:
-        u = Usuario.query.get(aprendiz_id)
+        u = db.session.get(Usuario, aprendiz_id)
         if u and u.correo:
             inasistentes.append({
                 'id': u.id,
@@ -92,7 +92,7 @@ def api_enviar_comunicado():
 
     for uid in destinatarios_ids:
         try:
-            u = Usuario.query.get(int(uid))
+            u = db.session.get(Usuario, int(uid))
             if not u or not u.correo:
                 continue
 

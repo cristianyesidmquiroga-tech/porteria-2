@@ -132,7 +132,7 @@ def dashboard():
         rsuffix = "trabajador"
         
         if acc.tipo_referencia == 'Usuario':
-            u = Usuario.query.get(acc.referencia_id)
+            u = db.session.get(Usuario, acc.referencia_id)
             if u:
                 nombre = u.nombre
                 documento = u.documento
@@ -147,7 +147,7 @@ def dashboard():
                 if u.programa:
                     programa_ficha = f"{u.programa} (Ficha: {u.ficha or 'N/A'})"
         elif acc.tipo_referencia == 'Visitante':
-            v = Visitante.query.get(acc.referencia_id)
+            v = db.session.get(Visitante, acc.referencia_id)
             if v:
                 nombre = v.nombre
                 documento = v.documento
@@ -156,7 +156,7 @@ def dashboard():
                 rsuffix = "visitante"
                 programa_ficha = f"Motivo: {v.motivo or 'N/A'}"
         elif acc.tipo_referencia == 'Vehiculo':
-            veh = Vehiculo.query.get(acc.referencia_id)
+            veh = db.session.get(Vehiculo, acc.referencia_id)
             if veh:
                 nombre = f"Vehículo {veh.placa}"
                 documento = veh.placa
@@ -165,7 +165,7 @@ def dashboard():
                 rsuffix = "vehiculo"
                 programa_ficha = f"Motivo: {veh.motivo or 'N/A'}"
         elif acc.tipo_referencia == 'ObjetoExterno':
-            obj = ObjetoExterno.query.get(acc.referencia_id)
+            obj = db.session.get(ObjetoExterno, acc.referencia_id)
             if obj:
                 nombre = obj.descripcion
                 documento = obj.serial
@@ -179,7 +179,7 @@ def dashboard():
         if ficha_filter:
             if acc.tipo_referencia != 'Usuario':
                 continue
-            u = Usuario.query.get(acc.referencia_id)
+            u = db.session.get(Usuario, acc.referencia_id)
             if not u or u.ficha != ficha_filter:
                 continue
 

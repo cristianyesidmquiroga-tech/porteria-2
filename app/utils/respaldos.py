@@ -190,8 +190,8 @@ def ejecutar_respaldo_mensual():
         ids_asistencias_borrar = []
         for asis in asistencias_antiguas:
             fecha_str = asis.fecha.strftime('%Y-%m-%d %H:%M:%S') if isinstance(asis.fecha, datetime) else str(asis.fecha)
-            instructor = Usuario.query.get(asis.instructor_id)
-            aprendiz = Usuario.query.get(asis.aprendiz_id)
+            instructor = db.session.get(Usuario, asis.instructor_id)
+            aprendiz = db.session.get(Usuario, asis.aprendiz_id)
             
             ws_asistencias.append([
                 asis.id,

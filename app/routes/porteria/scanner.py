@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, current_app
+from flask import abort, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from . import porteria_bp as bp
 from ...models.usuarios import Usuario, avatar_de_cargo
@@ -226,7 +226,8 @@ def register_movement(user_id, type):
         flash(msg, 'danger')
         return redirect(url_for('porteria.dashboard'))
 
-    Usuario.query.get_or_404(user_id)
+    if db.session.get(Usuario, user_id) is None:
+        abort(404)
 
     try:
         # Este control existia para visitantes y vehiculos, pero no para

@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, flash, redirect, url_for
+from flask import abort, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
 from ...models.usuarios import Usuario, Rol, TurnoCelador
 from ...models.fichas import Ficha
@@ -141,7 +141,7 @@ def api_crear_usuario():
         from app.utils.email import enviar_correo
         from app.models.usuarios import Rol
         
-        rol = Rol.query.get(int(data['rol_id']))
+        rol = db.session.get(Rol, int(data['rol_id']))
         es_usuario_normal = rol and rol.nombre == 'Usuario'
         cargo = data.get('cargo') or None
         if cargo and cargo not in CARGOS_VALIDOS:
@@ -252,7 +252,9 @@ def api_editar_usuario(id):
         return jsonify({"status": "error", "message": "No autorizado"}), 403
 
     data = request.json
-    usuario = Usuario.query.get_or_404(id)
+    usuario = db.session.get(Usuario, id)
+    if usuario is None:
+        abort(404)
 
     try:
         from app.models.accesos import Auditoria
@@ -361,7 +363,9 @@ def api_eliminar_usuario(id):
     if current_user.id == id:
         return jsonify({"status": "error", "message": "No puedes eliminar tu propia cuenta"}), 400
 
-    usuario = Usuario.query.get_or_404(id)
+    usuario = db.session.get(Usuario, id)
+    if usuario is None:
+        abort(404)
     info_usuario = f"{usuario.nombre} ({usuario.correo})"
     
     if usuario.rol and usuario.rol.nombre == 'Admin':
