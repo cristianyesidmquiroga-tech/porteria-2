@@ -1,5 +1,5 @@
 from .. import db
-from ..models.usuarios import TurnoCelador, Usuario
+from ..models.usuarios import Usuario
 from ..models.entidades import Visitante, Vehiculo, Equipo
 from ..models.accesos import Acceso, Auditoria
 from . import get_colombia_time
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def auto_exit_all():
-    """Cierra turnos, accesos y estados de entidades que quedaron abiertos.
+    """Cierra accesos y estados de entidades que quedaron abiertos.
 
     Se ejecuta a las 00:00:05. Todo el trabajo va en una sola transaccion: si
     algo falla se revierte completo, para no dejar la mitad de las salidas
@@ -31,12 +31,6 @@ def auto_exit_all():
         cierre = ahora
 
     try:
-        turnos_cerrados = 0
-        for turno in TurnoCelador.query.filter_by(estado='Activo').all():
-            turno.estado = 'Finalizado'
-            turno.fecha_salida = cierre
-            turnos_cerrados += 1
-
         visitantes_cerrados = 0
         for visitante in Visitante.query.filter_by(activo=True).all():
             visitante.activo = False
@@ -84,7 +78,7 @@ def auto_exit_all():
                 tabla_afectada="VARIAS (cierre nocturno)",
                 registro_id=0,
                 accion="Cierre automatico de ingresos a medianoche",
-                detalles=(f"Turnos: {turnos_cerrados}, visitantes: {visitantes_cerrados}, "
+                detalles=(f"Visitantes: {visitantes_cerrados}, "
                           f"vehiculos: {vehiculos_cerrados}, equipos: {equipos_cerrados}, "
                           f"salidas registradas: {len(adentro)}"),
                 fecha=cierre,
@@ -92,9 +86,9 @@ def auto_exit_all():
 
         db.session.commit()
         logger.info(
-            "Cierre nocturno completado: %s turnos, %s visitantes, %s vehiculos, "
+            "Cierre nocturno completado: %s visitantes, %s vehiculos, "
             "%s equipos, %s salidas registradas",
-            turnos_cerrados, visitantes_cerrados, vehiculos_cerrados,
+            visitantes_cerrados, vehiculos_cerrados,
             equipos_cerrados, len(adentro),
         )
     except Exception:

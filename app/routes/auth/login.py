@@ -31,19 +31,6 @@ def _destino_tras_login(user):
     return url_for('usuarios.profile')
 
 
-def _abrir_turno_celador(user):
-    from ...models.usuarios import TurnoCelador
-
-    turno_activo = TurnoCelador.query.filter(
-        TurnoCelador.celador_id == user.id,
-        TurnoCelador.estado == 'Activo',
-        db.func.date(TurnoCelador.fecha_ingreso) == get_colombia_time().date(),
-    ).first()
-    if not turno_activo:
-        db.session.add(TurnoCelador(celador_id=user.id, estado='Activo'))
-        db.session.commit()
-
-
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -113,9 +100,6 @@ def login():
     session['session_token'] = token
     session['last_activity'] = datetime.now(timezone.utc).timestamp()
     session.modified = True
-
-    if user.cargo == 'Celador':
-        _abrir_turno_celador(user)
 
     destino = _destino_tras_login(user)
     logger.info("Inicio de sesion del usuario %s", user.id)

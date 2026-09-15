@@ -113,7 +113,6 @@ zona `America/Bogota`. Se desactivan por proceso con `EJECUTAR_TAREAS=false`.
 
 `auto_exit_all()` en `app/utils/tareas.py`. En una sola transacción:
 
-- Finaliza todos los **turnos de celador** activos.
 - Desactiva todos los **visitantes, vehículos** (campo `activo=False`) y pone
   todos los **equipos** en estado `Afuera`.
 - Para toda persona o entidad cuyo último movimiento fue `Entrada`, inserta
@@ -154,8 +153,8 @@ solo existen en el `.xlsx`. Por eso:
   `ADMIN_EMAIL` no está configurado, el aviso solo queda en el log.
 - El panel avisa al administrador 15 días y 3 días antes del día 1.
 
-Qué **no** borra el respaldo: usuarios, equipos, fichas, mensajes, auditoría,
-turnos de celador. Solo accesos y asistencias del mes anterior.
+Qué **no** borra el respaldo: usuarios, equipos, fichas, mensajes, auditoría.
+Solo accesos y asistencias del mes anterior.
 
 ---
 
