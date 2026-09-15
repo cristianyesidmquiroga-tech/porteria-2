@@ -174,6 +174,19 @@ html[data-theme="dark"] .glass-footer-link:hover {
     outline-offset: 2px;
 }
 
+/* Acciones de cabecera en una sola fila, cada boton a su ancho: .glass-btn
+   impone width:100% y los dejaba como dos barras apiladas de lado a lado. */
+.header-actions .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.header-actions .action-buttons .glass-btn {
+    width: auto;
+}
+
 /* Las clases .badge* se usan en la tabla de gestion de perfiles pero no tenian
    ninguna regla en todo el proyecto: "Verificado", "Pendiente" y "Bloqueado" se
    veian como texto plano identico. Un admin revisando decenas de cuentas no

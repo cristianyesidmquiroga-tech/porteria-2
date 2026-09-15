@@ -190,12 +190,9 @@
         gap: 1rem;
     }
     
-    .header-actions .action-buttons {
-        width: 100%;
-    }
-    
-    .header-actions .action-buttons button {
-        width: 100%;
+    /* En movil los dos botones se reparten la fila en vez de apilarse. */
+    .header-actions .action-buttons .glass-btn {
+        flex: 1 1 0;
     }
 }
 
@@ -331,16 +328,6 @@
         align-items: stretch;
     }
     
-    .header-actions .action-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        width: 100%;
-    }
-    
-    .header-actions .action-buttons button {
-        width: 100%;
-    }
 }
 
 @media (max-width: 768px) {
