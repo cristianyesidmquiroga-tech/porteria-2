@@ -1,6 +1,19 @@
 import os
 import logging
 from datetime import datetime, timedelta
+
+# Si el respaldo mensual borra de la base lo que acaba de exportar.
+#
+# Por defecto NO. Este sistema no tiene forma de restaurar un .xlsx a la base,
+# asi que un borrado automatico mensual es irreversible por diseno; y el
+# historial de accesos alimenta los calculos de asistencia con los que se
+# decide sobre personas, que quedan falseados si solo sobrevive un mes.
+#
+# Poner PURGAR_TRAS_RESPALDO=true solo cuando el tamano de la base sea un
+# problema real y medido, y despues de comprobar que existe una copia completa
+# fuera del servidor.
+PURGAR_TRAS_RESPALDO = os.environ.get(
+    'PURGAR_TRAS_RESPALDO', 'false').strip().lower() in ('1', 'true', 'si', 'yes')
 from openpyxl import Workbook, load_workbook
 from flask import current_app
 from .. import db
@@ -224,14 +237,34 @@ def ejecutar_respaldo_mensual():
                 _avisar_fallo(nombre_mes_anterior, problema)
                 return
 
-            # Borrar datos respaldados
+            if not PURGAR_TRAS_RESPALDO:
+                # Comportamiento por defecto: se archiva y NO se borra nada.
+                # El borrado automatico deja el historial de accesos reducido a
+                # un mes, y de ahi salen los calculos de asistencia sobre los
+                # que la institucion decide sobre personas: al purgar, la fecha
+                # del primer acceso se reinicia cada mes y las cifras mienten.
+                # Ademas no existe forma de restaurar un .xlsx a la base, asi
+                # que un borrado equivocado no tiene vuelta atras.
+                db.session.rollback()
+                logger.info("Respaldo generado: %s (sin borrar datos)", nombre_archivo)
+                _anotar_en_auditoria(
+                    "Respaldo mensual generado",
+                    f"Archivo: {nombre_archivo}. No se borro ningun dato.")
+                return
+
             if ids_accesos_borrar:
                 Acceso.query.filter(Acceso.id.in_(ids_accesos_borrar)).delete(synchronize_session=False)
             if ids_asistencias_borrar:
                 AsistenciaClase.query.filter(AsistenciaClase.id.in_(ids_asistencias_borrar)).delete(synchronize_session=False)
-            
+
             db.session.commit()
-            logger.info("Respaldo generado: %s", nombre_archivo)
+            logger.warning("Respaldo generado: %s. Se borraron %s accesos y %s "
+                           "asistencias de la base.", nombre_archivo,
+                           len(ids_accesos_borrar), len(ids_asistencias_borrar))
+            _anotar_en_auditoria(
+                "Respaldo mensual generado CON BORRADO",
+                f"Archivo: {nombre_archivo}. Borrados {len(ids_accesos_borrar)} "
+                f"accesos y {len(ids_asistencias_borrar)} asistencias.")
         else:
             logger.info("No hay datos antiguos para respaldar este mes.")
             

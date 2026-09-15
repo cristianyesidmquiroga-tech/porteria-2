@@ -20,12 +20,18 @@ from app.utils.limitador import limiter as _limitador  # noqa: E402
 
 
 @pytest.fixture
-def app():
+def app(tmp_path):
     aplicacion = create_app()
     aplicacion.config.update(
         TESTING=True,
         WTF_CSRF_ENABLED=False,
         SQLALCHEMY_DATABASE_URI='sqlite:///:memory:',
+        # Carpeta de fotos propia y desechable para cada prueba. Sin esto, las
+        # pruebas escriben y borran archivos user_<id>.jpg en la carpeta real:
+        # ya destruyo fotos de desarrollo al coincidir un id con el de un
+        # usuario de prueba. Ademas hacia que una prueba fallara o no segun el
+        # orden, porque afirmaba sobre una carpeta compartida.
+        CARPETA_FOTOS=str(tmp_path / 'fotos_perfil'),
         # El desafio anti-bot se apaga por defecto: las pruebas de los
         # formularios publicos comprueban la logica del formulario, no la
         # prueba de trabajo. Las que si lo miran lo encienden a mano.

@@ -3,6 +3,7 @@
 El respaldo mensual BORRA datos de la base después de exportarlos, así que un
 fallo silencioso aquí es pérdida de información irrecuperable.
 """
+import errno
 import io
 import os
 import shutil
@@ -321,6 +322,42 @@ class TestSubidaCompleta:
             # Un temporal olvidado iría acumulando basura en cada subida.
             assert not [f for f in os.listdir(carpeta) if f.startswith('.tmp_')]
 
+    def test_la_subida_funciona_con_las_fotos_en_otro_volumen(self, client, app,
+                                                              crear_usuario, db,
+                                                              tmp_path, monkeypatch):
+        """En el servidor la carpeta de fotos es un volumen montado aparte y
+        os.replace no cruza sistemas de archivos: con el temporal en /tmp toda
+        subida de foto daba 500 (OSError EXDEV). Aquí se simula ese límite."""
+        from app.routes.usuarios import perfil
+
+        # Lo que se prueba es el guardado, no el detector: sin esto la prueba
+        # dependería de una foto real que no se puede versionar.
+        monkeypatch.setattr(perfil, 'tiene_un_solo_rostro', lambda ruta: (True, None))
+
+        usuario = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz',
+                                perfil_completo=False)
+        self._entrar(client, usuario)
+
+        carpeta = os.path.abspath(carpeta_fotos())
+        replace_real = os.replace
+
+        def replace_entre_volumenes(origen, destino):
+            if not os.path.abspath(origen).startswith(carpeta + os.sep):
+                raise OSError(errno.EXDEV, 'Invalid cross-device link')
+            return replace_real(origen, destino)
+
+        monkeypatch.setattr(os, 'replace', replace_entre_volumenes)
+
+        destino = os.path.join(carpeta, f'user_{usuario.id}.jpg')
+        with proteger_archivo_real(destino, tmp_path):
+            r = client.post('/usuarios/update_profile',
+                            data={'foto': (imagen_dibujada(600, 600), 'foto.jpg')},
+                            content_type='multipart/form-data',
+                            headers={'X-Requested-With': 'XMLHttpRequest'})
+            assert r.status_code == 200
+            assert os.path.isfile(destino)
+            assert not [f for f in os.listdir(carpeta) if f.startswith('.tmp_')]
+
     def test_un_archivo_invalido_no_borra_la_foto_anterior(self, client, app,
                                                            crear_usuario, db,
                                                            tmp_path):
@@ -390,8 +427,36 @@ class TestRespaldoMensual:
             filas = list(wb['Historial Accesos'].iter_rows(min_row=2, values_only=True))
             assert len(filas) == 1, 'solo el acceso del usuario va en esa hoja'
 
-            # Todo lo archivado se purga: no debe quedar nada del mes anterior.
-            assert Acceso.query.filter(Acceso.fecha < get_colombia_time().replace(day=1)).count() == 0
+            # Por defecto se archiva SIN borrar: no hay forma de restaurar un
+            # .xlsx a la base, y el historial alimenta los calculos de
+            # asistencia con los que se decide sobre personas.
+            assert Acceso.query.filter(
+                Acceso.fecha < get_colombia_time().replace(day=1)).count() == 2, (
+                'el respaldo no debe borrar datos salvo que se pida a proposito')
+
+    def test_solo_borra_si_se_pide_a_proposito(self, app, db, crear_usuario,
+                                               tmp_path, monkeypatch):
+        from datetime import timedelta
+
+        from app.utils import get_colombia_time, respaldos
+
+        usuario = crear_usuario(correo='beto@sena.edu.co', documento='543210')
+        mes_pasado = get_colombia_time().replace(day=1) - timedelta(days=5)
+        db.session.add(Acceso(punto_id=1, referencia_id=usuario.id,
+                              tipo_referencia='Usuario', tipo='Entrada',
+                              fecha=mes_pasado))
+        db.session.commit()
+
+        ultimo_dia = get_colombia_time().replace(day=1) - timedelta(days=1)
+        ruta = os.path.join(app.root_path, 'respaldos_mensuales',
+                            f"Respaldo_Sistema_{ultimo_dia.strftime('%Y-%m')}.xlsx")
+
+        monkeypatch.setattr(respaldos, 'PURGAR_TRAS_RESPALDO', True)
+        with proteger_archivo_real(ruta, tmp_path):
+            respaldos.ejecutar_respaldo_mensual()
+            assert os.path.isfile(ruta)
+            assert Acceso.query.filter(
+                Acceso.fecha < get_colombia_time().replace(day=1)).count() == 0
 
 
 @pytest.mark.skipif(not HAY_OPENCV, reason="opencv no está instalado")

@@ -356,6 +356,23 @@ def create_app(iniciar_tareas=True):
     login_manager.login_message_category = "info"
 
     from .utils.security import check_security_and_verification
+    @app.before_request
+    def bloquear_carpeta_de_subidas():
+        """Nada bajo /static/uploads/ se sirve, pase lo que pase.
+
+        Ahi vivian las fotos de rostro, descargables por cualquiera sin sesion
+        con solo recorrer los ids. Ya no se guardan ahi, pero la carpeta sigue
+        montada como volumen y puede contener fotos antiguas o un respaldo
+        comprimido puesto a mano. Esta comprobacion es la red por debajo: aunque
+        alguien deje un archivo ahi, no se entrega por la web.
+
+        Las fotos se piden por /usuarios/foto/<id>, que si comprueba quien
+        pregunta.
+        """
+        if request.path.startswith('/static/uploads/'):
+            return render_template('errores/404.html'), 404
+        return None
+
     app.before_request(check_security_and_verification)
 
     @app.before_request

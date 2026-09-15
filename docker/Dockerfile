@@ -16,9 +16,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# La carpeta de fotos se crea aqui aunque vaya montada: si no existe en la
+# imagen, Docker crea el punto de montaje como root y appuser no puede escribir
+# en el, asi que toda subida de foto de perfil falla.
 RUN chmod +x docker/entrypoint.sh \
     && useradd --create-home --uid 10001 appuser \
-    && mkdir -p /app/app/static/uploads/profiles /app/app/respaldos_mensuales \
+    && mkdir -p /app/datos/fotos_perfil /app/app/static/uploads/profiles \
+                /app/app/respaldos_mensuales \
     && chown -R appuser:appuser /app
 
 # No correr como root: limita el impacto de una ejecucion de codigo arbitrario.

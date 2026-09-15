@@ -103,9 +103,13 @@ def update_profile():
         #
         # El temporal va FUERA de static/: ahi quedaba descargable sin sesion en
         # una URL predecible mientras se procesaba (Werkzeug si sirve los
-        # archivos que empiezan por punto), y si el proceso moria a mitad se
-        # quedaba ahi para siempre sin que nada lo limpiara.
-        carpeta_temporal = tempfile.mkdtemp(prefix='foto_perfil_')
+        # archivos que empiezan por punto).
+        #
+        # Y va DENTRO de la carpeta de fotos, no en /tmp: en el servidor esa
+        # carpeta es un volumen montado aparte, y os.replace no puede mover
+        # entre sistemas de archivos distintos (EXDEV). Ahi dentro no se puede
+        # pedir por URL: la vista de fotos solo sirve por basename.
+        carpeta_temporal = tempfile.mkdtemp(prefix='.tmp_foto_', dir=carpeta)
         temporal = os.path.join(carpeta_temporal, nombre_final)
 
         # procesar_foto reescala, aplana transparencias, quita los metadatos
@@ -122,7 +126,6 @@ def update_profile():
 
             # os.replace es atomico: no queda una foto a medio escribir si algo
             # falla a mitad de la copia.
-            os.makedirs(carpeta, exist_ok=True)
             os.replace(temporal, destino)
         finally:
             # Se borra la carpeta temporal siempre, incluso si algo revento.
