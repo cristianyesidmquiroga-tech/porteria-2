@@ -11,7 +11,7 @@ porteria-2/
 ├── app/                              # Aplicación Flask
 │   ├── __init__.py                   # create_app(): config, seguridad, blueprints, tareas
 │   ├── models/                       # Modelos SQLAlchemy
-│   │   ├── usuarios.py               # Usuario, Rol, Carnet, TurnoCelador, avatares
+│   │   ├── usuarios.py               # Usuario, Rol, Carnet, avatares
 │   │   ├── entidades.py              # Visitante, Vehiculo, Equipo, ObjetoExterno
 │   │   ├── accesos.py                # PuntoAcceso, Acceso, Auditoria
 │   │   ├── asistencia.py             # AsistenciaClase

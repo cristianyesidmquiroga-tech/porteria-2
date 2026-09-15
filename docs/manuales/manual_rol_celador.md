@@ -27,8 +27,6 @@ un cargo, no un rol del sistema.
 
 ## Particularidades de su cuenta
 
-- **Turno automático:** al iniciar sesión se abre su turno del día; el cierre
-  de medianoche lo finaliza. No tiene que abrirlo ni cerrarlo a mano.
 - **Sesión extendida:** su sesión dura hasta 12 horas de trabajo continuo (a
   los demás usuarios se les cierra a los 10 minutos de inactividad), pero es
   **sesión única**: si alguien entra con su cuenta en otro equipo, la suya se

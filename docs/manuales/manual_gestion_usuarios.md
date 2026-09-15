@@ -48,7 +48,6 @@ Gestión Perfiles → **"Nuevo Perfil"**.
   con las credenciales temporales**, se les obliga a cambiar la contraseña en
   el primer ingreso y a completar su perfil. Las cuentas de gestión (Admin,
   Trabajador) se crean con el perfil marcado completo y sin ese correo.
-- Crear una cuenta con cargo **Celador** abre además su turno.
 - Todo queda en la auditoría (con "autorizado por" y "motivo" si se
   diligencian).
 
@@ -68,7 +67,7 @@ Gestión Perfiles → **"Nuevo Perfil"**.
 
 ## Eliminar un usuario
 
-- **Permanente y sin recuperación.** Borra también sus turnos, sus equipos
+- **Permanente y sin recuperación.** Borra también sus equipos
   con sus movimientos, su carnet y sus registros de acceso.
 - Restricciones: no puede eliminarse a sí mismo, y las cuentas con rol
   **Admin no se pueden eliminar** (solo editar).

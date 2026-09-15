@@ -11,7 +11,7 @@ manuales y el panel general.
 4. [Pases manuales: visitantes, vehículos y objetos](#pases-manuales-visitantes-vehículos-y-objetos)
 5. [Incidentes](#incidentes)
 6. [Panel General (dashboard)](#panel-general-dashboard)
-7. [Turnos de celador y cierre de medianoche](#turnos-de-celador-y-cierre-de-medianoche)
+7. [Cierre de medianoche](#cierre-de-medianoche)
 8. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ---
@@ -140,11 +140,8 @@ con la lista de quiénes están adentro en ese momento.
 
 ---
 
-## Turnos de celador y cierre de medianoche
+## Cierre de medianoche
 
-- Al iniciar sesión, a quien tiene cargo **Celador** se le abre un **turno**
-  automáticamente (uno por día). El turno se cierra con el cierre automático
-  de medianoche.
 - **Todos los días a las 00:00** el sistema cierra lo que quedó abierto:
   registra salida (23:59:59) a toda persona/entidad que seguía adentro,
   desactiva visitantes y vehículos, y pone los equipos en "Afuera". Por eso

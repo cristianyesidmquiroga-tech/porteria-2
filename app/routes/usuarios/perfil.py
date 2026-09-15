@@ -11,7 +11,6 @@ import re
 import shutil
 import tempfile
 from ...utils import get_colombia_time
-from app.models.usuarios import TurnoCelador
 from ...utils.security import sanitize_html
 from ...models.usuarios import ESTADO_PENDIENTE, ESTADO_APROBADA
 from ...utils.documentos import (TIPOS_DOCUMENTO, descripcion_formato,
@@ -64,10 +63,6 @@ def profile():
 
     equipos = Equipo.query.filter_by(usuario_id=current_user.id).all()
 
-    turnos_hoy = []
-    if current_user.puede_operar_porteria:
-        turnos_hoy = TurnoCelador.query.filter(db.func.date(TurnoCelador.fecha_ingreso) == get_colombia_time().date()).all()
-
     # Solo las fichas activas, mas la del propio usuario aunque este archivada:
     # si no, al guardar el perfil perderia su ficha sin darse cuenta.
     fichas = Ficha.query.filter(
@@ -76,7 +71,7 @@ def profile():
 
     return render_template('usuarios/profile.html',
                            barcode_svg=barcode_svg, equipos=equipos,
-                           turnos=turnos_hoy, fichas=fichas)
+                           fichas=fichas)
 
 @bp.route('/update_profile', methods=['POST'])
 @login_required

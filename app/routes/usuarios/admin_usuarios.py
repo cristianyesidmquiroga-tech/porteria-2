@@ -1,6 +1,6 @@
 from flask import abort, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
-from ...models.usuarios import Usuario, Rol, TurnoCelador
+from ...models.usuarios import Usuario, Rol
 from ...models.fichas import Ficha
 from ... import db
 from . import bp
@@ -170,11 +170,6 @@ def api_crear_usuario():
 
         db.session.add(nuevo_usuario)
         db.session.flush() # Para obtener el ID
-
-        # Si el cargo es Celador, creamos un turno
-        if nuevo_usuario.cargo == 'Celador':
-            turno = TurnoCelador(celador_id=nuevo_usuario.id, estado='Activo')
-            db.session.add(turno)
 
         # Send Email
         if es_usuario_normal:
@@ -373,7 +368,8 @@ def api_eliminar_usuario(id):
 
     try:
         from app.models.entidades import Equipo
-        from app.models.usuarios import Carnet, CodigoQR, TurnoCelador
+        from sqlalchemy import inspect, text
+        from app.models.usuarios import Carnet, CodigoQR
         from app.models.accesos import Acceso, Auditoria
         from app.models.movimientos import MovimientoEquipo
 
@@ -381,8 +377,12 @@ def api_eliminar_usuario(id):
         # Auditoria.query.filter_by(usuario_id=id).delete() # No, esto borraría lo que ÉL hizo.
         # Mejor no borrar auditorías antiguas, solo dependencias técnicas.
 
-        # 2. Eliminar Turnos de Celador
-        TurnoCelador.query.filter_by(celador_id=id).delete()
+        # 2. Turnos de celador antiguos. La funcion se retiro, pero la tabla
+        # sigue en las bases ya desplegadas con filas que apuntan al usuario:
+        # sin borrarlas, su clave foranea impide eliminar la cuenta.
+        if inspect(db.engine).has_table('turnos_celador'):
+            db.session.execute(text('DELETE FROM turnos_celador WHERE celador_id = :id'),
+                               {'id': id})
 
         # 3. Eliminar Equipos y sus movimientos
         equipos = Equipo.query.filter_by(usuario_id=id).all()

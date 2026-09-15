@@ -340,14 +340,3 @@ class CodigoQR(db.Model):
         nullable=False)
     codigo = db.Column(db.String(255), unique=True, nullable=False)
     fecha = db.Column(db.DateTime, default=get_colombia_time)
-
-
-class TurnoCelador(db.Model):
-    __tablename__ = 'turnos_celador'
-    id = db.Column(db.Integer, primary_key=True)
-    celador_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    fecha_ingreso = db.Column(db.DateTime, default=get_colombia_time)
-    fecha_salida = db.Column(db.DateTime, nullable=True)
-    estado = db.Column(db.String(20), default='Activo')  # 'Activo' o 'Finalizado'
-    
-    celador = db.relationship('Usuario', backref='turnos', lazy=True)

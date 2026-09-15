@@ -7,7 +7,7 @@ borrado en error 500. Un equipo que ya cruzo la puerta tampoco se podia borrar
 desde el perfil. Estas pruebas cubren los cuatro casos y comprueban, contra el
 esquema real, que los indices declarados en los modelos existen.
 """
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 
 from app.models.accesos import Acceso, Auditoria
@@ -119,6 +119,36 @@ class TestBorrarUsuario:
         assert auditoria is not None
         assert auditoria.usuario_id is None
         assert auditoria.nombre_usuario == nombre_celador  # sigue siendo legible
+
+    def test_celador_con_turnos_de_la_tabla_retirada(self, client, crear_usuario, db):
+        """turnos_celador ya no tiene modelo, pero sigue en las bases desplegadas
+        con filas que apuntan al usuario: borrar a ese celador debe funcionar."""
+        celador = crear_usuario(correo='celador@sena.edu.co', cargo='Celador',
+                                documento='444')
+        db.session.execute(text(
+            'CREATE TABLE turnos_celador ('
+            ' id INTEGER PRIMARY KEY,'
+            ' celador_id INTEGER NOT NULL REFERENCES usuarios(id),'
+            ' fecha_ingreso DATETIME, fecha_salida DATETIME, estado VARCHAR(20))'))
+        db.session.execute(text(
+            "INSERT INTO turnos_celador (celador_id, estado) VALUES (:id, 'Finalizado')"),
+            {'id': celador.id})
+        db.session.commit()
+
+        # SQLite no aplica claves foraneas salvo que se le pida; PostgreSQL si,
+        # y es ahi donde el borrado reventaria.
+        db.session.execute(text('PRAGMA foreign_keys=ON'))
+        try:
+            r = _borrar_como_admin(client, crear_usuario, celador.id)
+        finally:
+            db.session.rollback()
+            db.session.execute(text('PRAGMA foreign_keys=OFF'))
+
+        assert r.status_code == 200, r.get_json()
+        assert db.session.get(Usuario, celador.id) is None
+        assert db.session.execute(text(
+            'SELECT COUNT(*) FROM turnos_celador WHERE celador_id = :id'),
+            {'id': celador.id}).scalar() == 0
 
 
 class TestBorrarEquipo:
