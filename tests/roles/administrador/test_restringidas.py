@@ -1,0 +1,20 @@
+import pytest
+
+VISTAS = [
+    pytest.param('/coordinacion/ambientes', '/usuarios/profile', id='ambientes'),
+    pytest.param('/usuarios/asistencia', '/usuarios/profile', id='asistencia'),
+    pytest.param('/usuarios/comunicados', '/usuarios/profile', id='comunicados'),
+    pytest.param('/usuarios/admin/fichas', '/', id='fichas'),
+    pytest.param('/usuarios/admin_gestion', '/', id='gestion_usuarios'),
+    pytest.param('/usuarios/admin_historial', '/', id='historial_cambios'),
+    pytest.param('/porteria/historial_clases', '/usuarios/profile', id='historial_clases'),
+    pytest.param('/usuarios/admin/respaldos', '/', id='respaldos'),
+    pytest.param('/usuarios/admin/fotos', '/', id='revision_fotos'),
+]
+
+
+@pytest.mark.parametrize('url,destino', VISTAS)
+def test_no_entra(sesion, url, destino):
+    r = sesion.get(url)
+    assert r.status_code == 302
+    assert r.headers['Location'] == destino
