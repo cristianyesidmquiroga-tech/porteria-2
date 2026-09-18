@@ -68,11 +68,12 @@ porteria-2/
 │   ├── probar_correo.py              # prueba la configuración SMTP (--puerto-25)
 │   ├── limpiar_fotos_huerfanas.py    # borra fotos sin usuario asociado
 │   └── generar_pdfs_*.py             # convierten los manuales a PDF (3 variantes)
-├── tests/                            # pytest (SQLite en memoria, ver conftest.py)
-│   ├── conftest.py
-│   ├── fixtures/
-│   └── test_*.py                     # autenticación, portería, carnet, correo, fotos,
-│                                     #   fichas, mensajes, límites, importación Excel...
+├── tests/                            # pytest (SQLite en local, PostgreSQL en GitHub Actions)
+│   ├── conftest.py                   # app de prueba y PERFILES (un usuario por rol/cargo)
+│   ├── modulos/                      # pruebas por módulo: autenticación, portería, carnet,
+│   │                                 #   correo, fotos, fichas, mensajes, límites, Excel...
+│   ├── roles/<rol>/test_<vista>.py   # qué puede y qué no puede hacer cada rol en cada vista
+│   └── vistas/<vista>/test_<vista>.py # cada vista probada con todos los perfiles
 ├── instance/                         # datos de instancia local
 │   ├── fotos_perfil/                 # ubicación ACTUAL de las fotos de perfil
 │   └── local_dev.sqlite              # base local de desarrollo
