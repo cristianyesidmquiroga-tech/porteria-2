@@ -125,30 +125,35 @@ class TestBorrarUsuario:
         con filas que apuntan al usuario: borrar a ese celador debe funcionar."""
         celador = crear_usuario(correo='celador@sena.edu.co', cargo='Celador',
                                 documento='444')
+        es_sqlite = db.engine.dialect.name == 'sqlite'
         db.session.execute(text(
             'CREATE TABLE turnos_celador ('
             ' id INTEGER PRIMARY KEY,'
             ' celador_id INTEGER NOT NULL REFERENCES usuarios(id),'
-            ' fecha_ingreso DATETIME, fecha_salida DATETIME, estado VARCHAR(20))'))
+            ' fecha_ingreso TIMESTAMP, fecha_salida TIMESTAMP, estado VARCHAR(20))'))
         db.session.execute(text(
-            "INSERT INTO turnos_celador (celador_id, estado) VALUES (:id, 'Finalizado')"),
+            "INSERT INTO turnos_celador (id, celador_id, estado) VALUES (1, :id, 'Finalizado')"),
             {'id': celador.id})
         db.session.commit()
 
         # SQLite no aplica claves foraneas salvo que se le pida; PostgreSQL si,
         # y es ahi donde el borrado reventaria.
-        db.session.execute(text('PRAGMA foreign_keys=ON'))
+        if es_sqlite:
+            db.session.execute(text('PRAGMA foreign_keys=ON'))
         try:
             r = _borrar_como_admin(client, crear_usuario, celador.id)
         finally:
             db.session.rollback()
-            db.session.execute(text('PRAGMA foreign_keys=OFF'))
+            if es_sqlite:
+                db.session.execute(text('PRAGMA foreign_keys=OFF'))
 
         assert r.status_code == 200, r.get_json()
         assert db.session.get(Usuario, celador.id) is None
         assert db.session.execute(text(
             'SELECT COUNT(*) FROM turnos_celador WHERE celador_id = :id'),
             {'id': celador.id}).scalar() == 0
+        db.session.execute(text('DROP TABLE turnos_celador'))
+        db.session.commit()
 
 
 class TestBorrarEquipo:
