@@ -111,3 +111,42 @@ def crear_usuario(app):
         _db.session.commit()
         return usuario
     return _crear
+
+
+PERFILES = {
+    'admin': ('Admin', 'Administrador', 'Admin de Prueba', '1000000001'),
+    'administrador': ('Usuario', 'Administrador', 'Administrador de Prueba', '1000000002'),
+    'administrativo': ('Usuario', 'Administrativo', 'Administrativo de Prueba', '1000000003'),
+    'aprendiz': ('Usuario', 'Aprendiz', 'Aprendiz de Prueba', '1000000004'),
+    'celador': ('Usuario', 'Celador', 'Celador de Prueba', '1000000005'),
+    'contratista': ('Usuario', 'Contratista', 'Contratista de Prueba', '1000000006'),
+    'coordinacion': ('Usuario', 'Coordinacion', 'Coordinacion de Prueba', '1000000007'),
+    'funcionario': ('Usuario', 'Funcionario', 'Funcionario de Prueba', '1000000008'),
+    'instructor': ('Usuario', 'Instructor', 'Instructor de Prueba', '1000000009'),
+    'porteria': ('Usuario', 'Portería', 'Porteria de Prueba', '1000000010'),
+    'subdirector': ('Usuario', 'Subdirector', 'Subdirector de Prueba', '1000000011'),
+    'trabajador': ('Trabajador', 'Funcionario', 'Trabajador de Prueba', '1000000012'),
+}
+
+
+def pytest_generate_tests(metafunc):
+    if 'clave' in metafunc.fixturenames:
+        metafunc.parametrize('clave', sorted(PERFILES))
+
+
+@pytest.fixture
+def entrar_como(client, crear_usuario):
+    def _entrar(clave, **extras):
+        rol, cargo, nombre, documento = PERFILES[clave]
+        if not Rol.query.filter_by(nombre=rol).first():
+            _db.session.add(Rol(nombre=rol))
+            _db.session.commit()
+        extras.setdefault('tutorial_visto', True)
+        usuario = crear_usuario(correo=f'{clave}@sena.edu.co', cargo=cargo, rol=rol,
+                                documento=documento, nombre=nombre, **extras)
+        r = client.post('/auth/login',
+                        data={'correo': usuario.correo, 'password': 'Segura2026'},
+                        headers={'X-Requested-With': 'XMLHttpRequest'})
+        assert r.get_json()['status'] == 'success'
+        return usuario
+    return _entrar
