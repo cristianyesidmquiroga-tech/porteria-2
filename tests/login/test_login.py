@@ -9,14 +9,52 @@ VERIFICAR_CORREO = '/auth/verificar'
 
 CONTRASENA = 'Segura2026'
 
-CARGOS_DE_PORTERIA = ('Celador', 'Portería', 'Administrador')
-
 USUARIOS = [
-    pytest.param('Usuario', cargo,
-                 DASHBOARD if cargo in CARGOS_DE_PORTERIA else PERFIL,
-                 id=cargo)
-    for cargo in CARGOS_VALIDOS
-] + [pytest.param('Admin', 'Administrador', DASHBOARD, id='rol-Admin')]
+    pytest.param({'rol': 'Admin', 'cargo': 'Administrador',
+                  'correo': 'admin@sena.edu.co', 'documento': '1000000001',
+                  'nombre': 'Admin de Prueba', 'destino': DASHBOARD},
+                 id='Admin'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Administrador',
+                  'correo': 'administrador@sena.edu.co', 'documento': '1000000002',
+                  'nombre': 'Administrador de Prueba', 'destino': DASHBOARD},
+                 id='Administrador'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Aprendiz',
+                  'correo': 'aprendiz@sena.edu.co', 'documento': '1000000003',
+                  'nombre': 'Aprendiz de Prueba', 'destino': PERFIL},
+                 id='Aprendiz'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Instructor',
+                  'correo': 'instructor@sena.edu.co', 'documento': '1000000004',
+                  'nombre': 'Instructor de Prueba', 'destino': PERFIL},
+                 id='Instructor'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Administrativo',
+                  'correo': 'administrativo@sena.edu.co', 'documento': '1000000005',
+                  'nombre': 'Administrativo de Prueba', 'destino': PERFIL},
+                 id='Administrativo'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Celador',
+                  'correo': 'celador@sena.edu.co', 'documento': '1000000006',
+                  'nombre': 'Celador de Prueba', 'destino': DASHBOARD},
+                 id='Celador'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Portería',
+                  'correo': 'porteria@sena.edu.co', 'documento': '1000000007',
+                  'nombre': 'Portería de Prueba', 'destino': DASHBOARD},
+                 id='Portería'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Coordinacion',
+                  'correo': 'coordinacion@sena.edu.co', 'documento': '1000000008',
+                  'nombre': 'Coordinacion de Prueba', 'destino': PERFIL},
+                 id='Coordinacion'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Subdirector',
+                  'correo': 'subdirector@sena.edu.co', 'documento': '1000000009',
+                  'nombre': 'Subdirector de Prueba', 'destino': PERFIL},
+                 id='Subdirector'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Contratista',
+                  'correo': 'contratista@sena.edu.co', 'documento': '1000000010',
+                  'nombre': 'Contratista de Prueba', 'destino': PERFIL},
+                 id='Contratista'),
+    pytest.param({'rol': 'Usuario', 'cargo': 'Funcionario',
+                  'correo': 'funcionario@sena.edu.co', 'documento': '1000000011',
+                  'nombre': 'Funcionario de Prueba', 'destino': PERFIL},
+                 id='Funcionario'),
+]
 
 
 def _login(client, identificador, contrasena, ajax=True):
@@ -27,90 +65,88 @@ def _login(client, identificador, contrasena, ajax=True):
 
 
 def test_cubre_todos_los_cargos():
-    cargos = {p.values[1] for p in USUARIOS if p.values[0] == 'Usuario'}
+    cargos = {p.values[0]['cargo'] for p in USUARIOS
+              if p.values[0]['rol'] == 'Usuario'}
     assert cargos == set(CARGOS_VALIDOS)
 
 
-@pytest.mark.parametrize('rol,cargo,destino', USUARIOS)
+@pytest.mark.parametrize('datos', USUARIOS)
 class TestLoginPorUsuario:
-    def test_entra_con_correo(self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
-        r = _login(client, 'persona@sena.edu.co', CONTRASENA)
+    @pytest.fixture
+    def nuevo(self, crear_usuario, datos):
+        def _crear(**extras):
+            return crear_usuario(correo=datos['correo'],
+                                 documento=datos['documento'],
+                                 nombre=datos['nombre'], rol=datos['rol'],
+                                 cargo=datos['cargo'], **extras)
+        return _crear
+
+    def test_entra_con_correo(self, client, nuevo, datos):
+        nuevo()
+        r = _login(client, datos['correo'], CONTRASENA)
         assert r.status_code == 200
-        assert r.get_json() == {'status': 'success', 'redirect': destino}
+        assert r.get_json() == {'status': 'success', 'redirect': datos['destino']}
 
-    def test_entra_con_documento(self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(documento='1098765432', rol=rol, cargo=cargo)
-        r = _login(client, '1098765432', CONTRASENA)
-        assert r.get_json()['redirect'] == destino
+    def test_entra_con_documento(self, client, nuevo, datos):
+        nuevo()
+        r = _login(client, datos['documento'], CONTRASENA)
+        assert r.get_json()['redirect'] == datos['destino']
 
-    def test_correo_sin_importar_mayusculas_ni_espacios(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
-        r = _login(client, '  Persona@SENA.edu.co ', CONTRASENA)
+    def test_correo_sin_importar_mayusculas_ni_espacios(self, client, nuevo, datos):
+        nuevo()
+        r = _login(client, f"  {datos['correo'].upper()} ", CONTRASENA)
         assert r.get_json()['status'] == 'success'
 
-    def test_formulario_sin_ajax_redirige(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
-        r = _login(client, 'persona@sena.edu.co', CONTRASENA, ajax=False)
+    def test_formulario_sin_ajax_redirige(self, client, nuevo, datos):
+        nuevo()
+        r = _login(client, datos['correo'], CONTRASENA, ajax=False)
         assert r.status_code == 302
-        assert r.headers['Location'].endswith(destino)
+        assert r.headers['Location'].endswith(datos['destino'])
 
-    def test_la_pagina_de_destino_abre(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
-        _login(client, 'persona@sena.edu.co', CONTRASENA)
-        assert client.get(destino).status_code == 200
+    def test_la_pagina_de_destino_abre(self, client, nuevo, datos):
+        nuevo()
+        _login(client, datos['correo'], CONTRASENA)
+        assert client.get(datos['destino']).status_code == 200
 
-    def test_ya_autenticado_no_vuelve_a_ver_el_login(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
-        _login(client, 'persona@sena.edu.co', CONTRASENA)
+    def test_ya_autenticado_no_vuelve_a_ver_el_login(self, client, nuevo, datos):
+        nuevo()
+        _login(client, datos['correo'], CONTRASENA)
         r = client.get('/auth/login')
         assert r.status_code == 302
         assert r.headers['Location'].endswith('/')
 
-    def test_contrasena_incorrecta_no_entra(
-            self, client, crear_usuario, db, rol, cargo, destino):
-        usuario = crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
-        r = _login(client, 'persona@sena.edu.co', 'Incorrecta2026')
+    def test_contrasena_incorrecta_no_entra(self, client, db, nuevo, datos):
+        usuario = nuevo()
+        r = _login(client, datos['correo'], 'Incorrecta2026')
         assert r.status_code == 401
         db.session.refresh(usuario)
         assert usuario.intentos_fallidos == 1
-        assert client.get(destino).status_code != 200
+        assert client.get(datos['destino']).status_code != 200
 
-    def test_bloqueo_tras_cinco_intentos(
-            self, client, crear_usuario, db, rol, cargo, destino):
-        usuario = crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo)
+    def test_bloqueo_tras_cinco_intentos(self, client, db, nuevo, datos):
+        usuario = nuevo()
         for _ in range(5):
-            _login(client, 'persona@sena.edu.co', 'Incorrecta2026')
+            _login(client, datos['correo'], 'Incorrecta2026')
         db.session.refresh(usuario)
         assert usuario.bloqueado_hasta is not None
-        r = _login(client, 'persona@sena.edu.co', CONTRASENA)
+        r = _login(client, datos['correo'], CONTRASENA)
         assert r.status_code == 403
         assert r.get_json()['bloqueado_segundos'] > 0
 
-    def test_contrasena_temporal_obliga_a_cambiarla(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo,
-                      debe_cambiar_contrasena=True, correo_verificado=False,
-                      perfil_completo=False)
-        r = _login(client, 'persona@sena.edu.co', CONTRASENA)
+    def test_contrasena_temporal_obliga_a_cambiarla(self, client, nuevo, datos):
+        nuevo(debe_cambiar_contrasena=True, correo_verificado=False,
+              perfil_completo=False)
+        r = _login(client, datos['correo'], CONTRASENA)
         assert r.get_json()['redirect'] == CAMBIO_OBLIGATORIO
 
-    def test_correo_sin_verificar_va_a_verificacion(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo,
-                      correo_verificado=False, perfil_completo=False)
-        r = _login(client, 'persona@sena.edu.co', CONTRASENA)
+    def test_correo_sin_verificar_va_a_verificacion(self, client, nuevo, datos):
+        nuevo(correo_verificado=False, perfil_completo=False)
+        r = _login(client, datos['correo'], CONTRASENA)
         assert r.get_json()['redirect'] == VERIFICAR_CORREO
 
-    def test_perfil_incompleto_va_al_perfil(
-            self, client, crear_usuario, rol, cargo, destino):
-        crear_usuario(correo='persona@sena.edu.co', rol=rol, cargo=cargo,
-                      perfil_completo=False)
-        r = _login(client, 'persona@sena.edu.co', CONTRASENA)
+    def test_perfil_incompleto_va_al_perfil(self, client, nuevo, datos):
+        nuevo(perfil_completo=False)
+        r = _login(client, datos['correo'], CONTRASENA)
         assert r.get_json()['redirect'] == PERFIL
 
 
