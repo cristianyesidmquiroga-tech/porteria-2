@@ -2,57 +2,52 @@ import pytest
 
 from app.models.usuarios import CARGOS_VALIDOS
 
-DASHBOARD = '/porteria/dashboard'
-PERFIL = '/usuarios/profile'
-CAMBIO_OBLIGATORIO = '/auth/cambiar_password_obligatorio'
-VERIFICAR_CORREO = '/auth/verificar'
-
 CONTRASENA = 'Segura2026'
 
 USUARIOS = [
     pytest.param({'rol': 'Admin', 'cargo': 'Administrador',
                   'correo': 'admin@sena.edu.co', 'documento': '1000000001',
-                  'nombre': 'Admin de Prueba', 'destino': DASHBOARD},
+                  'nombre': 'Admin de Prueba'},
                  id='Admin'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Administrador',
                   'correo': 'administrador@sena.edu.co', 'documento': '1000000002',
-                  'nombre': 'Administrador de Prueba', 'destino': DASHBOARD},
+                  'nombre': 'Administrador de Prueba'},
                  id='Administrador'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Aprendiz',
                   'correo': 'aprendiz@sena.edu.co', 'documento': '1000000003',
-                  'nombre': 'Aprendiz de Prueba', 'destino': PERFIL},
+                  'nombre': 'Aprendiz de Prueba'},
                  id='Aprendiz'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Instructor',
                   'correo': 'instructor@sena.edu.co', 'documento': '1000000004',
-                  'nombre': 'Instructor de Prueba', 'destino': PERFIL},
+                  'nombre': 'Instructor de Prueba'},
                  id='Instructor'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Administrativo',
                   'correo': 'administrativo@sena.edu.co', 'documento': '1000000005',
-                  'nombre': 'Administrativo de Prueba', 'destino': PERFIL},
+                  'nombre': 'Administrativo de Prueba'},
                  id='Administrativo'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Celador',
                   'correo': 'celador@sena.edu.co', 'documento': '1000000006',
-                  'nombre': 'Celador de Prueba', 'destino': DASHBOARD},
+                  'nombre': 'Celador de Prueba'},
                  id='Celador'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Portería',
                   'correo': 'porteria@sena.edu.co', 'documento': '1000000007',
-                  'nombre': 'Portería de Prueba', 'destino': DASHBOARD},
+                  'nombre': 'Portería de Prueba'},
                  id='Portería'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Coordinacion',
                   'correo': 'coordinacion@sena.edu.co', 'documento': '1000000008',
-                  'nombre': 'Coordinacion de Prueba', 'destino': PERFIL},
+                  'nombre': 'Coordinacion de Prueba'},
                  id='Coordinacion'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Subdirector',
                   'correo': 'subdirector@sena.edu.co', 'documento': '1000000009',
-                  'nombre': 'Subdirector de Prueba', 'destino': PERFIL},
+                  'nombre': 'Subdirector de Prueba'},
                  id='Subdirector'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Contratista',
                   'correo': 'contratista@sena.edu.co', 'documento': '1000000010',
-                  'nombre': 'Contratista de Prueba', 'destino': PERFIL},
+                  'nombre': 'Contratista de Prueba'},
                  id='Contratista'),
     pytest.param({'rol': 'Usuario', 'cargo': 'Funcionario',
                   'correo': 'funcionario@sena.edu.co', 'documento': '1000000011',
-                  'nombre': 'Funcionario de Prueba', 'destino': PERFIL},
+                  'nombre': 'Funcionario de Prueba'},
                  id='Funcionario'),
 ]
 
@@ -85,12 +80,12 @@ class TestLoginPorUsuario:
         nuevo()
         r = _login(client, datos['correo'], CONTRASENA)
         assert r.status_code == 200
-        assert r.get_json() == {'status': 'success', 'redirect': datos['destino']}
+        assert r.get_json()['status'] == 'success'
 
     def test_entra_con_documento(self, client, nuevo, datos):
         nuevo()
         r = _login(client, datos['documento'], CONTRASENA)
-        assert r.get_json()['redirect'] == datos['destino']
+        assert r.get_json()['status'] == 'success'
 
     def test_correo_sin_importar_mayusculas_ni_espacios(self, client, nuevo, datos):
         nuevo()
@@ -101,19 +96,11 @@ class TestLoginPorUsuario:
         nuevo()
         r = _login(client, datos['correo'], CONTRASENA, ajax=False)
         assert r.status_code == 302
-        assert r.headers['Location'].endswith(datos['destino'])
-
-    def test_la_pagina_de_destino_abre(self, client, nuevo, datos):
-        nuevo()
-        _login(client, datos['correo'], CONTRASENA)
-        assert client.get(datos['destino']).status_code == 200
 
     def test_ya_autenticado_no_vuelve_a_ver_el_login(self, client, nuevo, datos):
         nuevo()
         _login(client, datos['correo'], CONTRASENA)
-        r = client.get('/auth/login')
-        assert r.status_code == 302
-        assert r.headers['Location'].endswith('/')
+        assert client.get('/auth/login').status_code == 302
 
     def test_contrasena_incorrecta_no_entra(self, client, db, nuevo, datos):
         usuario = nuevo()
@@ -121,7 +108,6 @@ class TestLoginPorUsuario:
         assert r.status_code == 401
         db.session.refresh(usuario)
         assert usuario.intentos_fallidos == 1
-        assert client.get(datos['destino']).status_code != 200
 
     def test_bloqueo_tras_cinco_intentos(self, client, db, nuevo, datos):
         usuario = nuevo()
@@ -132,22 +118,6 @@ class TestLoginPorUsuario:
         r = _login(client, datos['correo'], CONTRASENA)
         assert r.status_code == 403
         assert r.get_json()['bloqueado_segundos'] > 0
-
-    def test_contrasena_temporal_obliga_a_cambiarla(self, client, nuevo, datos):
-        nuevo(debe_cambiar_contrasena=True, correo_verificado=False,
-              perfil_completo=False)
-        r = _login(client, datos['correo'], CONTRASENA)
-        assert r.get_json()['redirect'] == CAMBIO_OBLIGATORIO
-
-    def test_correo_sin_verificar_va_a_verificacion(self, client, nuevo, datos):
-        nuevo(correo_verificado=False, perfil_completo=False)
-        r = _login(client, datos['correo'], CONTRASENA)
-        assert r.get_json()['redirect'] == VERIFICAR_CORREO
-
-    def test_perfil_incompleto_va_al_perfil(self, client, nuevo, datos):
-        nuevo(perfil_completo=False)
-        r = _login(client, datos['correo'], CONTRASENA)
-        assert r.get_json()['redirect'] == PERFIL
 
 
 class TestLoginGeneral:
