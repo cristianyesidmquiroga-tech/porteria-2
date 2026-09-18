@@ -277,7 +277,7 @@ class TestGeneralidadesConfigurables:
 
     def test_no_quedan_escritas_a_fuego_en_las_plantillas(self):
         import os
-        raiz = os.path.join(os.path.dirname(__file__), '..', 'app')
+        raiz = os.path.join(os.path.dirname(__file__), '..', '..', 'app')
         prohibidas = ('Regional Santander',
                       'Centro de Gestión Agroempresarial del Oriente',
                       'Aseguradora Aurora', '100603')
