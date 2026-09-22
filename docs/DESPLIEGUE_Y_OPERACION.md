@@ -227,7 +227,9 @@ python run.py
 ```
 
 - Pruebas: `python -m pytest tests/` (usan SQLite en memoria vía
-  `tests/conftest.py`; no tocan la base real).
+  `tests/conftest.py`; no tocan la base real). GitHub Actions
+  (`.github/workflows/pruebas.yml`) las corre sobre un PostgreSQL temporal
+  en cada push.
 - En local sin HTTPS: `COOKIES_SEGURAS=false` y `PROXIES_CONFIABLES=0`.
 - Scripts útiles en `scripts/`: `probar_correo.py` (SMTP),
   `limpiar_fotos_huerfanas.py` (fotos sin usuario), `generar_pdfs_*.py`

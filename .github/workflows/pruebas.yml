@@ -1,0 +1,35 @@
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: porteria
+          POSTGRES_PASSWORD: pruebas
+          POSTGRES_DB: porteria_pruebas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://porteria:pruebas@localhost:5432/porteria_pruebas
+      SECRET_KEY: clave-solo-para-pruebas-0123456789abcdef
+      COOKIES_SEGURAS: "false"
+      EJECUTAR_TAREAS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pytest==8.3.4
+      - run: pytest tests -v

@@ -65,11 +65,11 @@ def foto_real(nombre):
     dibujada con elipses la rechaza, y hace bien. Y una foto real no puede
     versionarse aquí porque es un dato biométrico de una persona identificable.
 
-    Ver `tests/fixtures/README.md` para activarlas.
+    Ver `tests/modulos/fixtures/README.md` para activarlas.
     """
     ruta = os.path.join(CARPETA_FIXTURES, nombre)
     if not os.path.isfile(ruta):
-        pytest.skip(f"falta tests/fixtures/{nombre} (ver el README de esa carpeta)")
+        pytest.skip(f"falta tests/modulos/fixtures/{nombre} (ver el README de esa carpeta)")
     return ruta
 
 

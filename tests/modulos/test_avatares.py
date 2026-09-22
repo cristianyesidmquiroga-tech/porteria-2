@@ -14,7 +14,7 @@ from app.models.usuarios import (
     ruta_foto_o_avatar,
 )
 
-RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 CARPETA_AVATARES = os.path.join(RAIZ, 'app', 'static', 'img', 'perfiles')
 
 
