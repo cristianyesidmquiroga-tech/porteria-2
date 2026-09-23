@@ -22,6 +22,7 @@ from app.routes.porteria.historial_persona import (
     construir_historial,
     dias_esperados,
 )
+from app.utils import get_colombia_time
 
 RUTA = '/porteria/historial-persona'
 RUTA_API = '/porteria/api/historial-persona'
@@ -135,7 +136,7 @@ class TestPermisos:
 class TestEmparejado:
     def test_entrada_y_salida_se_emparejan_con_permanencia(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         _acceso(persona.id, 'Entrada', datetime.combine(dia, datetime.min.time())
                 .replace(hour=7))
         _acceso(persona.id, 'Salida', datetime.combine(dia, datetime.min.time())
@@ -150,7 +151,7 @@ class TestEmparejado:
     def test_entrada_de_hoy_sin_salida_es_alguien_que_sigue_adentro(
             self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         _acceso(persona.id, 'Entrada',
                 datetime.combine(dia, datetime.min.time()).replace(hour=8))
         db.session.commit()
@@ -165,7 +166,7 @@ class TestEmparejado:
 
     def test_entrada_antigua_sin_salida_si_es_anomalia(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today() - timedelta(days=10)
+        dia = get_colombia_time().date() - timedelta(days=10)
         _acceso(persona.id, 'Entrada',
                 datetime.combine(dia, datetime.min.time()).replace(hour=8))
         db.session.commit()
@@ -176,7 +177,7 @@ class TestEmparejado:
 
     def test_dos_entradas_seguidas_dejan_la_primera_sin_salida(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         base = datetime.combine(dia, datetime.min.time())
         _acceso(persona.id, 'Entrada', base.replace(hour=7))
         _acceso(persona.id, 'Entrada', base.replace(hour=9))
@@ -194,7 +195,7 @@ class TestEmparejado:
 
     def test_salida_sin_entrada_previa_se_conserva(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         _acceso(persona.id, 'Salida',
                 datetime.combine(dia, datetime.min.time()).replace(hour=6))
         db.session.commit()
@@ -212,7 +213,7 @@ class TestEmparejado:
         db.session.add(portatil)
         db.session.commit()
 
-        dia = date.today()
+        dia = get_colombia_time().date()
         _acceso(persona.id, 'Entrada',
                 datetime.combine(dia, datetime.min.time()).replace(hour=7),
                 equipos_str=f'{portatil.id},9999')
@@ -226,7 +227,7 @@ class TestEmparejado:
 class TestCierreAutomatico:
     def test_cierre_de_medianoche_sin_operador_se_marca(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         base = datetime.combine(dia, datetime.min.time())
         _acceso(persona.id, 'Entrada', base.replace(hour=7))
         _acceso(persona.id, 'Salida',
@@ -241,7 +242,7 @@ class TestCierreAutomatico:
         celador = crear_usuario(correo='celador@sena.edu.co', cargo='Celador',
                                 documento='777777')
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         base = datetime.combine(dia, datetime.min.time())
         _acceso(persona.id, 'Entrada', base.replace(hour=7),
                 operador_id=celador.id)
@@ -258,7 +259,7 @@ class TestAislamientoDeEntidades:
     def test_no_se_mezclan_accesos_de_visitantes(self, app, crear_usuario):
         """referencia_id es polimorfico: el visitante N no es el usuario N."""
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         base = datetime.combine(dia, datetime.min.time())
         _acceso(persona.id, 'Entrada', base.replace(hour=7))
         # Mismo referencia_id, otra entidad: no debe aparecer en el historial.
@@ -277,7 +278,7 @@ class TestAislamientoDeEntidades:
                             documento='111111')
         luis = crear_usuario(correo='luis@sena.edu.co', cargo='Aprendiz',
                              documento='222222')
-        dia = date.today()
+        dia = get_colombia_time().date()
         base = datetime.combine(dia, datetime.min.time())
         _acceso(ana.id, 'Entrada', base.replace(hour=7))
         _acceso(luis.id, 'Entrada', base.replace(hour=8))
@@ -322,7 +323,7 @@ class TestDiasAsistidosYFaltados:
 
     def test_varias_entradas_el_mismo_dia_cuentan_un_solo_dia(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        dia = date.today()
+        dia = get_colombia_time().date()
         base = datetime.combine(dia, datetime.min.time())
         for hora_entrada, hora_salida in ((7, 9), (10, 12), (14, 16)):
             _acceso(persona.id, 'Entrada', base.replace(hour=hora_entrada))
@@ -336,12 +337,12 @@ class TestDiasAsistidosYFaltados:
 
     def test_periodo_fuera_de_rango_no_trae_movimientos(self, app, crear_usuario):
         persona = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz')
-        antiguo = date.today() - timedelta(days=90)
+        antiguo = get_colombia_time().date() - timedelta(days=90)
         _acceso(persona.id, 'Entrada',
                 datetime.combine(antiguo, datetime.min.time()).replace(hour=7))
         db.session.commit()
 
-        reciente = date.today()
+        reciente = get_colombia_time().date()
         bloque = _bloques([persona], reciente - timedelta(days=5), reciente)[0]
         assert bloque['movimientos'] == []
         assert bloque['resumen']['total_dias_asistidos'] == 0
@@ -700,7 +701,7 @@ class TestVista:
         db.session.add(equipo)
         db.session.commit()
 
-        base = datetime.combine(date.today(), datetime.min.time())
+        base = datetime.combine(get_colombia_time().date(), datetime.min.time())
         _acceso(ana.id, 'Entrada', base.replace(hour=7),
                 equipos_str=str(equipo.id))
         _acceso(ana.id, 'Salida', base.replace(hour=12))
@@ -718,11 +719,11 @@ class TestVista:
                                 documento='777777')
         ana = crear_usuario(correo='ana@sena.edu.co', cargo='Aprendiz',
                             documento='111111', nombre='Ana Rodriguez')
-        _jornada(ana.id, date.today())
+        _jornada(ana.id, get_colombia_time().date())
         db.session.commit()
 
         _entrar(client, celador)
-        futuro = date.today() + timedelta(days=10)
+        futuro = get_colombia_time().date() + timedelta(days=10)
         html = client.get(
             f'{RUTA}?usuario_id={ana.id}'
             f'&fecha_inicio={futuro.isoformat()}'
@@ -765,8 +766,8 @@ class TestVista:
         luis = crear_usuario(correo='luis@sena.edu.co', cargo='Aprendiz',
                              documento='222222', nombre='Luis Perez',
                              ficha='2758899')
-        _jornada(ana.id, date.today())
-        _jornada(luis.id, date.today())
+        _jornada(ana.id, get_colombia_time().date())
+        _jornada(luis.id, get_colombia_time().date())
         db.session.commit()
 
         _entrar(client, celador)

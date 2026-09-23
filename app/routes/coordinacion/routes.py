@@ -4,8 +4,8 @@ from ...models.usuarios import Usuario
 from ...models.accesos import Acceso
 from ...models.asistencia import AsistenciaClase
 from ... import db
-from datetime import datetime
 from sqlalchemy import func, distinct
+from ...utils import get_colombia_time
 from . import coordinacion_bp
 
 
@@ -22,7 +22,10 @@ def ambientes():
     if not _check_acceso():
         return redirect(url_for('usuarios.profile'))
 
-    today = datetime.now().date()
+    # El reloj del sistema (UTC en el servidor) y el de Colombia no coinciden
+    # entre las 0:00 y las 5:00 UTC: con datetime.now() la ficha del dia no
+    # aparecia en esas horas. Todo el sistema usa get_colombia_time().
+    today = get_colombia_time().date()
 
     # Fichas con aprendices dentro hoy
     rows = (
@@ -86,7 +89,7 @@ def detalle_ambiente(ficha):
     if not _check_acceso():
         return redirect(url_for('usuarios.profile'))
 
-    today = datetime.now().date()
+    today = get_colombia_time().date()
 
     # Aprendices de esa ficha que entraron hoy
     students_raw = (

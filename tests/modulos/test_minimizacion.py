@@ -13,12 +13,13 @@ Cubren cinco correcciones puntuales:
     otro mensaje automático.
 """
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from app import db
 from app.models.accesos import Acceso, Auditoria
 from app.models.mensajes import Mensaje
 from app.models.usuarios import ESTADO_APROBADA, ESTADO_PENDIENTE, ESTADO_SIN_FOTO
+from app.utils import get_colombia_time
 from app.utils.fotos import carpeta_fotos
 from app.utils.limitador import LIMITES
 
@@ -157,8 +158,8 @@ class TestExportacionExigeRangoDeFechas:
     def test_con_fechas_exporta_y_deja_constancia_en_auditoria(self, client,
                                                                 crear_usuario):
         admin, persona = self._preparar(client, crear_usuario)
-        hoy = datetime.now().strftime('%Y-%m-%d')
-        manana = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        hoy = get_colombia_time().strftime('%Y-%m-%d')
+        manana = (get_colombia_time() + timedelta(days=1)).strftime('%Y-%m-%d')
         r = client.get('/porteria/export_dashboard'
                        f'?fecha_inicio={hoy}&fecha_fin={manana}')
         assert r.status_code == 200
@@ -174,8 +175,8 @@ class TestExportacionExigeRangoDeFechas:
 
     def test_rango_invertido_se_rechaza(self, client, crear_usuario):
         self._preparar(client, crear_usuario)
-        hoy = datetime.now().strftime('%Y-%m-%d')
-        ayer = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        hoy = get_colombia_time().strftime('%Y-%m-%d')
+        ayer = (get_colombia_time() - timedelta(days=1)).strftime('%Y-%m-%d')
         r = client.get('/porteria/export_dashboard'
                        f'?fecha_inicio={hoy}&fecha_fin={ayer}', follow_redirects=False)
         assert r.status_code == 302
