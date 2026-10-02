@@ -1,12 +1,10 @@
-# Access Control System (Flask)
+# Sistema de control de acceso (Flask)
+
+<details>
+<summary><b>Read this in English</b></summary>
 
 Full-stack web system that manages who enters and leaves a training center: digital ID cards with barcodes, gate control with a scanner, visitor / vehicle / equipment passes, class attendance, messaging and role-based administration. Built with Flask, PostgreSQL and Docker, ready to deploy on Coolify.
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.1-000000?logo=flask&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-800%2B-1a7f37)
 
 The same system also exists as a Spring Boot API plus a React front end: see [`spring`](https://github.com/cristianyesidmquiroga-tech/spring) and [`react`](https://github.com/cristianyesidmquiroga-tech/react).
 
@@ -94,5 +92,104 @@ pytest
 800+ tests run on every push with GitHub Actions against PostgreSQL 16. They are organized three ways: by module, by role (what each profile can and cannot do) and by view (each view with every profile).
 
 ## Author
+
+Cristian Muñoz · [GitHub](https://github.com/cristianyesidmquiroga-tech)
+
+</details>
+
+Sistema web completo que gestiona quién entra y sale de un centro de formación: carnet digital con código de barras, control de portería con escáner, pases de visitantes, vehículos y equipos, asistencia a clase, mensajería y administración por roles. Hecho con Flask, PostgreSQL y Docker, listo para desplegar en Coolify.
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.1-000000?logo=flask&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-listo-2496ED?logo=docker&logoColor=white)
+![Pruebas](https://img.shields.io/badge/pruebas-800%2B-1a7f37)
+
+El mismo sistema existe también como API en Spring Boot más frontend en React: ver [`spring`](https://github.com/cristianyesidmquiroga-tech/spring) y [`react`](https://github.com/cristianyesidmquiroga-tech/react).
+
+## Qué incluye
+
+- **Carnet digital** por perfil (aprendiz, instructor, contratista, funcionario, subdirector...) con código de barras Code128 generado en SVG y foto de perfil validada con detección de rostro.
+- **Control de portería:** vista de escáner, entradas y salidas de personas, visitantes, vehículos y equipos personales, con protección contra doble entrada y salida sin entrada. Lo que queda adentro se cierra solo a medianoche.
+- **Pases y reportes:** pases de visitantes, vehículos y objetos; panel, historial por persona y reportes exportables.
+- **Formación:** fichas, asistencia a clase y comunicados por correo.
+- **Cuentas:** registro con verificación de correo, recuperación de contraseña, desafío anti-bot propio (prueba de trabajo, sin servicios de terceros) y cambio obligatorio de contraseña temporal.
+- **Roles y vistas:** 11 perfiles, cada uno con sus permisos. Cada vista se prueba con todos los perfiles.
+- **Operación:** respaldo mensual en Excel del mes anterior, tareas programadas con APScheduler, registro de auditoría y manuales de usuario en Markdown con scripts para exportarlos a PDF.
+
+## Stack
+
+| Capa | Herramientas |
+|---|---|
+| Backend | Python, Flask 3.1, SQLAlchemy, Flask-Login, Flask-WTF, Flask-Limiter, Flask-Migrate (Alembic), APScheduler |
+| Datos | PostgreSQL 16 |
+| Frontend | Plantillas Jinja2, CSS y JavaScript divididos por vista |
+| Archivos e imágenes | Pillow, OpenCV, pandas + openpyxl (Excel) |
+| Infraestructura | Docker, gunicorn, Coolify, GitHub Actions |
+| Pruebas | pytest |
+
+## Seguridad
+
+- Contraseñas validadas en el servidor y una sola sesión activa por usuario.
+- Protección CSRF en todos los formularios y límites de peticiones por ruta y por usuario.
+- `SECRET_KEY` y `DATABASE_URL` obligatorias: la app no arranca sin ellas.
+- Las fotos de perfil se recodifican, se guardan fuera de carpetas públicas y solo se entregan con permiso.
+- Límites de caracteres, etiquetas HTML quitadas del texto libre y cookies seguras detrás de proxy.
+- El manejo de datos personales sigue la Ley 1581 de 2012 (incluye página de política de privacidad).
+
+## Estructura
+
+```
+app/
+├── models/      modelos SQLAlchemy (usuarios, accesos, entidades, asistencia, mensajes)
+├── routes/      blueprints: auth, main, usuarios, porteria, equipos
+├── templates/   vistas Jinja2
+├── static/      css/ y js/ divididos por vista
+└── utils/       código de barras, captcha, cola de correo, fotos, límites, respaldos, tareas
+config/          clase Config y .env.example
+docker/          Dockerfile, docker-compose.yml, entrypoint
+docs/            estructura, despliegue y operación, guía de migraciones, manuales
+scripts/         create_admin, prueba de correo, generadores de carnets y manuales
+tests/           modulos/ (por módulo), roles/ (por perfil), vistas/ (por vista)
+```
+
+Más detalle en [`docs/ESTRUCTURA_PROYECTO.md`](docs/ESTRUCTURA_PROYECTO.md) y [`docs/DESPLIEGUE_Y_OPERACION.md`](docs/DESPLIEGUE_Y_OPERACION.md).
+
+## Cómo ponerlo a correr
+
+Se necesita Python 3.12 y una base de datos PostgreSQL.
+
+```bash
+# base de datos para desarrollo
+docker run -d --name porteria-db -e POSTGRES_USER=porteria -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=porteria -p 5432:5432 postgres:16
+
+python -m venv .venv
+.venv\Scripts\activate            # Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+
+copy config\.env.example config\.env   # Linux/macOS: cp config/.env.example config/.env
+```
+
+Llenar `config/.env`: `SECRET_KEY`, `DATABASE_URL` (`postgresql://porteria:dev@localhost:5432/porteria`), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (12 caracteres o más) y `COOKIES_SEGURAS=false` para HTTP sin cifrar. Luego:
+
+```bash
+python scripts/create_admin.py
+python run.py
+```
+
+## Docker y Coolify
+
+`docker/docker-compose.yml` construye el servicio web (python:3.12-slim, usuario sin privilegios, hora de Bogotá); la base de datos es externa y se conecta con `DATABASE_URL`. En Coolify, definir las variables de `config/.env.example` como variables de entorno y exponer el puerto 5000.
+
+## Pruebas
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Más de 800 pruebas corren en cada push con GitHub Actions contra PostgreSQL 16. Están organizadas de tres formas: por módulo, por rol (qué puede y qué no puede hacer cada perfil) y por vista (cada vista con todos los perfiles).
+
+## Autor
 
 Cristian Muñoz · [GitHub](https://github.com/cristianyesidmquiroga-tech)
