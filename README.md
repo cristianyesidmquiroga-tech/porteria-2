@@ -6,6 +6,8 @@
 Full-stack web system that manages who enters and leaves a training center: digital ID cards with barcodes, gate control with a scanner, visitor / vehicle / equipment passes, class attendance, messaging and role-based administration. Built with Flask, PostgreSQL and Docker, ready to deploy on Coolify.
 
 
+**Live system:** [esena.proyecto.sbs](https://esena.proyecto.sbs/auth/login)
+
 The same system also exists as a Spring Boot API plus a React front end: see [`spring`](https://github.com/cristianyesidmquiroga-tech/spring) and [`react`](https://github.com/cristianyesidmquiroga-tech/react).
 
 ## Features
@@ -104,6 +106,8 @@ Sistema web completo que gestiona quién entra y sale de un centro de formación
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-listo-2496ED?logo=docker&logoColor=white)
 ![Pruebas](https://img.shields.io/badge/pruebas-800%2B-1a7f37)
+
+**Sistema en línea:** [esena.proyecto.sbs](https://esena.proyecto.sbs/auth/login)
 
 El mismo sistema existe también como API en Spring Boot más frontend en React: ver [`spring`](https://github.com/cristianyesidmquiroga-tech/spring) y [`react`](https://github.com/cristianyesidmquiroga-tech/react).
 
