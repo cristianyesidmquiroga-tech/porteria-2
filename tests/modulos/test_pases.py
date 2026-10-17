@@ -177,7 +177,7 @@ class TestCrearObjeto:
 class TestEditarActualizarEliminarObjeto:
     def _crear_objeto(self, db, descripcion='Camara', serial='SN-1', propietario='X'):
         objeto = ObjetoExterno(descripcion=descripcion, serial=serial,
-                               propietario=propietario, qr_code=f'SENA-OBJ:{serial}')
+                               nombre_propietario=propietario, qr_code=f'SENA-OBJ:{serial}')
         db.session.add(objeto)
         db.session.commit()
         return objeto
@@ -218,7 +218,7 @@ class TestEditarActualizarEliminarObjeto:
 
         db.session.refresh(objeto)
         assert objeto.descripcion == 'Camara actualizada'
-        assert objeto.propietario == 'Nuevo dueño'
+        assert objeto.nombre_propietario == 'Nuevo dueño'
 
     def test_aprendiz_no_actualiza_objeto(self, client, crear_usuario, db):
         aprendiz = _aprendiz(crear_usuario)
