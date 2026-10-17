@@ -67,7 +67,7 @@ class ObjetoExterno(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descripcion = db.Column(db.String(255), nullable=False)
     serial = db.Column(db.String(100), unique=True, nullable=True)
-    propietario = db.Column(db.String(100), nullable=True)
+    nombre_propietario = db.Column(db.String(100), nullable=True)
     motivo = db.Column(db.Text, nullable=True)
     activo = db.Column(db.Boolean, default=True)
     qr_code = db.Column(db.String(255), unique=True, nullable=True)

@@ -67,7 +67,7 @@
                 {% elif tipo == 'Vehiculo' %}
                     {{ entidad.tipo }} - {{ entidad.propietario or 'N/A' }}
                 {% else %}
-                    S/N: {{ entidad.serial or 'N/A' }} <br><span style="font-size: 0.85rem; color: var(--text-muted);">Prop: {{ entidad.propietario or 'N/A' }}</span>
+                    S/N: {{ entidad.serial or 'N/A' }} <br><span style="font-size: 0.85rem; color: var(--text-muted);">Prop: {{ entidad.nombre_propietario or 'N/A' }}</span>
                 {% endif %}
             </div>
         </div>

@@ -54,5 +54,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      - name: Crear la base de las migraciones
+        run: PGPASSWORD=pruebas psql -h localhost -U porteria -d porteria_pruebas -c "create database porteria_migraciones"
+
       - name: Ejecutar pruebas
+        env:
+          MIGRACIONES_DATABASE_URL: postgresql://porteria:pruebas@localhost:5432/porteria_migraciones
         run: python -m pytest tests -v --maxfail=1
