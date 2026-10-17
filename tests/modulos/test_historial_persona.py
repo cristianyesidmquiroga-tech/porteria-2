@@ -701,14 +701,15 @@ class TestVista:
         db.session.add(equipo)
         db.session.commit()
 
-        base = datetime.combine(get_colombia_time().date(), datetime.min.time())
+        base = datetime.combine(date(2026, 8, 3), datetime.min.time())
         _acceso(ana.id, 'Entrada', base.replace(hour=7),
                 equipos_str=str(equipo.id))
         _acceso(ana.id, 'Salida', base.replace(hour=12))
         db.session.commit()
 
         _entrar(client, celador)
-        html = client.get(f'{RUTA}?usuario_id={ana.id}').get_data(as_text=True)
+        html = client.get(f'{RUTA}?usuario_id={ana.id}'
+                          '&fecha_inicio=2026-08-03&fecha_fin=2026-08-07').get_data(as_text=True)
         assert 'Ana Rodriguez' in html
         assert 'Portatil Dell' in html
         assert 'Periodo evaluado para esta persona' in html
