@@ -3,16 +3,26 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user, logout_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_apscheduler import APScheduler
+from flask_migrate import Migrate
+from sqlalchemy import MetaData
 from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import datetime, timedelta, timezone
 import functools
 import logging
 import os
 
-db = SQLAlchemy()
+convencion = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+db = SQLAlchemy(metadata=MetaData(naming_convention=convencion))
 login_manager = LoginManager()
 csrf = CSRFProtect()
 scheduler = APScheduler()
+migrate = Migrate(compare_type=True, render_as_batch=False)
 
 # El limitador se define en su propio modulo junto al catalogo de limites.
 from .utils.limitador import (  # noqa: E402
@@ -111,162 +121,6 @@ def _registrar_manejadores_error(app):
         return render_template('errores/500.html'), 500
 
 
-# Columnas que db.create_all() no puede anadir a tablas que ya existen.
-# Cada entrada corre solo si la columna falta, asi que es idempotente.
-COLUMNAS_PENDIENTES = {
-    'objetos_externos': {
-        'serial': 'VARCHAR(100)',
-        'propietario': 'VARCHAR(100)',
-        'motivo': 'TEXT',
-        'activo': 'BOOLEAN DEFAULT TRUE',
-        'qr_code': 'VARCHAR(255)',
-        'fecha_creacion': 'TIMESTAMP',
-    },
-    'usuarios': {
-        'intentos_codigo': 'INTEGER DEFAULT 0',
-        'foto_estado': "VARCHAR(20) DEFAULT 'sin_foto'",
-        'foto_motivo': 'TEXT',
-        'foto_revisada_por': 'INTEGER',
-        'foto_fecha_revision': 'TIMESTAMP',
-        'foto_fecha_subida': 'TIMESTAMP',
-        'tipo_documento': "VARCHAR(5) DEFAULT 'CC'",
-        'tutorial_visto': 'BOOLEAN DEFAULT FALSE',
-        # Nombres y apellidos por separado, que es como los pide el carnet
-        # oficial. No se rellenan partiendo `nombre`: quedan vacios hasta que
-        # la persona los declare (ver el comentario en el modelo).
-        'nombres': 'VARCHAR(100)',
-        'apellidos': 'VARCHAR(100)',
-        # Sin FOREIGN KEY en el ALTER: SQLite no la admite al anadir columna y
-        # la integridad ya la impone el modelo al insertar.
-        'ficha_id': 'INTEGER',
-    },
-    'accesos': {
-        'operador_id': 'INTEGER',
-    },
-}
-
-
-def _migrar_columnas():
-    """Anade las columnas que falten en una base creada por una version previa."""
-    from sqlalchemy import text, inspect
-
-    registro = logging.getLogger(__name__)
-    try:
-        inspector = inspect(db.engine)
-        tablas = set(inspector.get_table_names())
-        for tabla, columnas in COLUMNAS_PENDIENTES.items():
-            if tabla not in tablas:
-                continue
-            existentes = {c['name'] for c in inspector.get_columns(tabla)}
-            faltantes = [c for c in columnas if c not in existentes]
-            for columna in faltantes:
-                db.session.execute(text(
-                    f"ALTER TABLE {tabla} ADD COLUMN {columna} {columnas[columna]}"))
-            if faltantes:
-                registro.info("Migracion %s: columnas agregadas %s", tabla, faltantes)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        registro.exception("Fallo la migracion de columnas")
-
-
-# Indices que db.create_all() no puede anadir a tablas que ya existen. Sin
-# esto, los indices declarados en los modelos solo aparecen en bases nuevas: la
-# de produccion se queda sin ellos y el trabajo parece hecho sin estarlo.
-#
-# El primero es el mas importante: es el patron exacto que ejecuta el escaner
-# en cada persona que entra. Sin indice, cada escaneo recorre entera la tabla
-# mas grande del sistema.
-INDICES_PENDIENTES = [
-    ("ix_accesos_referencia_tipo_fecha",
-     "CREATE INDEX IF NOT EXISTS ix_accesos_referencia_tipo_fecha "
-     "ON accesos (referencia_id, tipo_referencia, fecha)"),
-    ("ix_accesos_fecha",
-     "CREATE INDEX IF NOT EXISTS ix_accesos_fecha ON accesos (fecha)"),
-    ("ix_accesos_operador_id",
-     "CREATE INDEX IF NOT EXISTS ix_accesos_operador_id ON accesos (operador_id)"),
-    ("ix_auditoria_fecha",
-     "CREATE INDEX IF NOT EXISTS ix_auditoria_fecha ON auditoria (fecha)"),
-    ("ix_equipos_usuario_id",
-     "CREATE INDEX IF NOT EXISTS ix_equipos_usuario_id ON equipos (usuario_id)"),
-    ("ix_asistencia_clases_aprendiz_id",
-     "CREATE INDEX IF NOT EXISTS ix_asistencia_clases_aprendiz_id "
-     "ON asistencia_clases (aprendiz_id)"),
-]
-
-
-# Columnas que dejaron de ser obligatorias en los modelos. Al borrar a una
-# persona, el ORM pone en nulo estas referencias para conservar el registro sin
-# ella (una auditoria o una clase valen aunque el autor ya no exista). En una
-# base creada antes del cambio siguen siendo NOT NULL, asi que ese UPDATE falla
-# y borrar un usuario devuelve error 500. Solo PostgreSQL: SQLite no admite
-# alterar la nulabilidad de una columna, y en desarrollo la base se recrea.
-COLUMNAS_OPCIONALES = [
-    ('auditoria', 'usuario_id'),
-    ('asistencia_clases', 'instructor_id'),
-    ('mensajes', 'autor_id'),
-]
-
-
-def _soltar_obligatoriedad():
-    """Permite el nulo en las columnas que el modelo ya declara opcionales."""
-    from sqlalchemy import text, inspect
-
-    registro = logging.getLogger(__name__)
-    if db.engine.dialect.name != 'postgresql':
-        return
-    try:
-        inspector = inspect(db.engine)
-        tablas = set(inspector.get_table_names())
-    except Exception:
-        registro.exception("No se pudo inspeccionar la base")
-        return
-
-    for tabla, columna in COLUMNAS_OPCIONALES:
-        if tabla not in tablas:
-            continue
-        try:
-            obligatorias = {c['name'] for c in inspector.get_columns(tabla)
-                            if not c.get('nullable', True)}
-            if columna not in obligatorias:
-                continue
-            db.session.execute(text(
-                f"ALTER TABLE {tabla} ALTER COLUMN {columna} DROP NOT NULL"))
-            db.session.commit()
-            registro.info("Migracion %s.%s: ahora admite nulo", tabla, columna)
-        except Exception:
-            db.session.rollback()
-            registro.exception("No se pudo soltar NOT NULL en %s.%s", tabla, columna)
-
-
-def _crear_indices_faltantes():
-    """Crea los indices que falten en una base creada por una version previa.
-
-    Cada sentencia va en su propia transaccion: si una falla (por ejemplo
-    porque la tabla todavia no existe en una base a medio migrar), las demas
-    se siguen creando en vez de perderse todas.
-    """
-    from sqlalchemy import text, inspect
-
-    registro = logging.getLogger(__name__)
-    try:
-        tablas = set(inspect(db.engine).get_table_names())
-    except Exception:
-        registro.exception("No se pudo inspeccionar la base para crear indices")
-        return
-
-    for nombre, sentencia in INDICES_PENDIENTES:
-        tabla = sentencia.split(' ON ')[1].split(' ')[0]
-        if tabla not in tablas:
-            continue
-        try:
-            db.session.execute(text(sentencia))
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            registro.exception("No se pudo crear el indice %s", nombre)
-
-
 def _con_contexto(app, funcion):
     """Envuelve una tarea programada para que corra dentro del contexto de app.
 
@@ -342,6 +196,7 @@ def create_app(iniciar_tareas=True):
                                 x_host=proxies)
 
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     # El limitador se inicializa ANTES que CSRF a proposito: los before_request
     # corren en orden de registro, y si CSRF fuera primero, una avalancha de
@@ -430,10 +285,6 @@ def create_app(iniciar_tareas=True):
         # sobre las vistas ya registradas.
         aplicar_limites(app)
 
-        db.create_all()
-        _migrar_columnas()
-        _crear_indices_faltantes()
-        _soltar_obligatoriedad()
         if iniciar_tareas:
             _registrar_tareas(app)
 

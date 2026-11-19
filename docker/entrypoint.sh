@@ -4,6 +4,7 @@ set -e
 echo "========================================="
 echo "  Inicializando base de datos..."
 echo "========================================="
+EJECUTAR_TAREAS=false flask --app run.py db upgrade
 python scripts/create_admin.py
 
 echo "========================================="

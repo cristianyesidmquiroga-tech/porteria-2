@@ -17,6 +17,10 @@ app/static/uploads/profiles/*
 app/respaldos_mensuales/*
 !app/respaldos_mensuales/.gitkeep
 
+# Respaldos del laboratorio de migraciones (dumps locales, no van al repo)
+respaldos/
+preflight.sql
+
 # Archivo de depuracion con codigos OTP (eliminado del codigo, se ignora por si acaso)
 CODIGOS_DESARROLLO.txt
 

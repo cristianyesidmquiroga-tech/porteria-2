@@ -121,7 +121,9 @@ class Usuario(db.Model, UserMixin):
     # Campos detallados del perfil del usuario (SENA)
     # El tipo condiciona cuantos digitos debe tener el numero: una tarjeta de
     # identidad y una cedula de extranjeria no se validan igual.
-    tipo_documento = db.Column(db.String(5), default='CC')
+    tipo_documento = db.Column(
+        db.Enum('CC', 'TI', 'CE', 'PPT', 'PA', name='tipo_documento'),
+        default='CC', server_default='CC')
     documento = db.Column(db.String(20), unique=True, nullable=True)
     programa = db.Column(db.String(100), nullable=True)
     ficha = db.Column(db.String(20), nullable=True)
@@ -150,9 +152,10 @@ class Usuario(db.Model, UserMixin):
     # rostro, nitida, con luz), pero NO puede comprobar que la persona de la
     # foto sea quien dice ser. Eso lo aprueba un administrador antes de que el
     # carnet digital quede activo.
-    foto_estado = db.Column(db.String(20), default=ESTADO_SIN_FOTO)
+    foto_estado = db.Column(db.String(20), default=ESTADO_SIN_FOTO, index=True)
     foto_motivo = db.Column(db.Text, nullable=True)          # por que se rechazo
-    foto_revisada_por = db.Column(db.Integer, nullable=True)  # id del admin
+    foto_revisada_por = db.Column(
+        db.Integer, db.ForeignKey('usuarios.id', ondelete='SET NULL'), nullable=True)
     foto_fecha_revision = db.Column(db.DateTime, nullable=True)
     foto_fecha_subida = db.Column(db.DateTime, nullable=True)
 

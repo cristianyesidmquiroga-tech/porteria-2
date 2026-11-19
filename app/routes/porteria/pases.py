@@ -87,7 +87,7 @@ def crear_objeto():
 
     if obj_exist:
         obj_exist.descripcion = descripcion
-        obj_exist.propietario = propietario
+        obj_exist.nombre_propietario = propietario
         obj_exist.motivo = motivo
         obj_exist.activo = True
     else:
@@ -102,7 +102,7 @@ def crear_objeto():
         db.session.add(ObjetoExterno(
             descripcion=descripcion,
             serial=serial_val,
-            propietario=propietario,
+            nombre_propietario=propietario,
             motivo=motivo,
             qr_code=f"SENA-OBJ:{serial_val}",
             activo=True
@@ -144,7 +144,7 @@ def actualizar_objeto(obj_id):
     if descripcion:
         obj.descripcion = descripcion
     obj.serial = serial or obj.serial
-    obj.propietario = propietario
+    obj.nombre_propietario = propietario
     obj.motivo = motivo
     db.session.commit()
     flash('Objeto actualizado correctamente.', 'success')

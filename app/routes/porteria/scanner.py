@@ -93,7 +93,7 @@ def api_verify(doc):
             data = {
                 "found": True, "id": obj.id, "nombre": obj.descripcion, "documento": obj.serial, "tipo": "ObjetoExterno",
                 "foto": url_for('static', filename=avatar_de_cargo('objetoexterno')),
-                "status": is_inside.tipo if is_inside else 'Afuera', "cargo": obj.propietario or "Externo", "rol": "Equipo de Tercero"
+                "status": is_inside.tipo if is_inside else 'Afuera', "cargo": obj.nombre_propietario or "Externo", "rol": "Equipo de Tercero"
             }
     
     return data
