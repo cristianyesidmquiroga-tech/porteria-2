@@ -1,5 +1,7 @@
 # Sistema de control de acceso (Flask)
 
+[![CI](https://github.com/cristianyesidmquiroga-tech/porteria-2/actions/workflows/pruebas.yml/badge.svg?branch=main)](https://github.com/cristianyesidmquiroga-tech/porteria-2/actions/workflows/pruebas.yml)
+
 <details>
 <summary><b>Read this in English</b></summary>
 
