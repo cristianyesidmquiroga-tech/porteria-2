@@ -101,6 +101,8 @@ Cristian Muñoz · [GitHub](https://github.com/cristianyesidmquiroga-tech)
 
 </details>
 
+![Pantalla de ingreso del sistema de control de acceso](docs/capturas/login.webp)
+
 Sistema web completo que gestiona quién entra y sale de un centro de formación: carnet digital con código de barras, control de portería con escáner, pases de visitantes, vehículos y equipos, asistencia a clase, mensajería y administración por roles. Hecho con Flask, PostgreSQL y Docker, listo para desplegar en Coolify.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
